@@ -167,9 +167,9 @@ export default function JetPesaLandingPage() {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', borderBottom: '1px solid rgba(255,255,255,0.04)', paddingBottom: '10px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#22c55e' }} />
-              <span style={{ fontSize: '12px', fontWeight: '800', color: '#94a3b8' }}>LIVE SYSTEM SIMULATOR ({totalPoolUsers} online)</span>
+              <span style={{ fontSize: '12px', fontWeight: '800', color: '#94a3b8' }}>LIVE NOW: ({totalPoolUsers} pilots online)</span>
             </div>
-            <span style={{ fontSize: '11px', background: 'rgba(255,255,255,0.05)', padding: '3px 8px', borderRadius: '4px', fontWeight: '700' }}>DEMO VIEW ONLY</span>
+            <span style={{ fontSize: '11px', background: 'rgba(255,255,255,0.05)', padding: '3px 8px', borderRadius: '4px', fontWeight: '700' }}>FLY THE ROCKET!</span>
           </div>
 
           {/* Interactive Core Flight Monitor Frame */}
