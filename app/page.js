@@ -1,182 +1,172 @@
 'use client';
 import { useRouter } from 'next/navigation';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { useTheme } from './layout';
 
-export default function PremiumLanding() {
+export default function NextGenLanding() {
   const router = useRouter();
+  const { theme, toggleTheme } = useTheme();
   const canvasRef = useRef(null);
+  
+  // Game simulation simulation parameters
+  const [simMult, setSimMult] = useState(1.00);
+  const [simStatus, setSimStatus] = useState('flying'); // flying, cashed, crashed
+  const [alertFeed, setAlertFeed] = useState('Player @Moraa_P cashed out at 4.50x (+KES 1,125)');
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
-    
-    let animationFrameId;
-    let angle = 0;
-    let particles = [];
+    let frameId;
+    let t = 0;
 
-    // Initialize decorative 3D floating flight matrix items
-    for(let i = 0; i < 40; i++) {
-      particles.push({
-        x: Math.random() * 800,
-        y: Math.random() * 500,
-        z: Math.random() * 800,
-        speed: Math.random() * 2 + 1
-      });
-    }
-
-    const render3DScene = () => {
+    const renderLoop = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      const cx = canvas.width / 2;
-      const cy = canvas.height / 2;
-      const fov = 400; // 3D Field of View perspective anchor
+      const W = canvas.width;
+      const H = canvas.height;
 
-      // Draw Rotating 3D Perspective Matrix Grid Lines
-      ctx.strokeStyle = 'rgba(225, 29, 72, 0.08)';
+      // Draw Grid Matrix Lines
+      ctx.strokeStyle = theme === 'dark' ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)';
       ctx.lineWidth = 1;
-      angle += 0.003;
+      for(let i=0; i<W; i+=40) { ctx.beginPath(); ctx.moveTo(i,0); ctx.lineTo(i,H); ctx.stroke(); }
+      for(let j=0; j<H; j+=40) { ctx.beginPath(); ctx.moveTo(0,j); ctx.lineTo(W,j); ctx.stroke(); }
 
-      for (let i = -400; i <= 400; i += 80) {
-        // Projecting 3D coordinates (X, Y, Z) down into 2D screen space
-        let cosA = Math.cos(angle);
-        let sinA = Math.sin(angle);
+      t += 0.05;
+      let currentMult = parseFloat(Math.pow(Math.E, 0.07 * t).toFixed(2));
 
-        let rotX1 = i * cosA - (-300) * sinA;
-        let rotZ1 = i * sinA + (-300) * cosA + 500;
-        let screenX1 = cx + (rotX1 * fov) / rotZ1;
-        let screenY1 = cy + (200 * fov) / rotZ1;
-
-        let rotX2 = i * cosA - (300) * sinA;
-        let rotZ2 = i * sinA + (300) * cosA + 500;
-        let screenX2 = cx + (rotX2 * fov) / rotZ2;
-        let screenY2 = cy + (200 * fov) / rotZ2;
-
-        ctx.beginPath();
-        ctx.moveTo(screenX1, screenY1);
-        ctx.lineTo(screenX2, screenY2);
-        ctx.stroke();
+      if (currentMult > 6.5 && simStatus === 'flying') {
+        // Mock a structured random workflow outcome
+        if (Math.random() > 0.5) {
+          setSimStatus('cashed');
+          setAlertFeed('🎯 AUTO-CASHOUT TRIGGERED AT ' + currentMult + 'x!');
+        } else {
+          setSimStatus('crashed');
+          setAlertFeed('💥 FLEW AWAY AT ' + currentMult + 'x. Retrying loop...');
+        }
       }
 
-      // Render flying propulsion space vectors
-      particles.forEach(p => {
-        p.z -= p.speed;
-        if(p.z <= 0) p.z = 800;
+      if (t > 12) {
+        t = 0;
+        setSimStatus('flying');
+      }
 
-        let sx = cx + ((p.x - cx) * fov) / p.z;
-        let sy = cy + ((p.y - cy) * fov) / p.z;
-        let size = (fov / p.z) * 1.5;
+      setSimMult(currentMult);
 
-        if(sx >= 0 && sx <= canvas.width && sy >= 0 && sy <= canvas.height) {
-          ctx.fillStyle = `rgba(225, 29, 72, ${1 - p.z / 800})`;
-          ctx.beginPath();
-          ctx.arc(sx, sy, Math.max(0.5, size), 0, Math.PI * 2);
-          ctx.fill();
-        }
-      });
+      // Map realistic coordinates
+      let x = 40 + (W - 100) * (t / 12);
+      let y = (H - 40) - (H - 100) * (Math.min(currentMult - 1, 6) / 6);
 
-      // Draw the central glowing marketing jet vector silhouette
-      ctx.save();
-      ctx.translate(cx, cy + Math.sin(angle * 5) * 15); // Smooth hover sequence
-      ctx.shadowColor = '#e11d48';
-      ctx.shadowBlur = 25;
-      ctx.fillStyle = '#e11d48';
-      ctx.beginPath();
-      ctx.moveTo(0, -40);
-      ctx.lineTo(35, 20);
-      ctx.lineTo(10, 10);
-      ctx.lineTo(0, 30);
-      ctx.lineTo(-10, 10);
-      ctx.lineTo(-35, 20);
-      ctx.closePath();
-      ctx.fill();
-      ctx.restore();
+      // Render Flight Trail
+      if (simStatus === 'flying') {
+        ctx.beginPath();
+        ctx.moveTo(40, H - 40);
+        ctx.quadraticCurveTo((40 + x)/1.7, H - 40, x, y);
+        ctx.strokeStyle = '#e11d48';
+        ctx.lineWidth = 4;
+        ctx.stroke();
 
-      animationFrameId = requestAnimationFrame(render3DScene);
+        // High realism vector rendering for the jet
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.fillStyle = '#e11d48';
+        ctx.beginPath();
+        ctx.moveTo(15, 0); ctx.lineTo(-15, -10); ctx.lineTo(-10, 0); ctx.lineTo(-15, 10);
+        ctx.closePath(); ctx.fill();
+        ctx.restore();
+      }
+
+      frameId = requestAnimationFrame(renderLoop);
     };
 
-    render3DScene();
-    return () => cancelAnimationFrame(animationFrameId);
-  }, []);
+    renderLoop();
+    return () => cancelAnimationFrame(frameId);
+  }, [theme, simStatus]);
+
+  const glassStyle = {
+    background: theme === 'dark' ? 'rgba(18, 18, 24, 0.6)' : 'rgba(255, 255, 255, 0.6)',
+    backdropFilter: 'blur(16px)',
+    border: theme === 'dark' ? '1px solid rgba(255,255,255,0.08)' : '1px solid rgba(0,0,0,0.08)',
+    borderRadius: '16px'
+  };
 
   return (
-    <div style={{ minHeight: '100vh', background: '#050507', color: '#fff', overflowX: 'hidden' }}>
-      
-      {/* Premium Header Navigation Control */}
+    <div style={{ minHeight: '100vh', paddingBottom: '60px' }}>
+      {/* Dynamic Header Navbar */}
       <nav style={{
         display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-        padding: '20px 6%', background: 'rgba(5, 5, 7, 0.8)', backdropFilter: 'blur(20px)',
-        borderBottom: '1px solid #14141a', position: 'fixed', width: '88%', top: 0, zIndex: 100
+        padding: '16px 5%', borderBottom: theme === 'dark' ? '1px solid #1e1e26' : '1px solid #e2e8f0',
+        position: 'sticky', top: 0, zIndex: 100, backdropFilter: 'blur(12px)',
+        background: theme === 'dark' ? 'rgba(5,5,8,0.8)' : 'rgba(248,250,252,0.8)'
       }}>
-        <div style={{ fontSize: '26px', fontWeight: '900', letterSpacing: '1px', cursor: 'pointer' }} onClick={() => router.push('/')}>
+        <div style={{ fontSize: '24px', fontWeight: '900', fontFamily: "'Space Grotesk', sans-serif" }}>
           JET<span style={{ color: '#e11d48' }}>PESA</span>
         </div>
-        <div style={{ display: 'flex', gap: '16px' }}>
-          <button onClick={() => router.push('/auth?mode=login')} style={{ background: 'transparent', border: '1px solid #272732', color: '#fff', padding: '10px 24px', borderRadius: '8px', fontWeight: '600', cursor: 'pointer' }}>
-            LOGIN
-          </button>
-          <button onClick={() => router.push('/auth?mode=signup')} style={{ background: '#e11d48', border: 'none', color: '#fff', padding: '10px 24px', borderRadius: '8px', fontWeight: '700', cursor: 'pointer', boxShadow: '0 4px 15px rgba(225,29,72,0.4)' }}>
-            SIGN UP
-          </button>
+        
+        <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+          {/* Mode Switcher Buttons */}
+          <select 
+            value={theme} 
+            onChange={(e) => toggleTheme(e.target.value)}
+            style={{ padding: '6px 12px', background: 'transparent', border: '1px solid #e11d48', borderRadius: '6px', color: '#e11d48', fontWeight: '700' }}
+          >
+            <option value="dark">Dark</option>
+            <option value="light">Light</option>
+          </select>
+
+          <button onClick={() => router.push('/auth?mode=login')} style={{ background: 'transparent', border: 'none', color: theme === 'dark' ? '#fff' : '#000', fontWeight: '600', cursor: 'pointer' }}>LOGIN</button>
+          <button onClick={() => router.push('/auth?mode=signup')} style={{ background: '#e11d48', border: 'none', color: '#fff', padding: '10px 20px', borderRadius: '8px', fontWeight: '700', cursor: 'pointer' }}>REGISTER</button>
         </div>
       </nav>
 
-      {/* Hero Ad Advertising Section */}
-      <section style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '40px', padding: '0 8%', paddingTop: '140px', alignItems: 'center', minHeight: '80vh' }}>
-        <div>
-          <div style={{ background: 'rgba(225, 29, 72, 0.1)', color: '#fb7185', padding: '6px 14px', borderRadius: '20px', fontSize: '12px', fontWeight: '800', display: 'inline-block', marginBottom: '20px', border: '1px solid rgba(225,29,72,0.2)' }}>
-            🚀 KENYA'S NUMBER ONE AUTOPILOT MULTIPLIER
+      {/* Main Responsive Grid Arena Layout */}
+      <main style={{ display: 'grid', gridTemplateColumns: 'window.innerWidth < 900 ? "1fr" : "1fr 1fr"', gap: '40px', padding: '5%', paddingTop: '60px', maxWidth: '1300px', margin: '0 auto' }}>
+        
+        {/* Ad Callouts Copy Block */}
+        <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+          <div style={{ background: 'rgba(225,29,72,0.1)', color: '#fb7185', padding: '6px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: '800', width: 'fit-content', marginBottom: '16px' }}>
+            🇰🇪 SECURED INTEGRATION WITH DARAJA DIRECT FAILSAFE
           </div>
-          <h1 style={{ fontSize: '4.2rem', fontWeight: '900', lineHeight: '1.05', margin: '0 0 24px 0', letterSpacing: '-1px' }}>
-            Watch It Fly. <br/>Multiply Your Cash <br/><span style={{ color: '#e11d48' }}>Up To 100x!</span>
+          <h1 style={{ fontSize: 'clamp(2.5rem, 5vw, 4rem)', fontWeight: '900', fontFamily: "'Space Grotesk', sans-serif", lineHeight: '1.1', margin: '0 0 20px 0' }}>
+            Predict The Altitude. <br/><span style={{ color: '#e11d48' }}>Cash Out Instant</span> Payouts.
           </h1>
-          <p style={{ color: '#a1a1aa', fontSize: '1.25rem', lineHeight: '1.6', margin: '0 0 40px 0', maxWidth: '520px' }}>
-            Join thousands of active players online. Turn your <span style={{ color: '#fff', fontWeight: '700' }}>KES 25 FREE Sign-Up Bonus</span> into instant M-Pesa payouts before the plane flies away!
+          <p style={{ color: theme === 'dark' ? '#a1a1aa' : '#475569', fontSize: '1.15rem', lineHeight: '1.6', margin: '0 0 32px 0' }}>
+            Claim your instant <strong style={{ color: '#e11d48' }}>KES 25 Sign-Up Registration Bonus</strong>. Experience ultra-reliable flight mechanics with zero-delay M-Pesa inputs.
           </p>
-          
-          <div style={{ display: 'flex', gap: '20px' }}>
-            <button onClick={() => router.push('/auth?mode=signup')} style={{ padding: '18px 36px', fontSize: '17px', fontWeight: '800', color: '#fff', background: 'linear-gradient(135deg, #e11d48 0%, #be123c 100%)', border: 'none', borderRadius: '10px', cursor: 'pointer', boxShadow: '0 10px 25px rgba(225, 29, 72, 0.4)' }}>
-              CLAIM FREE KES 25 NOW
-            </button>
+
+          <div style={{ ...glassStyle, padding: '16px', marginBottom: '32px', color: '#e11d48', fontWeight: '700', fontSize: '13px' }}>
+            {alertFeed}
+          </div>
+
+          <button onClick={() => router.push('/auth?mode=signup')} style={{ width: 'fit-content', padding: '16px 40px', background: 'linear-gradient(135deg,#e11d48 0%,#be123c 100%)', border: 'none', borderRadius: '8px', color: '#fff', fontSize: '17px', fontWeight: '800', cursor: 'pointer', boxShadow: '0 10px 20px rgba(225,29,72,0.3)' }}>
+            GET STARTED NOW (FREE KES 25)
+          </button>
+        </div>
+
+        {/* Real-time Interactive Simulator Canvas Container */}
+        <div style={{ ...glassStyle, padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px', minWidth: '320px' }}>
+          <div style={{ position: 'relative', background: '#000', borderRadius: '12px', height: '300px', overflow: 'hidden' }}>
+            <canvas ref={canvasRef} width={550} height={300} style={{ width: '100%', height: '100%' }} />
+            <div style={{ position: 'absolute', top: '40%', left: '50%', transform: 'translate(-50%, -50%)', textAlign: 'center' }}>
+              <h2 style={{ fontSize: '4rem', fontWeight: '900', margin: 0, color: simStatus === 'crashed' ? '#e11d48' : '#fff' }}>
+                {simStatus === 'crashed' ? 'FLEW AWAY' : `${simMult.toFixed(2)}x`}
+              </h2>
+            </div>
+          </div>
+
+          {/* Interactive Educational Cards explaining the game cycle */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', fontSize: '12px' }}>
+            <div style={{ background: 'rgba(0,0,0,0.2)', padding: '12px', borderRadius: '8px' }}>
+              <strong style={{ color: '#e11d48' }}>1. AUTOMATED PLACEMENT</strong>
+              <p style={{ margin: '4px 0 0 0', color: '#888' }}>Set your stake and let the system track outcomes transparently.</p>
+            </div>
+            <div style={{ background: 'rgba(0,0,0,0.2)', padding: '12px', borderRadius: '8px' }}>
+              <strong style={{ color: '#22c55e' }}>2. TIMED LOCK CASHOUT</strong>
+              <p style={{ margin: '4px 0 0 0', color: '#888' }}>Exit strategically to bank accumulated multipliers straight to your wallet.</p>
+            </div>
           </div>
         </div>
 
-        {/* 3D Animated Plane Space Canvas Component */}
-        <div style={{ position: 'relative', display: 'flex', justifyContent: 'center' }}>
-          <canvas ref={canvasRef} width={500} height={420} style={{ background: '#09090b', borderRadius: '24px', border: '1px solid #14141a', boxShadow: '0 30px 60px rgba(0,0,0,0.7)' }} />
-          <div style={{ position: 'absolute', bottom: '24px', right: '24px', background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)', padding: '8px 16px', borderRadius: '20px', fontSize: '12px', color: '#4ade80', border: '1px solid rgba(74,222,128,0.2)', fontWeight: '700' }}>
-            ● LIVE MATCH ENGINE ACTIVE
-          </div>
-        </div>
-      </section>
-
-      {/* "How It Works" Informational Section */}
-      <section style={{ padding: '80px 8%', background: '#09090b', borderTop: '1px solid #14141a' }}>
-        <div style={{ textAlign: 'center', marginBottom: '60px' }}>
-          <h2 style={{ fontSize: '2.5rem', fontWeight: '800', margin: 0 }}>How To Play In <span style={{ color: '#e11d48' }}>3 Simple Steps</span></h2>
-          <p style={{ color: '#71717a', marginTop: '8px' }}>Zero experience required. Pure intuition and instant speeds.</p>
-        </div>
-
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '30px' }}>
-          <div style={{ background: '#050507', padding: '32px', borderRadius: '16px', border: '1px solid #14141a' }}>
-            <div style={{ fontSize: '32px', marginBottom: '16px' }}>💰</div>
-            <h3 style={{ fontSize: '20px', margin: '0 0 12px 0', fontWeight: '700' }}>1. Place Your Wager</h3>
-            <p style={{ color: '#a1a1aa', fontSize: '14px', lineHeight: '1.5', margin: 0 }}>Enter your preferred bet amount before the round begins. Use your free KES 25 bonus immediately upon profile activation.</p>
-          </div>
-
-          <div style={{ background: '#050507', padding: '32px', borderRadius: '16px', border: '1px solid #14141a' }}>
-            <div style={{ fontSize: '32px', marginBottom: '16px' }}>📈</div>
-            <h3 style={{ fontSize: '20px', margin: '0 0 12px 0', fontWeight: '700' }}>2. Watch Multiplier Scale</h3>
-            <p style={{ color: '#a1a1aa', fontSize: '14px', lineHeight: '1.5', margin: 0 }}>As the jet gains altitude, your potential payout accelerates exponentially from 1.00x up to 100x or higher in real-time.</p>
-          </div>
-
-          <div style={{ background: '#050507', padding: '32px', borderRadius: '16px', border: '1px solid #14141a' }}>
-            <div style={{ fontSize: '32px', marginBottom: '16px' }}>⚡</div>
-            <h3 style={{ fontSize: '20px', margin: '0 0 12px 0', fontWeight: '700' }}>3. Cashout Securely</h3>
-            <p style={{ color: '#a1a1aa', fontSize: '14px', lineHeight: '1.5', margin: 0 }}>Press CASHOUT before the plane flies away to lock in your winnings. Winnings are paid out directly to your M-Pesa balance wallet!</p>
-          </div>
-        </div>
-      </section>
-
+      </main>
     </div>
   );
 }
