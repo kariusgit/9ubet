@@ -1,172 +1,107 @@
 'use client';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useEffect, useRef, useState } from 'react';
-import { useTheme } from './layout';
+import { auth, db } from '../firebaseConfig';
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
+import { doc, setDoc } from 'firebase/firestore';
 
-export default function NextGenLanding() {
+export default function GlassmorphismAuthGateway() {
   const router = useRouter();
-  const { theme, toggleTheme } = useTheme();
-  const canvasRef = useRef(null);
-  
-  // Game simulation simulation parameters
-  const [simMult, setSimMult] = useState(1.00);
-  const [simStatus, setSimStatus] = useState('flying'); // flying, cashed, crashed
-  const [alertFeed, setAlertFeed] = useState('Player @Moraa_P cashed out at 4.50x (+KES 1,125)');
+  const [isSignUp, setIsSignUp] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [phone, setPhone] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [gateError, setGateError] = useState('');
 
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    let frameId;
-    let t = 0;
-
-    const renderLoop = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      const W = canvas.width;
-      const H = canvas.height;
-
-      // Draw Grid Matrix Lines
-      ctx.strokeStyle = theme === 'dark' ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)';
-      ctx.lineWidth = 1;
-      for(let i=0; i<W; i+=40) { ctx.beginPath(); ctx.moveTo(i,0); ctx.lineTo(i,H); ctx.stroke(); }
-      for(let j=0; j<H; j+=40) { ctx.beginPath(); ctx.moveTo(0,j); ctx.lineTo(W,j); ctx.stroke(); }
-
-      t += 0.05;
-      let currentMult = parseFloat(Math.pow(Math.E, 0.07 * t).toFixed(2));
-
-      if (currentMult > 6.5 && simStatus === 'flying') {
-        // Mock a structured random workflow outcome
-        if (Math.random() > 0.5) {
-          setSimStatus('cashed');
-          setAlertFeed('🎯 AUTO-CASHOUT TRIGGERED AT ' + currentMult + 'x!');
-        } else {
-          setSimStatus('crashed');
-          setAlertFeed('💥 FLEW AWAY AT ' + currentMult + 'x. Retrying loop...');
+  const executeGateTransaction = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setGateError('');
+    try {
+      if (isSignUp) {
+        if (!phone.startsWith('07') && !phone.startsWith('01')) {
+          throw new Error('Please provide a valid Safaricom phone format structure.');
         }
+        const credential = await createUserWithEmailAndPassword(auth, email, password);
+        await setDoc(doc(db, "users", credential.user.uid), {
+          uid: credential.user.uid,
+          email,
+          mpesaPhone: phone,
+          walletBalance: 0.0,
+          secretDepositSum: 0,
+          secretLossSum: 0,
+          secretFreeBets: 0,
+          createdAt: new Date().toISOString()
+        });
+      } else {
+        await signInWithEmailAndPassword(auth, email, password);
       }
-
-      if (t > 12) {
-        t = 0;
-        setSimStatus('flying');
-      }
-
-      setSimMult(currentMult);
-
-      // Map realistic coordinates
-      let x = 40 + (W - 100) * (t / 12);
-      let y = (H - 40) - (H - 100) * (Math.min(currentMult - 1, 6) / 6);
-
-      // Render Flight Trail
-      if (simStatus === 'flying') {
-        ctx.beginPath();
-        ctx.moveTo(40, H - 40);
-        ctx.quadraticCurveTo((40 + x)/1.7, H - 40, x, y);
-        ctx.strokeStyle = '#e11d48';
-        ctx.lineWidth = 4;
-        ctx.stroke();
-
-        // High realism vector rendering for the jet
-        ctx.save();
-        ctx.translate(x, y);
-        ctx.fillStyle = '#e11d48';
-        ctx.beginPath();
-        ctx.moveTo(15, 0); ctx.lineTo(-15, -10); ctx.lineTo(-10, 0); ctx.lineTo(-15, 10);
-        ctx.closePath(); ctx.fill();
-        ctx.restore();
-      }
-
-      frameId = requestAnimationFrame(renderLoop);
-    };
-
-    renderLoop();
-    return () => cancelAnimationFrame(frameId);
-  }, [theme, simStatus]);
-
-  const glassStyle = {
-    background: theme === 'dark' ? 'rgba(18, 18, 24, 0.6)' : 'rgba(255, 255, 255, 0.6)',
-    backdropFilter: 'blur(16px)',
-    border: theme === 'dark' ? '1px solid rgba(255,255,255,0.08)' : '1px solid rgba(0,0,0,0.08)',
-    borderRadius: '16px'
+      router.push('/dashboard');
+    } catch (err) {
+      setGateError(err.message.replace("Firebase:", ""));
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div style={{ minHeight: '100vh', paddingBottom: '60px' }}>
-      {/* Dynamic Header Navbar */}
-      <nav style={{
-        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-        padding: '16px 5%', borderBottom: theme === 'dark' ? '1px solid #1e1e26' : '1px solid #e2e8f0',
-        position: 'sticky', top: 0, zIndex: 100, backdropFilter: 'blur(12px)',
-        background: theme === 'dark' ? 'rgba(5,5,8,0.8)' : 'rgba(248,250,252,0.8)'
-      }}>
-        <div style={{ fontSize: '24px', fontWeight: '900', fontFamily: "'Space Grotesk', sans-serif" }}>
-          JET<span style={{ color: '#e11d48' }}>PESA</span>
-        </div>
-        
-        <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-          {/* Mode Switcher Buttons */}
-          <select 
-            value={theme} 
-            onChange={(e) => toggleTheme(e.target.value)}
-            style={{ padding: '6px 12px', background: 'transparent', border: '1px solid #e11d48', borderRadius: '6px', color: '#e11d48', fontWeight: '700' }}
-          >
-            <option value="dark">Dark</option>
-            <option value="light">Light</option>
-          </select>
+    <div style={{ minHeight: '100vh', background: 'radial-gradient(circle at 50% 50%, #11131e 0%, #050609 100%)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px', fontFamily: "'Plus Jakarta Sans', sans-serif", overflow: 'hidden', position: 'relative' }}>
+      
+      {/* Background Ambient Blur Blobs */}
+      <div style={{ position: 'absolute', width: '350px', height: '350px', background: 'rgba(225,29,72,0.15)', borderRadius: '50%', filter: 'blur(80px)', top: '10%', left: '15%', pointerEvents: 'none' }} />
+      <div style={{ position: 'absolute', width: '400px', height: '400px', background: 'rgba(168,85,247,0.12)', borderRadius: '50%', filter: 'blur(100px)', bottom: '10%', right: '15%', pointerEvents: 'none' }} />
 
-          <button onClick={() => router.push('/auth?mode=login')} style={{ background: 'transparent', border: 'none', color: theme === 'dark' ? '#fff' : '#000', fontWeight: '600', cursor: 'pointer' }}>LOGIN</button>
-          <button onClick={() => router.push('/auth?mode=signup')} style={{ background: '#e11d48', border: 'none', color: '#fff', padding: '10px 20px', borderRadius: '8px', fontWeight: '700', cursor: 'pointer' }}>REGISTER</button>
-        </div>
-      </nav>
+      <div style={{ textAlign: 'center', marginBottom: '28px', zIndex: 2 }}>
+        <h1 style={{ fontSize: '3.2rem', fontWeight: '900', color: '#fff', letterSpacing: '-1.5px', margin: '0 0 8px 0', textTransform: 'uppercase' }}>
+          JetPesa<span style={{ color: '#e11d48' }}>.🚀</span>
+        </h1>
+        <p style={{ color: '#94a3b8', fontSize: '15px', fontWeight: '600', maxWidth: '440px', margin: '0 auto', lineHeight: '1.5' }}>
+          The fastest multiplying crash arena in East Africa. Watch the altitude swell, retain control, and unlock financial scale in seconds.
+        </p>
+      </div>
 
-      {/* Main Responsive Grid Arena Layout */}
-      <main style={{ display: 'grid', gridTemplateColumns: 'window.innerWidth < 900 ? "1fr" : "1fr 1fr"', gap: '40px', padding: '5%', paddingTop: '60px', maxWidth: '1300px', margin: '0 auto' }}>
+      {/* Glassmorphic Portal Core Frame */}
+      <div style={{ width: '100%', maxWidth: '400px', background: 'rgba(18, 20, 32, 0.45)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '24px', padding: '32px', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.7)', zIndex: 2 }}>
         
-        {/* Ad Callouts Copy Block */}
-        <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-          <div style={{ background: 'rgba(225,29,72,0.1)', color: '#fb7185', padding: '6px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: '800', width: 'fit-content', marginBottom: '16px' }}>
-            🇰🇪 SECURED INTEGRATION WITH DARAJA DIRECT FAILSAFE
+        <div style={{ display: 'flex', background: 'rgba(0,0,0,0.25)', padding: '4px', borderRadius: '12px', marginBottom: '24px' }}>
+          <button onClick={() => { setIsSignUp(false); setGateError(''); }} style={{ flex: 1, padding: '10px', background: !isSignUp ? 'rgba(255,255,255,0.08)' : 'transparent', border: 'none', color: '#fff', fontSize: '13px', fontWeight: '800', borderRadius: '8px', cursor: 'pointer', transition: 'all 0.2s' }}>LOGIN</button>
+          <button onClick={() => { setIsSignUp(true); setGateError(''); }} style={{ flex: 1, padding: '10px', background: isSignUp ? 'rgba(255,255,255,0.08)' : 'transparent', border: 'none', color: '#fff', fontSize: '13px', fontWeight: '800', borderRadius: '8px', cursor: 'pointer', transition: 'all 0.2s' }}>SIGN UP</button>
+        </div>
+
+        {gateError && (
+          <div style={{ background: 'rgba(220,38,38,0.15)', border: '1px solid rgba(220,38,38,0.4)', color: '#ef4444', padding: '10px 14px', borderRadius: '10px', fontSize: '12px', fontWeight: '700', marginBottom: '16px', textAlign: 'center' }}>
+            {gateError}
           </div>
-          <h1 style={{ fontSize: 'clamp(2.5rem, 5vw, 4rem)', fontWeight: '900', fontFamily: "'Space Grotesk', sans-serif", lineHeight: '1.1', margin: '0 0 20px 0' }}>
-            Predict The Altitude. <br/><span style={{ color: '#e11d48' }}>Cash Out Instant</span> Payouts.
-          </h1>
-          <p style={{ color: theme === 'dark' ? '#a1a1aa' : '#475569', fontSize: '1.15rem', lineHeight: '1.6', margin: '0 0 32px 0' }}>
-            Claim your instant <strong style={{ color: '#e11d48' }}>KES 25 Sign-Up Registration Bonus</strong>. Experience ultra-reliable flight mechanics with zero-delay M-Pesa inputs.
-          </p>
+        )}
 
-          <div style={{ ...glassStyle, padding: '16px', marginBottom: '32px', color: '#e11d48', fontWeight: '700', fontSize: '13px' }}>
-            {alertFeed}
+        <form onSubmit={executeGateTransaction} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <div>
+            <label style={{ fontSize: '11px', color: '#94a3b8', fontWeight: '700', display: 'block', marginBottom: '6px' }}>EMAIL PROFILE NODE</label>
+            <input type="email" required value={email} onChange={e => setEmail(e.target.value)} placeholder="pilot@jetpesa.com" style={{ width: '100%', padding: '12px 14px', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.06)', color: '#fff', borderRadius: '10px', fontSize: '14px', boxSizing: 'border-box' }} />
           </div>
 
-          <button onClick={() => router.push('/auth?mode=signup')} style={{ width: 'fit-content', padding: '16px 40px', background: 'linear-gradient(135deg,#e11d48 0%,#be123c 100%)', border: 'none', borderRadius: '8px', color: '#fff', fontSize: '17px', fontWeight: '800', cursor: 'pointer', boxShadow: '0 10px 20px rgba(225,29,72,0.3)' }}>
-            GET STARTED NOW (FREE KES 25)
+          {isSignUp && (
+            <div>
+              <label style={{ fontSize: '11px', color: '#94a3b8', fontWeight: '700', display: 'block', marginBottom: '6px' }}>SAFARICOM TELEPHONE (M-PESA)</label>
+              <input type="text" required value={phone} onChange={e => setPhone(e.target.value)} placeholder="0712345678" style={{ width: '100%', padding: '12px 14px', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.06)', color: '#fff', borderRadius: '10px', fontSize: '14px', boxSizing: 'border-box' }} />
+            </div>
+          )}
+
+          <div>
+            <label style={{ fontSize: '11px', color: '#94a3b8', fontWeight: '700', display: 'block', marginBottom: '6px' }}>SECURE ACCESS KEY</label>
+            <input type="password" required value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" style={{ width: '100%', padding: '12px 14px', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.06)', color: '#fff', borderRadius: '10px', fontSize: '14px', boxSizing: 'border-box' }} />
+          </div>
+
+          <button type="submit" disabled={loading} style={{ width: '100%', padding: '14px', marginTop: '8px', background: 'linear-gradient(135deg, #e11d48 0%, #be123c 100%)', border: 'none', color: '#fff', fontWeight: '900', fontSize: '14px', borderRadius: '10px', cursor: 'pointer', boxShadow: '0 8px 20px rgba(225,29,72,0.35)', transition: 'transform 0.2s' }}>
+            {loading ? 'SYNCHRONIZING SECURE TUNNEL...' : isSignUp ? 'REGISTER PROFILE & RECEIVE BONUS' : 'START RADAR OPERATIONS'}
           </button>
-        </div>
+        </form>
 
-        {/* Real-time Interactive Simulator Canvas Container */}
-        <div style={{ ...glassStyle, padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px', minWidth: '320px' }}>
-          <div style={{ position: 'relative', background: '#000', borderRadius: '12px', height: '300px', overflow: 'hidden' }}>
-            <canvas ref={canvasRef} width={550} height={300} style={{ width: '100%', height: '100%' }} />
-            <div style={{ position: 'absolute', top: '40%', left: '50%', transform: 'translate(-50%, -50%)', textAlign: 'center' }}>
-              <h2 style={{ fontSize: '4rem', fontWeight: '900', margin: 0, color: simStatus === 'crashed' ? '#e11d48' : '#fff' }}>
-                {simStatus === 'crashed' ? 'FLEW AWAY' : `${simMult.toFixed(2)}x`}
-              </h2>
-            </div>
-          </div>
-
-          {/* Interactive Educational Cards explaining the game cycle */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', fontSize: '12px' }}>
-            <div style={{ background: 'rgba(0,0,0,0.2)', padding: '12px', borderRadius: '8px' }}>
-              <strong style={{ color: '#e11d48' }}>1. AUTOMATED PLACEMENT</strong>
-              <p style={{ margin: '4px 0 0 0', color: '#888' }}>Set your stake and let the system track outcomes transparently.</p>
-            </div>
-            <div style={{ background: 'rgba(0,0,0,0.2)', padding: '12px', borderRadius: '8px' }}>
-              <strong style={{ color: '#22c55e' }}>2. TIMED LOCK CASHOUT</strong>
-              <p style={{ margin: '4px 0 0 0', color: '#888' }}>Exit strategically to bank accumulated multipliers straight to your wallet.</p>
-            </div>
-          </div>
-        </div>
-
-      </main>
+        <p style={{ textAlign: 'center', fontSize: '12px', color: '#475569', marginTop: '20px', fontWeight: '600', margin: '20px 0 0 0' }}>
+          By establishing connectivity, you certify your age parameter is strictly 18+.
+        </p>
+      </div>
     </div>
   );
 }
