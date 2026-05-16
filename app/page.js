@@ -1,72 +1,119 @@
 'use client';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { auth, db } from '../firebaseConfig';
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
+import { doc, setDoc, getDoc } from 'firebase/firestore';
 
-export default function LandingPage() {
+export default function AuthPage() {
   const router = useRouter();
+  const [isSignUp, setIsSignUp] = useState(false);
+  const [mpesaNumber, setMpesaNumber] = useState('');
+  const [password, setPassword] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  // Formats standard Kenyan phone contexts to structured email formats for Firebase Auth
+  const formatMpesaEmail = (num) => {
+    let clean = num.trim().replace(/\s+/g, '');
+    if (clean.startsWith('0')) clean = '254' + clean.substring(1);
+    if (!clean.startsWith('254')) clean = '254' + clean;
+    return `${clean}@mpesa.jetpesa.local`;
+  };
+
+  const handleAuth = async (e) => {
+    e.preventDefault();
+    setErrorMessage('');
+    setLoading(true);
+
+    if (mpesaNumber.length < 9 || password.length < 6) {
+      setErrorMessage('Provide a valid Safaricom number and minimum 6-character password.');
+      setLoading(false);
+      return;
+    }
+
+    const mpesaEmail = formatMpesaEmail(mpesaNumber);
+
+    try {
+      if (isSignUp) {
+        // Create Authentication profile
+        const userCredential = await createUserWithEmailAndPassword(auth, mpesaEmail, password);
+        const user = userCredential.user;
+
+        // Establish core user document map with KES 25 Signup Bonus
+        await setDoc(doc(db, "users", user.uid), {
+          mpesaPhone: mpesaEmail.split('@')[0],
+          walletBalance: 25.00,
+          createdAt: new Date().toISOString()
+        });
+      } else {
+        await signInWithEmailAndPassword(auth, mpesaEmail, password);
+      }
+      router.push('/dashboard');
+    } catch (err) {
+      setErrorMessage(err.message.includes('auth/user-not-found') ? 'Account profile context not found.' : err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const triggerPasswordReset = async () => {
+    if (!mpesaNumber) return alert('Enter your Safaricom phone number above first.');
+    try {
+      await sendPasswordResetEmail(auth, formatMpesaEmail(mpesaNumber));
+      alert('Password reset link dispatched via platform channels successfully.');
+    } catch (err) {
+      alert(err.message);
+    }
+  };
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', position: 'relative' }}>
-      {/* Premium Navbar */}
-      <nav style={{
-        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-        padding: '20px 6%', background: 'rgba(5, 5, 7, 0.75)', backdropFilter: 'blur(16px)',
-        borderBottom: '1px solid #18181b', position: 'fixed', width: '88%', top: 0, zIndex: 100
+    <div style={{
+      minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
+      background: 'radial-gradient(circle at center, #18111e 0%, #050507 100%)', padding: '20px'
+    }}>
+      <div style={{
+        background: '#0e0e12', border: '1px solid #221a2b', padding: '40px',
+        borderRadius: '16px', width: '100%', maxWidth: '400px', boxShadow: '0 20px 50px rgba(0,0,0,0.6)'
       }}>
-        <div style={{ fontSize: '26px', fontWeight: '800', fontFamily: "'Space Grotesk', sans-serif", letterSpacing: '1px' }}>
-          JET<span style={{ color: '#e11d48' }}>PESA</span>
-        </div>
-        <button 
-          onClick={() => router.push('/dashboard')}
-          style={{
-            background: 'linear-gradient(135deg, #e11d48 0%, #be123c 100%)', color: '#fff',
-            border: 'none', padding: '12px 28px', borderRadius: '8px', fontWeight: '700',
-            cursor: 'pointer', boxShadow: '0 8px 20px rgba(225, 29, 72, 0.3)', transition: '0.2s'
-          }}>
-          ENTER LOBBY
-        </button>
-      </nav>
-
-      {/* Hero Section */}
-      <section style={{
-        flex: 1, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '40px',
-        alignItems: 'center', padding: '0 8%', paddingTop: '120px',
-        background: 'radial-gradient(circle at 75% 30%, rgba(225, 29, 72, 0.1), transparent 50%)'
-      }}>
-        <div>
-          <div style={{ background: 'rgba(225, 29, 72, 0.1)', color: '#fb7185', padding: '6px 16px', borderRadius: '20px', fontSize: '13px', fontWeight: '700', display: 'inline-block', marginBottom: '20px' }}>
-            ⚡ POWERED BY PAYHERO M-PESA GATEWAY
-          </div>
-          <h1 style={{ fontSize: '3.8rem', fontWeight: '800', lineHeight: '1.1', margin: '0 0 20px 0', fontFamily: "'Space Grotesk', sans-serif" }}>
-            The Elite <span style={{ color: '#e11d48' }}>Provably Fair</span> Crash Simulator.
+        <div style={{ textAlign: 'center', marginBottom: '30px' }}>
+          <h1 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '32px', margin: 0, fontWeight: '800', letterSpacing: '1px' }}>
+            JET<span style={{ color: '#e11d48' }}>PESA</span>
           </h1>
-          <p style={{ color: '#a1a1aa', fontSize: '1.2rem', lineHeight: '1.6', margin: '0 0 35px 0' }}>
-            Test your Aviator strategy with real programmatic infrastructure. Real M-Pesa STK push mechanics paired with standard SHA-256 seed verification protocols.
-          </p>
-          <button 
-            onClick={() => router.push('/dashboard')}
-            style={{
-              padding: '18px 40px', fontSize: '1.1rem', fontWeight: '700', color: '#fff',
-              background: 'linear-gradient(135deg, #e11d48 0%, #be123c 100%)', border: 'none',
-              borderRadius: '10px', cursor: 'pointer', boxShadow: '0 10px 30px rgba(225, 29, 72, 0.4)'
-            }}>
-            START SIMULATION NOW
-          </button>
+          <p style={{ color: '#71717a', fontSize: '14px', marginTop: '6px' }}>Spribe Crash Engine Hub</p>
         </div>
 
-        {/* Visual Showcase */}
-        <div style={{
-          background: '#09090b', border: '1px solid #1e1e24', borderRadius: '24px',
-          height: '420px', display: 'flex', flexDirection: 'column', alignItems: 'center',
-          justify-content: 'center', boxShadow: '0 25px 60px rgba(0,0,0,0.5)', position: 'relative'
-        }}>
-          <div style={{ fontSize: '4.5rem', color: '#e11d48', fontWeight: '800', fontFamily: "'Space Grotesk', sans-serif" }}>
-            84.20x
+        {errorMessage && (
+          <div style={{ background: 'rgba(225,29,72,0.1)', color: '#f43f5e', padding: '12px', borderRadius: '8px', fontSize: '13px', marginBottom: '16px', border: '1px solid rgba(225,29,72,0.2)' }}>
+            {errorMessage}
           </div>
-          <div style={{ color: '#4ade80', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '15px', marginTop: '10px' }}>
-            <span>🛡️</span> 100% CRYPTOGRAPHICALLY SECURE
+        )}
+
+        <form onSubmit={handleAuth} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <div>
+            <label style={{ fontSize: '12px', color: '#a1a1aa', fontWeight: '600' }}>SAFARICOM M-PESA NUMBER</label>
+            <input type="text" placeholder="e.g., 0712345678 or 254..." value={mpesaNumber} onChange={(e) => setMpesaNumber(e.target.value)} required style={{ width: '100%', padding: '14px', boxSizing: 'border-box', background: '#16161e', border: '1px solid #272732', borderRadius: '8px', color: '#fff', marginTop: '6px', fontSize: '15px' }} />
           </div>
+
+          <div>
+            <label style={{ fontSize: '12px', color: '#a1a1aa', fontWeight: '600' }}>SECURITY ACCREDITATION PASSWORD</label>
+            <input type="password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} required style={{ width: '100%', padding: '14px', boxSizing: 'border-box', background: '#16161e', border: '1px solid #272732', borderRadius: '8px', color: '#fff', marginTop: '6px', fontSize: '15px' }} />
+          </div>
+
+          <button type="submit" disabled={loading} style={{ width: '100%', padding: '14px', background: '#e11d48', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: '700', fontSize: '16px', cursor: 'pointer', marginTop: '10px', transition: '0.2s' }}>
+            {loading ? 'SYNCHRONIZING SECURE TUNNELS...' : isSignUp ? 'CLAIM KES 25 & SIGN UP' : 'SIGN IN TO FLIGHT LOBBY'}
+          </button>
+        </form>
+
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '20px', fontSize: '13px' }}>
+          <span onClick={() => setIsSignUp(!isSignUp)} style={{ color: '#fb7185', cursor: 'pointer' }}>
+            {isSignUp ? 'Have an account? Login' : 'Create an Account'}
+          </span>
+          <span onClick={triggerPasswordReset} style={{ color: '#a1a1aa', cursor: 'pointer' }}>
+            Forgot Password?
+          </span>
         </div>
-      </section>
+      </div>
     </div>
   );
 }
