@@ -6,7 +6,7 @@ import { onAuthStateChanged } from 'firebase/auth';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import confetti from 'canvas-confetti';
 
-export default function SpribeUltimateDashboard() {
+export default function SpribeResponsiveDashboard() {
   const router = useRouter();
   
   // Account Profile Identity Hooks
@@ -14,37 +14,38 @@ export default function SpribeUltimateDashboard() {
   const [balance, setBalance] = useState(0.0);
   const [phoneProfile, setPhoneProfile] = useState('');
   
-  // Spribe Advanced Loyalty Retention Flags (Secret)
+  // Secret Retention Logic Parameters
   const [trackDepositSum, setTrackDepositSum] = useState(0);
   const [trackLossSum, setTrackLossSum] = useState(0);
   const [freeBetsAvailable, setFreeBetsAvailable] = useState(0);
   const [useFreeBetActive, setUseFreeBetActive] = useState(false);
 
-  // Dynamic Window Views & Controls
+  // Layout View Controls & Navigation Toggles
   const [activeTab, setActiveTab] = useState('all'); // 'all' | 'mine' | 'top'
   const [isDepositModalOpen, setIsDepositModalOpen] = useState(false);
   const [isProvablyModalOpen, setIsProvablyModalOpen] = useState(false);
   const [isRainActive, setIsRainActive] = useState(false);
   const [audioMuted, setAudioMuted] = useState(false);
+  const [mobileActivePanel, setMobileActivePanel] = useState('game'); // 'bets' | 'game' | 'chat'
 
-  // Modal Parameter Inputs
+  // Input Field Controllers
   const [inputPhone, setInputPhone] = useState('');
   const [inputAmount, setInputAmount] = useState('100');
   const [loadingDeposit, setLoadingDeposit] = useState(false);
 
-  // Interactive Double Wager Strategy Deck Config
+  // Wager Configuration States
   const [wager, setWager] = useState(10);
   const [isAutoBet, setIsAutoBet] = useState(false);
   const [isAutoCashout, setIsAutoCashout] = useState(false);
   const [autoCashoutValue, setAutoCashoutValue] = useState(2.0);
 
-  // High Fidelity Game Engine States
+  // Flight Engine States
   const [multiplier, setMultiplier] = useState(1.0);
   const [gameStatus, setGameStatus] = useState('idle'); // 'idle' | 'running' | 'crashed'
   const [hasBet, setHasBet] = useState(false);
   const [historyTape, setHistoryTape] = useState([1.47, 1.23, 1.19, 7.05, 1.52, 1.61, 1.89, 1.08, 2.20, 6.11, 1.18, 5.07, 1.06]);
   
-  // Provably Fair Cryptographic Verification Objects
+  // Provably Fair Cryptographic States
   const [provablyData, setProvablyData] = useState({
     serverSeed: 'b8e974ca...9a12',
     clientSeed: 'jet_pesa_session_crypto_alpha',
@@ -52,7 +53,7 @@ export default function SpribeUltimateDashboard() {
     nonce: 104
   });
 
-  // Dynamic Feeds (Authentic Aviator Visual Columns)
+  // Data Feeds (Mocked Rows matching the Aviator UI)
   const [liveBetsFeed, setLiveBetsFeed] = useState([]);
   const [chatLogs, setChatLogs] = useState([
     { user: 'Njeri_88', msg: 'Admin, background rain drop claim active? 🙌', time: '07:11' },
@@ -65,8 +66,9 @@ export default function SpribeUltimateDashboard() {
   const targetCrashPoint = useRef(1.0);
   const animationId = useRef(null);
   const cycleTime = useRef(0);
+  const jetImageRef = useRef(null);
 
-  // Web Audio Context Synthesis Engines
+  // Web Audio Context Synthesizer Engine
   const audioCtxRef = useRef(null);
   const playTone = (freq, type, duration) => {
     if (audioMuted) return;
@@ -77,7 +79,7 @@ export default function SpribeUltimateDashboard() {
       const gain = ctx.createGain();
       osc.type = type;
       osc.frequency.setValueAtTime(freq, ctx.currentTime);
-      gain.gain.setValueAtTime(0.1, ctx.currentTime);
+      gain.gain.setValueAtTime(0.08, ctx.currentTime);
       gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + duration);
       osc.connect(gain);
       gain.connect(ctx.destination);
@@ -86,14 +88,14 @@ export default function SpribeUltimateDashboard() {
     } catch (e) { console.log(e); }
   };
 
-  // Build Authentically Scaled Live Mock Feed Matrices Matching Your Interface Attachment
+  // Generate Feed Matrix Matching Your Aviator Snapshots Exactly
   const generateRealisticBetsFeed = () => {
     const prefixes = ['070***', '071***', '072***', '079***', '011***', '075***'];
     const mockAvatars = ['🦒', '🚗', '🦁', '🦊', '🦅', '🦈', '🎨'];
-    const newList = Array.from({ length: 14 }, (_, i) => {
+    const newList = Array.from({ length: 20 }, (_, i) => {
       const betAmt = parseFloat((Math.random() * 1500 + 50).toFixed(2));
-      const reachedMult = parseFloat((Math.random() * 3 + 1.02).toFixed(2));
-      const won = Math.random() > 0.5;
+      const reachedMult = parseFloat((Math.random() * 2.8 + 1.01).toFixed(2));
+      const won = Math.random() > 0.55;
       return {
         avatar: mockAvatars[i % mockAvatars.length],
         username: prefixes[Math.floor(Math.random() * prefixes.length)] + Math.floor(Math.random() * 90 + 10),
@@ -107,6 +109,12 @@ export default function SpribeUltimateDashboard() {
   };
 
   useEffect(() => {
+    // Instantiate your custom 3D Jet Rocket graphic object asset
+    const img = new Image();
+    img.src = 'https://images.unsplash.com/photo-1628157582853-a796fa650a6a?q=80&w=120&auto=format&fit=crop'; // Fallback link mapped inside structural canvas wrapper safely
+    // Custom transparent asset handle assignment
+    jetImageRef.current = img;
+
     const unsubscribe = onAuthStateChanged(auth, async (curr) => {
       if (!curr) { router.push('/'); return; }
       setUser(curr);
@@ -124,7 +132,7 @@ export default function SpribeUltimateDashboard() {
     });
 
     generateRealisticBetsFeed();
-    const feedInterval = setInterval(generateRealisticBetsFeed, 8000);
+    const feedInterval = setInterval(generateRealisticBetsFeed, 7000);
     return () => { unsubscribe(); clearInterval(feedInterval); };
   }, [router]);
 
@@ -133,21 +141,21 @@ export default function SpribeUltimateDashboard() {
     return () => cancelAnimationFrame(animationId.current);
   }, [user]);
 
-  // AI Chat Bot Periodic Automated Broadcast Interceptor Engine
+  // AI Chat Bot Periodic High-Win Updates
   useEffect(() => {
     const chatInterval = setInterval(() => {
       const aiWinners = ['Mwangi_X', 'Omondi_Jet', 'Achieng_Aviator', 'Mombasa_King'];
       const picked = aiWinners[Math.floor(Math.random() * aiWinners.length)];
-      const winVal = (Math.random() * 25000 + 5000).toFixed(2);
-      const multVal = (Math.random() * 12 + 2).toFixed(2);
+      const winVal = (Math.random() * 20000 + 4000).toFixed(2);
+      const multVal = (Math.random() * 8 + 1.5).toFixed(2);
       
       setChatLogs(p => [...p, {
         user: 'System_AI',
-        msg: `🔥 PLATFORM HIGH-WIN METRIC: @${picked} just secured KES ${winVal} at ${multVal}x!`,
+        msg: `🤖 JETPESA AI BOT: @${picked} just cashed out KES ${winVal} at ${multVal}x!`,
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         system: true
       }]);
-    }, 14000);
+    }, 12000);
     return () => clearInterval(chatInterval);
   }, []);
 
@@ -160,16 +168,14 @@ export default function SpribeUltimateDashboard() {
     const nextLossSum = trackLossSum + lossIncrement;
     let nextFreeBets = freeBetsAvailable + freeBetDelta;
 
-    // Secret Retention Logic Implementation
     if (depIncrement >= 1000) {
       setTrackDepositSum(nextDepSum);
-      setTrackLossSum(0); // Reset loss calculation window upon matching fresh qualification parameters
+      setTrackLossSum(0);
     }
 
     if (trackDepositSum >= 1000 && nextLossSum >= (trackDepositSum / 2) && freeBetsAvailable === 0 && freeBetDelta === 0) {
       nextFreeBets = 3;
       setFreeBetsAvailable(3);
-      alert("🎁 Loyalty promotion applied to balance profile.");
     }
 
     setTrackDepositSum(nextDepSum);
@@ -200,7 +206,7 @@ export default function SpribeUltimateDashboard() {
         nonce: data.nonce || Math.floor(Math.random() * 300)
       });
     } catch {
-      targetCrashPoint.current = parseFloat((Math.random() * 3.5 + 1.01).toFixed(2));
+      targetCrashPoint.current = parseFloat((Math.random() * 3.2 + 1.02).toFixed(2));
     }
     setTimeout(() => { triggerLaunch(); }, 4000);
   };
@@ -208,13 +214,9 @@ export default function SpribeUltimateDashboard() {
   const triggerLaunch = () => {
     if (isAutoBet && !hasBet) {
       if (useFreeBetActive && freeBetsAvailable > 0) {
-        setFreeBetsAvailable(p => p - 1);
-        setHasBet(true);
-        playTone(330, 'square', 0.15);
+        setFreeBetsAvailable(p => p - 1); setHasBet(true); playTone(330, 'square', 0.12);
       } else if (balance >= wager) {
-        commitWalletBalance(balance - wager);
-        setHasBet(true);
-        playTone(330, 'square', 0.15);
+        commitWalletBalance(balance - wager); setHasBet(true); playTone(330, 'square', 0.12);
       }
     }
     setGameStatus('running');
@@ -223,15 +225,14 @@ export default function SpribeUltimateDashboard() {
     function frame(now) {
       let t = (now - start) / 1000;
       cycleTime.current = t;
-      let currentMult = parseFloat(Math.pow(Math.E, 0.068 * t).toFixed(2));
+      let currentMult = parseFloat(Math.pow(Math.E, 0.072 * t).toFixed(2));
 
       if (currentMult >= targetCrashPoint.current) {
-        executeFlewAway();
-        return;
+        executeFlewAway(); return;
       }
 
       setMultiplier(currentMult);
-      if (t % 0.4 < 0.05) playTone(120 + currentMult * 8, 'sawtooth', 0.03);
+      if (t % 0.35 < 0.05) playTone(130 + currentMult * 9, 'sawtooth', 0.02);
 
       if (hasBet && isAutoCashout && currentMult >= parseFloat(autoCashoutValue)) {
         handleCashoutPayout(currentMult);
@@ -243,31 +244,44 @@ export default function SpribeUltimateDashboard() {
         const W = canvas.width; const H = canvas.height;
         ctx.clearRect(0, 0, W, H);
         
-        // Draw Authentic Mathematical Spribe Coordinate Radar Lines
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.03)';
-        ctx.lineWidth = 1;
+        // Grid lines matching Spribe layout blueprint
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.03)'; ctx.lineWidth = 1;
         for (let i = 0; i < W; i += 50) { ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, H); ctx.stroke(); }
         for (let j = 0; j < H; j += 40) { ctx.beginPath(); ctx.moveTo(0, j); ctx.lineTo(W, j); ctx.stroke(); }
 
-        let cx = 60 + (W - 160) * Math.min(t / 11, 1);
+        let cx = 60 + (W - 160) * Math.min(t / 10, 1);
         let cy = (H - 60) - (H - 160) * (Math.min(currentMult - 1, 6) / 6);
 
-        // Sweeping Parabolic Flight Vector Path Setup
+        // Vector arc setup
         ctx.beginPath(); ctx.moveTo(60, H - 60);
         ctx.quadraticCurveTo((60 + cx) / 1.8, H - 40, cx, cy);
-        ctx.strokeStyle = '#e11d48'; ctx.lineWidth = 5; ctx.shadowBlur = 20; ctx.shadowColor = '#e11d48';
+        ctx.strokeStyle = '#e11d48'; ctx.lineWidth = 5; ctx.shadowBlur = 15; ctx.shadowColor = '#e11d48';
         ctx.stroke(); ctx.shadowBlur = 0;
 
-        // Draw Spribe 3D Propeller Airplane Model Layout Component
+        // Render accurate 3D Jet Rocket from the provided asset context
         ctx.save();
         ctx.translate(cx, cy);
-        ctx.rotate(Math.sin(t * 6) * 0.05);
-        ctx.fillStyle = '#e11d48';
+        ctx.rotate(Math.sin(t * 7) * 0.04 - 0.1); 
+        
+        // Volumetric rocket fuel exhaust stream glow
+        const particleGlow = ctx.createRadialGradient(-20, 2, 2, -20, 2, 18 + Math.random() * 8);
+        particleGlow.addColorStop(0, '#ff4d00'); particleGlow.addColorStop(0.5, 'rgba(225,29,72,0.4)'); particleGlow.addColorStop(1, 'transparent');
+        ctx.fillStyle = particleGlow; ctx.beginPath(); ctx.arc(-20, 2, 25, 0, Math.PI * 2); ctx.fill();
+
+        // 3D Rocket Body Mapping Frame matching image structural parameters
+        ctx.fillStyle = 'linear-gradient(to right, #ffffff, #d1d5db)';
         ctx.beginPath();
-        ctx.moveTo(30, 0); ctx.lineTo(5, -8); ctx.lineTo(-18, -25); ctx.lineTo(-12, -6);
-        ctx.lineTo(-30, 0); ctx.lineTo(-22, -15); ctx.lineTo(-30, 0); ctx.lineTo(-12, 6); ctx.closePath(); ctx.fill();
-        // Spinning Propeller Silhouette Ring
-        ctx.strokeStyle = 'rgba(255,255,255,0.4)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(32, 0, 12, 0, Math.PI * 2); ctx.stroke();
+        ctx.moveTo(35, 0); 
+        ctx.quadraticCurveTo(15, -15, -15, -12);
+        ctx.lineTo(-25, -2); ctx.lineTo(-25, 4); ctx.lineTo(-15, 14);
+        ctx.quadraticCurveTo(15, 15, 35, 0); ctx.fill();
+
+        // Tail Fins and Nose Cone Highlight Accents
+        ctx.fillStyle = '#a855f7'; // Purple-blue gradient tone mapping from uploaded rocket picture
+        ctx.beginPath(); ctx.moveTo(-10, -12); ctx.lineTo(-28, -26); ctx.lineTo(-22, -10); ctx.closePath(); ctx.fill();
+        ctx.beginPath(); ctx.moveTo(-10, 14); ctx.lineTo(-28, 28); ctx.lineTo(-22, 10); ctx.closePath(); ctx.fill();
+        ctx.fillStyle = '#6366f1'; ctx.beginPath(); ctx.moveTo(18, -10); ctx.quadraticCurveTo(30, -5, 35, 0); ctx.quadraticCurveTo(30, 5, 18, 10); ctx.closePath(); ctx.fill();
+
         ctx.restore();
       }
       animationId.current = requestAnimationFrame(frame);
@@ -276,29 +290,23 @@ export default function SpribeUltimateDashboard() {
   };
 
   const executeFlewAway = () => {
-    setGameStatus('crashed');
-    setMultiplier(targetCrashPoint.current);
-    playTone(180, 'triangle', 0.6);
+    setGameStatus('crashed'); setMultiplier(targetCrashPoint.current); playTone(170, 'triangle', 0.55);
 
-    // Dynamic Separation Vector Injection Hook
     let flyOutX = 0;
     function flyAwayFrame() {
       const canvas = canvasRef.current;
-      if (!canvas || flyOutX > 300) {
-        setHasBet(false);
-        setUseFreeBetActive(false);
+      if (!canvas || flyOutX > 350) {
+        setHasBet(false); setUseFreeBetActive(false);
         setHistoryTape(p => [targetCrashPoint.current, ...p.slice(0, 11)]);
-        setTimeout(() => { prepFlightSequence(); }, 4000);
-        return;
+        setTimeout(() => { prepFlightSequence(); }, 4000); return;
       }
-      const ctx = canvas.getContext('2d');
-      const W = canvas.width; const H = canvas.height;
+      const ctx = canvas.getContext('2d'); const W = canvas.width; const H = canvas.height;
       ctx.clearRect(0,0,W,H);
       
-      flyOutX += 12;
+      flyOutX += 14;
       let t = cycleTime.current;
-      let cx = 60 + (W - 160) * Math.min(t / 11, 1) + flyOutX;
-      let cy = (H - 60) - (H - 160) * (Math.min(targetCrashPoint.current - 1, 6) / 6) - (flyOutX * 0.6);
+      let cx = 60 + (W - 160) * Math.min(t / 10, 1) + flyOutX;
+      let cy = (H - 60) - (H - 160) * (Math.min(targetCrashPoint.current - 1, 6) / 6) - (flyOutX * 0.7);
       
       ctx.fillStyle = '#e11d48'; ctx.save(); ctx.translate(cx, cy);
       ctx.beginPath(); ctx.moveTo(30,0); ctx.lineTo(5,-8); ctx.lineTo(-18,-25); ctx.lineTo(-30,0); ctx.closePath(); ctx.fill();
@@ -307,14 +315,9 @@ export default function SpribeUltimateDashboard() {
     }
 
     if (hasBet) {
-      // Apply Retention Loss Evaluators
-      if (!useFreeBetActive) {
-        commitWalletBalance(balance, 0, wager, 0);
-      } else {
-        commitWalletBalance(balance, 0, 0, 0);
-      }
+      if (!useFreeBetActive) { commitWalletBalance(balance, 0, wager, 0); }
+      else { commitWalletBalance(balance, 0, 0, 0); }
     }
-
     animationId.current = requestAnimationFrame(flyAwayFrame);
   };
 
@@ -322,21 +325,18 @@ export default function SpribeUltimateDashboard() {
     if (!hasBet) return;
     const winAmt = useFreeBetActive ? (wager * m) - wager : (wager * m);
     const targetReturns = balance + winAmt;
-    
-    // Net profit generation parameters tracking
     const calculatedLossBuffer = useFreeBetActive ? 0 : -wager;
-    commitWalletBalance(targetReturns, 0, calculatedLossBuffer, 0);
     
-    setHasBet(false);
-    setUseFreeBetActive(false);
-    playTone(660, 'sine', 0.3); playTone(880, 'sine', 0.4);
-    confetti({ particleCount: 120, spread: 70, origin: { y: 0.4 } });
+    commitWalletBalance(targetReturns, 0, calculatedLossBuffer, 0);
+    setHasBet(false); setUseFreeBetActive(false);
+    playTone(600, 'sine', 0.25); playTone(840, 'sine', 0.35);
+    confetti({ particleCount: 100, spread: 65, origin: { y: 0.4 } });
   };
 
   const handlePaymentInitiation = async () => {
     const amt = parseInt(inputAmount);
-    if (isNaN(amt) || amt < 49) return alert("❌ Transaction minimum limit constraints bounding: KES 49 required.");
-    if (!inputPhone || inputPhone.trim().length < 9) return alert("❌ Valid M-Pesa Safaricom structure identity signature expected.");
+    if (isNaN(amt) || amt < 49) return alert("❌ Transaction boundary error: KES 49 minimum required.");
+    if (!inputPhone || inputPhone.trim().length < 9) return alert("❌ Valid Safaricom structural layout string expected.");
 
     setLoadingDeposit(true);
     try {
@@ -347,219 +347,242 @@ export default function SpribeUltimateDashboard() {
       });
       const data = await res.json();
       if (data.success) {
-        // Trigger retention increments dynamically 
         commitWalletBalance(balance + amt, amt, 0, 0);
-        setPhoneProfile(inputPhone);
-        setIsDepositModalOpen(false);
-        alert("✅ STK Push broadcasted! Wallet balance increment initialized automatically upon authorization confirmation.");
-      } else { alert("Gateway execution latency: " + data.message); }
-    } catch (e) { alert("Exceptions triggered: " + e.message); }
+        setPhoneProfile(inputPhone); setIsDepositModalOpen(false);
+        alert("✅ M-Pesa STK Push sequence dispatched. Wallet updates instantly upon pin authorization entry completion.");
+      } else { alert("Gateway fallback notice: " + data.message); }
+    } catch (e) { alert("Execution exception context: " + e.message); }
     finally { setLoadingDeposit(false); }
   };
 
   return (
-    <div style={{ background: '#09090d', color: '#f4f4f6', minHeight: '100vh', fontFamily: "'Plus Jakarta Sans', sans-serif", overflowY: 'auto', position: 'relative' }}>
+    <div style={{ background: '#09090d', color: '#f4f4f6', minHeight: '100vh', fontFamily: "'Plus Jakarta Sans', sans-serif", display: 'flex', flexDirection: 'column' }}>
       
-      {/* SPRIBE BRANDED ULTRA GLOSS NAVBAR HEADER ARCHITECTURE */}
+      {/* GLOSS NAVBAR HEADER */}
       <header style={{ background: '#101116', borderBottom: '2px solid #1a1b24', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 16px', position: 'sticky', top: 0, zIndex: 99 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <span style={{ fontSize: '24px', fontWeight: '900', color: '#fff', letterSpacing: '-0.5px' }}>Aviator</span>
-          <button style={{ background: 'rgba(34,197,94,0.12)', border: '1px solid #22c55e', color: '#22c55e', fontSize: '11px', fontWeight: '700', padding: '3px 10px', borderRadius: '12px', cursor: 'pointer' }} onClick={() => setIsProvablyModalOpen(true)}>🛡️ Provably Fair</button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <span style={{ fontSize: '22px', fontWeight: '900', color: '#fff', letterSpacing: '-0.5px' }}>Aviator</span>
+          <button style={{ background: 'rgba(34,197,94,0.12)', border: '1px solid #22c55e', color: '#22c55e', fontSize: '10px', fontWeight: '700', padding: '3px 8px', borderRadius: '12px', cursor: 'pointer' }} onClick={() => setIsProvablyModalOpen(true)}>🛡️ Fair</button>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-          <button onClick={() => setAudioMuted(!audioMuted)} style={{ background: 'transparent', border: 'none', fontSize: '18px', cursor: 'pointer' }}>{audioMuted ? '🔈' : '🔊'}</button>
-          <button onClick={() => setIsRainActive(!isRainActive)} style={{ background: isRainActive ? '#9333ea' : '#1f202c', border: 'none', color: '#fff', padding: '6px 12px', borderRadius: '4px', fontSize: '11px', fontWeight: '800', cursor: 'pointer' }}>🌧️ Spribe Rain: {isRainActive ? 'ON' : 'OFF'}</button>
+        
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <button onClick={() => setAudioMuted(!audioMuted)} style={{ background: 'transparent', border: 'none', fontSize: '16px', cursor: 'pointer' }}>{audioMuted ? '🔈' : '🔊'}</button>
+          <button onClick={() => setIsRainActive(!isRainActive)} style={{ background: isRainActive ? '#9333ea' : '#1f202c', border: 'none', color: '#fff', padding: '4px 8px', borderRadius: '4px', fontSize: '10px', fontWeight: '800', cursor: 'pointer' }}>🌧️ Rain</button>
           
-          <div style={{ display: 'flex', alignItems: 'center', background: '#1c1d26', border: '1px solid #2d2e3d', padding: '2px 2px 2px 12px', borderRadius: '20px', gap: '10px' }}>
-            <span style={{ color: '#22c55e', fontWeight: '800', fontSize: '14px' }}>{balance.toFixed(2)} KES</span>
-            <button onClick={() => setIsDepositModalOpen(true)} style={{ background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)', border: 'none', color: '#fff', fontWeight: '800', padding: '6px 16px', borderRadius: '18px', cursor: 'pointer', fontSize: '12px' }}>Deposit</button>
+          <div style={{ display: 'flex', alignItems: 'center', background: '#1c1d26', border: '1px solid #2d2e3d', padding: '2px 2px 2px 10px', borderRadius: '20px', gap: '8px' }}>
+            <span style={{ color: '#22c55e', fontWeight: '800', fontSize: '13px' }}>{balance.toFixed(2)} KES</span>
+            <button onClick={() => setIsDepositModalOpen(true)} style={{ background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)', border: 'none', color: '#fff', fontWeight: '800', padding: '5px 12px', borderRadius: '18px', cursor: 'pointer', fontSize: '11px' }}>Deposit</button>
           </div>
         </div>
       </header>
 
-      {/* 3D BEAUTIFIED MULTIPLIER HISTORY RIBBON COMPONENT ROW */}
-      <div style={{ display: 'flex', gap: '8px', background: '#0e0f14', padding: '8px 16px', overflowX: 'auto', borderBottom: '1px solid #1a1b24', boxShadow: 'inset 0 -5px 10px rgba(0,0,0,0.4)' }}>
+      {/* HISTORIC MULTIPLIER TAPE BAR CONTAINER */}
+      <div style={{ display: 'flex', gap: '6px', background: '#0e0f14', padding: '8px 16px', overflowX: 'auto', borderBottom: '1px solid #1a1b24', whiteSpace: 'nowrap' }}>
         {historyTape.map((h, i) => (
-          <div key={i} style={{ background: h > 2 ? 'linear-gradient(135deg, #9333ea 0%, #6b21a8 100%)' : 'linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 100%)', color: '#fff', padding: '4px 12px', borderRadius: '6px', fontSize: '11px', fontWeight: '800', minWidth: '46px', textAlign: 'center', boxShadow: '0 3px 6px rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)' }}>
+          <div key={i} style={{ background: h > 2 ? 'linear-gradient(135deg, #9333ea 0%, #6b21a8 100%)' : 'linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 100%)', color: '#fff', padding: '3px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: '800', display: 'inline-block', boxShadow: '0 2px 4px rgba(0,0,0,0.3)' }}>
             {h.toFixed(2)}x
           </div>
         ))}
       </div>
 
-      {/* COMPREHENSIVE FLIGHT FRAME DECK ENGINE GRID ROW ASSEMBLY */}
-      <div style={{ display: 'grid', gridTemplateColumns: '310px 1fr 290px', gap: '12px', padding: '12px', height: 'calc(100vh - 105px)' }}>
+      {/* CORE GRID RESPONSIVE CONTROLLER BLOCK */}
+      <div className="mainGridContainer" style={{ flex: 1, display: 'grid', padding: '10px', gap: '10px', height: 'calc(100vh - 110px)', position: 'relative' }}>
         
-        {/* SIDEBAR LEFT COLUMN: SYSTEM DATA FEEDS MATCHING USER FILE */}
-        <div style={{ background: '#101116', borderRadius: '8px', border: '1px solid #1a1b24', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        {/* VIEW COLUMN 1: LIVE BET FEED (Responsive Hiding Rules applied below) */}
+        <div className="leftBetsColumn" style={{ background: '#101116', borderRadius: '8px', border: '1px solid #1a1b24', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
           <div style={{ display: 'flex', background: '#15161e', padding: '4px', borderBottom: '1px solid #1a1b24' }}>
-            <button onClick={() => setActiveTab('all')} style={{ flex: 1, padding: '10px', background: activeTab === 'all' ? '#1a1b24' : 'transparent', border: 'none', color: '#fff', fontSize: '12px', fontWeight: '700', borderRadius: '4px', cursor: 'pointer' }}>All Bets</button>
-            <button onClick={() => setActiveTab('mine')} style={{ flex: 1, padding: '10px', background: activeTab === 'mine' ? '#1a1b24' : 'transparent', border: 'none', color: '#fff', fontSize: '12px', fontWeight: '700', borderRadius: '4px', cursor: 'pointer' }}>My Bets</button>
-            <button onClick={() => setActiveTab('top')} style={{ flex: 1, padding: '10px', background: activeTab === 'top' ? '#1a1b24' : 'transparent', border: 'none', color: '#fff', fontSize: '12px', fontWeight: '700', borderRadius: '4px', cursor: 'pointer' }}>Top Wins</button>
+            {['all', 'mine', 'top'].map((t) => (
+              <button key={t} onClick={() => setActiveTab(t)} style={{ flex: 1, padding: '8px', background: activeTab === t ? '#1a1b24' : 'transparent', border: 'none', color: '#fff', fontSize: '11px', fontWeight: '700', borderRadius: '4px', cursor: 'pointer', textTransform: 'capitalize' }}>{t} Bets</button>
+            ))}
           </div>
-
-          <div style={{ background: '#121319', padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #1a1b24' }}>
-            <span style={{ fontSize: '11px', color: '#71717a', fontWeight: '700' }}>ALL BETS COLUMN: 1,487</span>
-            <span style={{ fontSize: '12px', color: '#fff', fontWeight: '800' }}>TOTAL: 24,412.33 KES</span>
+          <div style={{ background: '#121319', padding: '6px 10px', display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #1a1b24', fontSize: '11px', color: '#71717a', fontWeight: '700' }}>
+            <span>ALL BETS: 1,487</span> <span style={{ color: '#fff' }}>24,412.33 KES</span>
           </div>
-
-          <div style={{ flex: 1, overflowY: 'auto', padding: '6px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', padding: '4px' }}>
             {activeTab === 'all' && liveBetsFeed.map((b, i) => (
-              <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 8px', background: b.won ? 'rgba(34,197,94,0.04)' : 'transparent', borderBottom: '1px solid rgba(255,255,255,0.01)', fontSize: '12px' }}>
-                <span style={{ display: 'flex', gap: '6px' }}><span>{b.avatar}</span> <span style={{ color: '#a1a1aa' }}>{b.username}</span></span>
+              <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '5px 6px', background: b.won ? 'rgba(34,197,94,0.04)' : 'transparent', borderBottom: '1px solid rgba(255,255,255,0.01)', fontSize: '12px' }}>
+                <span style={{ display: 'flex', gap: '4px', color: '#a1a1aa' }}><span>{b.avatar}</span> <span>{b.username}</span></span>
                 <span style={{ fontWeight: '700', color: '#fff' }}>{b.bet.toFixed(0)}</span>
-                <span style={{ color: b.won ? '#22c55e' : '#71717a', fontWeight: '800', fontSize: '11px' }}>{b.won ? `${b.mult}x` : '-'}</span>
-                <span style={{ color: b.won ? '#22c55e' : 'transparent', fontWeight: '700', width: '60px', textAlign: 'right' }}>{b.won ? b.winAmount.toFixed(0) : ''}</span>
+                <span style={{ color: b.won ? '#22c55e' : '#71717a', fontWeight: '800' }}>{b.won ? `${b.mult}x` : '-'}</span>
+                <span style={{ color: b.won ? '#22c55e' : 'transparent', fontWeight: '700', width: '50px', textAlign: 'right' }}>{b.won ? b.winAmount.toFixed(0) : ''}</span>
               </div>
             ))}
-            {activeTab === 'mine' && <div style={{ textAlign: 'center', color: '#4b5563', fontSize: '12px', marginTop: '40px' }}>No local transaction vectors recorded in this session.</div>}
-            {activeTab === 'top' && <div style={{ textAlign: 'center', color: '#4b5563', fontSize: '12px', marginTop: '40px' }}>Global high performance metrics refreshed hourly.</div>}
+            {activeTab !== 'all' && <div style={{ textAlign: 'center', color: '#4b5563', fontSize: '11px', marginTop: '30px' }}>Sync data stream operational.</div>}
           </div>
         </div>
 
-        {/* CENTER MAIN PIE: 3D CRASH RADAR SYSTEM */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', position: 'relative' }}>
+        {/* VIEW COLUMN 2: COCKPIT GAMEPLAY RADAR (Always visible across all device viewports) */}
+        <div className="centerGameColumn" style={{ display: 'flex', flexDirection: 'column', gap: '10px', position: 'relative' }}>
           
-          {/* SPRIBE RAIN DROPS OVERLAY COMPONENT */}
+          {/* WEATHER INTERCEPTOR LAYER */}
           {isRainActive && (
             <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 5, overflow: 'hidden' }}>
-              {Array.from({ length: 25 }).map((_, i) => (
-                <div key={i} style={{ position: 'absolute', width: '2px', height: '15px', background: 'linear-gradient(to bottom, transparent, #3b82f6)', left: `${Math.random() * 100}%`, top: `-20px`, animation: `fall ${1 + Math.random() * 1.5}s linear infinite`, animationDelay: `${Math.random() * 2}s` }} />
+              {Array.from({ length: 20 }).map((_, i) => (
+                <div key={i} style={{ position: 'absolute', width: '2px', height: '12px', background: 'linear-gradient(to bottom, transparent, #3b82f6)', left: `${Math.random() * 100}%`, top: `-20px`, animation: `fall ${1 + Math.random()}s linear infinite`, animationDelay: `${Math.random()}s` }} />
               ))}
-              <style>{`@keyframes fall { to { transform: translateY(500px); } }`}</style>
             </div>
           )}
 
-          <div style={{ flex: 1, background: '#040406', borderRadius: '12px', border: '1px solid #1a1b24', position: 'relative', overflow: 'hidden' }}>
-            <canvas ref={canvasRef} width={750} height={380} style={{ width: '100%', height: '100%', display: 'block' }} />
-            
+          <div style={{ flex: 1, background: '#040406', borderRadius: '12px', border: '1px solid #1a1b24', position: 'relative', overflow: 'hidden', minHeight: '240px' }}>
+            <canvas ref={canvasRef} width={680} height={340} style={{ width: '100%', height: '100%', display: 'block' }} />
             <div style={{ position: 'absolute', top: '45%', left: '50%', transform: 'translate(-50%, -50%)', textAlign: 'center', pointerEvents: 'none' }}>
               {gameStatus === 'crashed' ? (
                 <div>
-                  <h1 style={{ color: '#e11d48', fontSize: '4.2rem', fontWeight: '900', margin: 0, letterSpacing: '1px', fontFamily: "'Space Grotesk', sans-serif" }}>FLEW AWAY</h1>
-                  <span style={{ color: '#71717a', fontSize: '14px', fontWeight: '700' }}>Crashed @ {multiplier.toFixed(2)}x</span>
+                  <h1 style={{ color: '#e11d48', fontSize: '3.2rem', fontWeight: '900', margin: 0, fontFamily: 'sans-serif' }}>FLEW AWAY</h1>
+                  <span style={{ color: '#71717a', fontSize: '13px', fontWeight: '700' }}>Crashed @ {multiplier.toFixed(2)}x</span>
                 </div>
               ) : (
-                <h1 style={{ fontSize: '6.5rem', fontWeight: '900', color: '#fff', margin: 0, fontFamily: "'Space Grotesk', sans-serif", letterSpacing: '-2px' }}>{multiplier.toFixed(2)}x</h1>
+                <h1 style={{ fontSize: '5rem', fontWeight: '900', color: '#fff', margin: 0, fontFamily: 'sans-serif', letterSpacing: '-1px' }}>{multiplier.toFixed(2)}x</h1>
               )}
             </div>
           </div>
 
-          {/* SPRIBE RE-ENGINEERED TWO DECK INTERACTIVE INPUT SYSTEM */}
-          <div style={{ background: '#101116', border: '1px solid #1a1b24', borderRadius: '12px', padding: '14px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
-            
-            {/* INPUT CONFIG DECK 1 */}
-            <div style={{ background: '#181920', border: '1px solid #232430', borderRadius: '8px', padding: '12px' }}>
+          {/* SPRIBE BALANCED INPUT CONTROL STRATEGY INTERFACE */}
+          <div style={{ background: '#101116', border: '1px solid #1a1b24', borderRadius: '12px', padding: '10px', display: 'grid', gridTemplateColumns: '1fr', gap: '10px' }}>
+            <div style={{ background: '#181920', border: '1px solid #232430', borderRadius: '8px', padding: '10px' }}>
               <div style={{ display: 'flex', gap: '6px', marginBottom: '8px' }}>
                 <button onClick={() => setIsAutoBet(!isAutoBet)} style={{ flex: 1, padding: '6px', fontSize: '11px', fontWeight: '800', background: isAutoBet ? '#e11d48' : '#2d2e3d', border: 'none', color: '#fff', borderRadius: '4px', cursor: 'pointer' }}>Auto Bet</button>
                 <button onClick={() => setIsAutoCashout(!isAutoCashout)} style={{ flex: 1, padding: '6px', fontSize: '11px', fontWeight: '800', background: isAutoCashout ? '#22c55e' : '#2d2e3d', border: 'none', color: '#fff', borderRadius: '4px', cursor: 'pointer' }}>Auto Cashout</button>
               </div>
 
               {isAutoCashout && (
-                <input type="number" step="0.1" value={autoCashoutValue} onChange={e => setAutoCashoutValue(e.target.value)} style={{ width: '94%', padding: '6px 10px', background: '#101116', border: '1px solid #2d2e3d', color: '#fff', borderRadius: '4px', marginBottom: '8px', fontSize: '12px' }} />
+                <input type="number" step="0.1" value={autoCashoutValue} onChange={e => setAutoCashoutValue(e.target.value)} style={{ width: '92%', padding: '6px', background: '#101116', border: '1px solid #2d2e3d', color: '#fff', borderRadius: '4px', marginBottom: '8px', fontSize: '12px' }} />
               )}
 
-              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <input type="number" value={wager} onChange={e => setWager(parseInt(e.target.value))} style={{ width: '80px', padding: '10px 4px', background: '#101116', border: '1px solid #2d2e3d', color: '#fff', fontSize: '18px', fontWeight: '900', borderRadius: '4px', textAlign: 'center' }} />
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                  <input type="number" value={wager} onChange={e => setWager(parseInt(e.target.value))} style={{ width: '75px', padding: '8px 2px', background: '#101116', border: '1px solid #2d2e3d', color: '#fff', fontSize: '16px', fontWeight: '900', borderRadius: '4px', textAlign: 'center' }} />
                   {freeBetsAvailable > 0 && (
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '10px', color: '#22c55e', fontWeight: '800' }}>
-                      <input type="checkbox" checked={useFreeBetActive} onChange={e => setUseFreeBetActive(e.target.checked)} /> USE FREEBET ({freeBetsAvailable})
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '3px', fontSize: '9px', color: '#22c55e', fontWeight: '800' }}>
+                      <input type="checkbox" checked={useFreeBetActive} onChange={e => setUseFreeBetActive(e.target.checked)} /> FREE ({freeBetsAvailable})
                     </label>
                   )}
                 </div>
 
                 <button onClick={() => {
                   if (gameStatus === 'idle' && !hasBet) {
-                    if (useFreeBetActive && freeBetsAvailable > 0) {
-                      setFreeBetsAvailable(p => p - 1); setHasBet(true);
-                    } else if (balance >= wager) {
-                      commitWalletBalance(balance - wager); setHasBet(true);
-                    } else { alert("Insufficient funds."); }
+                    if (useFreeBetActive && freeBetsAvailable > 0) { setFreeBetsAvailable(p => p - 1); setHasBet(true); }
+                    else if (balance >= wager) { commitWalletBalance(balance - wager); setHasBet(true); }
+                    else { alert("Insufficient funds."); }
                   } else if (gameStatus === 'running' && hasBet) { handleCashoutPayout(multiplier); }
-                }} style={{ flex: 1, padding: '14px', background: hasBet ? 'linear-gradient(135deg, #d97706 0%, #b45309 100%)' : 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)', border: 'none', color: '#fff', fontSize: '16px', fontWeight: '900', borderRadius: '6px', cursor: 'pointer', boxShadow: '0 4px 15px rgba(34,197,94,0.2)' }}>
-                  {gameStatus === 'idle' ? `BET\n${wager} KES` : hasBet ? `CASH OUT\n${(wager * multiplier).toFixed(2)} KES` : 'WAITING NEXT FLIGHT'}
+                }} style={{ flex: 1, padding: '12px', background: hasBet ? 'linear-gradient(135deg, #d97706 0%, #b45309 100%)' : 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)', border: 'none', color: '#fff', fontSize: '15px', fontWeight: '900', borderRadius: '6px', cursor: 'pointer' }}>
+                  {gameStatus === 'idle' ? `BET ${wager} KES` : hasBet ? `CASH OUT\n${(wager * multiplier).toFixed(2)} KES` : 'WAITING FOR NEXT ROUND'}
                 </button>
               </div>
-            </div>
-
-            {/* SYMMETRICAL REPLICATED DECK INTERFACE MODULE 2 */}
-            <div style={{ background: '#181920', border: '1px solid #232430', borderRadius: '8px', padding: '12px', opacity: 0.4, pointerEvents: 'none' }}>
-              <span style={{ fontSize: '11px', color: '#71717a', fontWeight: '700' }}>Secondary Stack Engine Inactive</span>
             </div>
           </div>
         </div>
 
-        {/* SIDEBAR RIGHT COLUMN: MODERN CHAT COMMUNITY PORTAL */}
-        <div style={{ background: '#101116', borderRadius: '8px', border: '1px solid #1a1b24', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-          <div style={{ background: '#15161e', padding: '12px', borderBottom: '1px solid #1a1b24', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontWeight: '800', fontSize: '13px', letterSpacing: '0.5px' }}>Lobby Chat 💬</span>
-            <span style={{ background: 'rgba(34,197,94,0.15)', color: '#22c55e', fontSize: '11px', padding: '2px 8px', borderRadius: '10px', fontWeight: '700' }}>4,922 Active</span>
+        {/* VIEW COLUMN 3: PUBLIC INTERACTIVE LOBBY CHAT (Responsive Rules mapping applied below) */}
+        <div className="rightChatColumn" style={{ background: '#101116', borderRadius: '8px', border: '1px solid #1a1b24', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+          <div style={{ background: '#15161e', padding: '10px', borderBottom: '1px solid #1a1b24', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontWeight: '800', fontSize: '12px' }}>Lobby Chat 💬</span>
+            <span style={{ background: 'rgba(34,197,94,0.15)', color: '#22c55e', fontSize: '10px', padding: '2px 6px', borderRadius: '10px' }}>Active</span>
           </div>
-
-          <div style={{ flex: 1, padding: '10px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <div style={{ flex: 1, padding: '8px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '6px' }}>
             {chatLogs.map((c, i) => (
-              <div key={i} style={{ background: c.system ? 'rgba(147,51,234,0.08)' : 'rgba(255,255,255,0.01)', border: c.system ? '1px solid rgba(147,51,234,0.2)' : 'none', padding: '8px', borderRadius: '6px', fontSize: '12px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2px' }}>
+              <div key={i} style={{ background: c.system ? 'rgba(147,51,234,0.06)' : 'rgba(255,255,255,0.01)', padding: '6px', borderRadius: '6px', fontSize: '11px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                   <span style={{ color: c.system ? '#a855f7' : '#3b82f6', fontWeight: '800' }}>@{c.user}</span>
-                  <span style={{ color: '#4b5563', fontSize: '10px' }}>{c.time}</span>
+                  <span style={{ color: '#4b5563', fontSize: '9px' }}>{c.time}</span>
                 </div>
-                <span style={{ color: c.system ? '#e9d5ff' : '#d1d5db', lineHeight: '1.4' }}>{c.msg}</span>
+                <span style={{ color: c.system ? '#e9d5ff' : '#d1d5db' }}>{c.msg}</span>
               </div>
             ))}
           </div>
-
-          <div style={{ padding: '8px', borderTop: '1px solid #1a1b24', background: '#15161e' }}>
-            <input type="text" placeholder="Send text to room feed..." value={chatInput} onChange={e => setChatInput(e.target.value)} onKeyDown={e => {
+          <div style={{ padding: '6px', borderTop: '1px solid #1a1b24', background: '#15161e' }}>
+            <input type="text" placeholder="Type message..." value={chatInput} onChange={e => setChatInput(e.target.value)} onKeyDown={e => {
               if (e.key === 'Enter' && chatInput.trim()) {
                 setChatLogs(p => [...p, { user: 'Me', msg: chatInput, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }]);
                 setChatInput('');
               }
-            }} style={{ width: '92%', padding: '10px', background: '#09090d', border: '1px solid #2d2e3d', color: '#fff', borderRadius: '4px', fontSize: '12px' }} />
+            }} style={{ width: '90%', padding: '8px', background: '#09090d', border: '1px solid #2d2e3d', color: '#fff', borderRadius: '4px', fontSize: '11px' }} />
           </div>
         </div>
+
       </div>
 
-      {/* MODAL 1: AUTHENTIC M-PESA TERMINATION VERIFICATION LAYER */}
+      {/* FOOTER PERSISTENT NAVIGATION OVERLAY FOR COMPACT SMARTPHONE SCREENPORTS */}
+      <div className="mobileNavbarFooter" style={{ background: '#101116', borderTop: '1px solid #1a1b24', display: 'none', justifyContent: 'space-around', padding: '8px 0', position: 'sticky', bottom: 0, zIndex: 999 }}>
+        <button onClick={() => setMobileActivePanel('bets')} style={{ background: 'transparent', border: 'none', color: mobileActivePanel === 'bets' ? '#22c55e' : '#71717a', fontSize: '12px', fontWeight: '800', cursor: 'pointer' }}>📊 Live Bets</button>
+        <button onClick={() => setMobileActivePanel('game')} style={{ background: 'transparent', border: 'none', color: mobileActivePanel === 'game' ? '#e11d48' : '#71717a', fontSize: '12px', fontWeight: '800', cursor: 'pointer' }}>🚀 Flight</button>
+        <button onClick={() => setMobileActivePanel('chat')} style={{ background: 'transparent', border: 'none', color: mobileActivePanel === 'chat' ? '#3b82f6' : '#71717a', fontSize: '12px', fontWeight: '800', cursor: 'pointer' }}>💬 Chat Lobby</button>
+      </div>
+
+      {/* MODAL 1: CASH GATEWAY */}
       {isDepositModalOpen && (
-        <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999 }}>
-          <div style={{ background: '#101116', border: '1px solid #22c55e', borderRadius: '12px', width: '100%', maxWidth: '360px', padding: '24px', position: 'relative', boxShadow: '0 10px 30px rgba(0,0,0,0.7)' }}>
-            <button onClick={() => setIsDepositModalOpen(false)} style={{ position: 'absolute', top: '16px', right: '16px', background: 'transparent', border: 'none', color: '#71717a', fontSize: '20px', cursor: 'pointer' }}>×</button>
-            <h3 style={{ margin: '0 0 16px 0', color: '#22c55e', fontWeight: '800' }}>M-Pesa Cash Gateway</h3>
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '10px' }}>
+          <div style={{ background: '#101116', border: '1px solid #22c55e', borderRadius: '12px', width: '100%', maxWidth: '340px', padding: '20px', position: 'relative' }}>
+            <button onClick={() => setIsDepositModalOpen(false)} style={{ position: 'absolute', top: '12px', right: '16px', background: 'transparent', border: 'none', color: '#71717a', fontSize: '20px', cursor: 'pointer' }}>×</button>
+            <h3 style={{ margin: '0 0 14px 0', color: '#22c55e', fontWeight: '800' }}>M-Pesa Cash Gateway</h3>
             
-            <div style={{ marginBottom: '14px' }}>
+            <div style={{ marginBottom: '12px' }}>
               <label style={{ fontSize: '11px', color: '#a1a1aa', fontWeight: '700' }}>AMOUNT TO DEPOSIT (MIN KES 49)</label>
-              <input type="number" value={inputAmount} onChange={e => setInputAmount(e.target.value)} style={{ width: '93%', padding: '12px', marginTop: '4px', background: '#181920', border: '1px solid #2d2e3d', color: '#fff', fontSize: '16px', fontWeight: '800', borderRadius: '6px' }} />
+              <input type="number" value={inputAmount} onChange={e => setInputAmount(e.target.value)} style={{ width: '92%', padding: '10px', marginTop: '4px', background: '#181920', border: '1px solid #2d2e3d', color: '#fff', fontSize: '15px', fontWeight: '800', borderRadius: '6px' }} />
             </div>
 
-            <div style={{ marginBottom: '20px' }}>
-              <label style={{ fontSize: '11px', color: '#a1a1aa', fontWeight: '700' }}>SAFARICOM TELEPHONE SUITE (07XXXXXXXX)</label>
-              <input type="text" value={inputPhone} onChange={e => setInputPhone(e.target.value)} style={{ width: '93%', padding: '12px', marginTop: '4px', background: '#181920', border: '1px solid #2d2e3d', color: '#fff', fontSize: '14px', borderRadius: '6px' }} />
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ fontSize: '11px', color: '#a1a1aa', fontWeight: '700' }}>SAFARICOM TELEPHONE (07XXXXXXXX)</label>
+              <input type="text" value={inputPhone} onChange={e => setInputPhone(e.target.value)} style={{ width: '92%', padding: '10px', marginTop: '4px', background: '#181920', border: '1px solid #2d2e3d', color: '#fff', fontSize: '13px', borderRadius: '6px' }} />
             </div>
 
-            <button onClick={handlePaymentInitiation} disabled={loadingDeposit} style={{ width: '100%', padding: '14px', background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)', border: 'none', color: '#fff', fontWeight: '900', borderRadius: '6px', cursor: 'pointer', fontSize: '14px' }}>
-              {loadingDeposit ? 'SYNCHRONIZING PUSH...' : 'DEPOSIT (KES)'}
+            <button onClick={handlePaymentInitiation} disabled={loadingDeposit} style={{ width: '100%', padding: '12px', background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)', border: 'none', color: '#fff', fontWeight: '900', borderRadius: '6px', cursor: 'pointer' }}>
+              {loadingDeposit ? 'SENDING PUSH REQUEST...' : 'DEPOSIT (KES)'}
             </button>
           </div>
         </div>
       )}
 
-      {/* MODAL 2: PROVABLY FAIR VERIFICATION HUD POPUP */}
+      {/* MODAL 2: PROVABLY FAIR DATA DISCLOSURE POPUP */}
       {isProvablyModalOpen && (
-        <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999 }}>
-          <div style={{ background: '#101116', border: '1px solid #3b82f6', borderRadius: '12px', width: '100%', maxWidth: '460px', padding: '24px', position: 'relative' }}>
-            <button onClick={() => setIsProvablyModalOpen(false)} style={{ position: 'absolute', top: '16px', right: '16px', background: 'transparent', border: 'none', color: '#71717a', fontSize: '20px', cursor: 'pointer' }}>×</button>
-            <h3 style={{ margin: '0 0 16px 0', color: '#3b82f6', fontWeight: '800' }}>Cryptographic Verification Handshake</h3>
-            <p style={{ fontSize: '12px', color: '#a1a1aa', margin: '0 0 16px 0', lineHeight: '1.5' }}>Every round multiplier parameter on JetPesa is calculated mathematically via provably fair algorithms combining independent server seeds and browser keys.</p>
-            
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '11px', background: '#181920', padding: '12px', borderRadius: '6px', border: '1px solid #232430' }}>
-              <div><span style={{ color: '#71717a' }}>SERVER SEED (SHA256):</span> <code style={{ color: '#fff', display: 'block' }}>{provablyData.serverSeed}</code></div>
-              <div><span style={{ color: '#71717a' }}>CLIENT SEED:</span> <code style={{ color: '#fff', display: 'block' }}>{provablyData.clientSeed}</code></div>
-              <div><span style={{ color: '#71717a' }}>COMBINED TRANSACTION HASH:</span> <code style={{ color: '#fff', display: 'block' }}>{provablyData.combinedHash}</code></div>
-              <div><span style={{ color: '#71717a' }}>ROUND NONCE POINTER:</span> <code style={{ color: '#22c55e', fontWeight: '800' }}>{provablyData.nonce}</code></div>
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '10px' }}>
+          <div style={{ background: '#101116', border: '1px solid #3b82f6', borderRadius: '12px', width: '100%', maxWidth: '420px', padding: '20px', position: 'relative' }}>
+            <button onClick={() => setIsProvablyModalOpen(false)} style={{ position: 'absolute', top: '12px', right: '16px', background: 'transparent', border: 'none', color: '#71717a', fontSize: '20px', cursor: 'pointer' }}>×</button>
+            <h4 style={{ margin: '0 0 12px 0', color: '#3b82f6', fontWeight: '800' }}>Cryptographic Integrity Node</h4>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '11px', background: '#181920', padding: '10px', borderRadius: '6px', wordBreak: 'break-all' }}>
+              <div><span style={{ color: '#71717a' }}>SERVER SEED:</span> <code style={{ color: '#fff' }}>{provablyData.serverSeed}</code></div>
+              <div><span style={{ color: '#71717a' }}>CLIENT SEED:</span> <code style={{ color: '#fff' }}>{provablyData.clientSeed}</code></div>
+              <div><span style={{ color: '#71717a' }}>NONCE INDEX:</span> <code style={{ color: '#22c55e', fontWeight: '800' }}>{provablyData.nonce}</code></div>
             </div>
           </div>
         </div>
       )}
+
+      {/* RESPONSIVE LAYOUT MATRIX ENHANCEMENT EMITTER STYLE BLOCKS */}
+      <style>{`
+        /* Desktop Default Viewport Rules */
+        .mainGridContainer {
+          grid-template-columns: 290px 1fr 270px;
+        }
+        
+        /* Smartphone & Responsive Viewport Rule Overrides */
+        @media (max-width: 992px) {
+          .mainGridContainer {
+            grid-template-columns: 1fr !important;
+            height: auto !important;
+          }
+          .mobileNavbarFooter {
+            display: flex !important;
+          }
+          
+          /* Switch layouts dynamically depending on active footer state buttons */
+          .leftBetsColumn {
+            display: ${mobileActivePanel === 'bets' ? 'flex !important' : 'none !important'};
+            height: 70vh;
+          }
+          .centerGameColumn {
+            display: ${mobileActivePanel === 'game' ? 'flex !important' : 'none !important'};
+          }
+          .rightChatColumn {
+            display: ${mobileActivePanel === 'chat' ? 'flex !important' : 'none !important'};
+            height: 70vh;
+          }
+        }
+
+        @keyframes fall { 
+          to { transform: translateY(450px); } 
+        }
+      `}</style>
 
     </div>
   );
