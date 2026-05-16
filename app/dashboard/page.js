@@ -17,7 +17,7 @@ export default function UltimateJetPesaCockpit() {
 
   // Structural Tracking State Matrices
   const [myBetsHistory, setMyBetsHistory] = useState([]);
-  const [activeTab, setActiveTab] = useState('all'); // 'all' | 'mine'
+  const [activeTab, setActiveTab] = useState('all'); 
   const [isDepositModalOpen, setIsDepositModalOpen] = useState(false);
   const [isProvablyModalOpen, setIsProvablyModalOpen] = useState(false);
   const [isRainActive, setIsRainActive] = useState(false);
@@ -44,8 +44,12 @@ export default function UltimateJetPesaCockpit() {
   
   const canvasRef = useRef(null);
   const animationId = useRef(null);
+  const chatEndRef = useRef(null); // Hook for auto-scrolling chat
 
-  // Realistic Dynamic Audio Synthesis Infrastructure
+  // Dynamic Real-time Counter for Live Players
+  const [activePlayersCount, setActivePlayersCount] = useState(3412);
+
+  // Dynamic Audio Synthesis Infrastructure
   const audioCtxRef = useRef(null);
   const playSynthesizedTone = (freq, type, duration, volume = 0.04) => {
     if (audioMuted) return;
@@ -79,6 +83,23 @@ export default function UltimateJetPesaCockpit() {
     setTimeout(() => { setToasts(prev => prev.filter(t => t.id !== id)); }, 3500);
   };
 
+  // Generate Fresh Bets for New Rounds
+  const generateFreshBetsFeed = () => {
+    const px = ['070***', '071***', '072***', '079***', '011***', '074***', '010***'];
+    const av = ['🦒', '🦁', '🦊', '🦅', '🦈', '🦏', '🐆', '🐊'];
+    
+    // Always calculate a massive pool of online active users (Above 3000)
+    setActivePlayersCount(Math.floor(Math.random() * 1500 + 3000));
+
+    // Fill visible ledger feed smoothly
+    setLiveBetsFeed(Array.from({ length: 25 }, () => ({
+      username: av[Math.floor(Math.random() * av.length)] + px[Math.floor(Math.random() * px.length)] + Math.floor(Math.random() * 89 + 10),
+      bet: Math.floor(Math.random() * 4800 + 100),
+      mult: parseFloat((Math.random() * 1.8 + 1.02).toFixed(2)),
+      won: Math.random() > 0.6
+    })).sort((a,b) => b.bet - a.bet));
+  };
+
   useEffect(() => {
     const savedPhone = localStorage.getItem('jetpesa_saved_phone');
     if (savedPhone) { setInputPhone(savedPhone); setPhoneProfile(savedPhone); }
@@ -94,21 +115,14 @@ export default function UltimateJetPesaCockpit() {
       }
     });
 
-    const mockSystemFeeds = () => {
-      const px = ['070***', '071***', '072***', '079***', '011***'];
-      const av = ['🦒', '🦁', '🦊', '🦅', '🦈'];
-      setLiveBetsFeed(Array.from({ length: 15 }, () => ({
-        username: av[Math.floor(Math.random() * av.length)] + px[Math.floor(Math.random() * px.length)] + Math.floor(Math.random() * 89 + 10),
-        bet: Math.floor(Math.random() * 1200 + 100),
-        mult: parseFloat((Math.random() * 2.5 + 1.05).toFixed(2)),
-        won: Math.random() > 0.45
-      })).sort((a,b) => b.bet - a.bet));
-    };
-
-    mockSystemFeeds();
-    const intervalFeed = setInterval(mockSystemFeeds, 7000);
-    return () => { unsubscribe(); clearInterval(intervalFeed); };
+    generateFreshBetsFeed();
+    return () => unsubscribe();
   }, [router]);
+
+  // Keep WhatsApp Chat Container pinned to the bottom automatically
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [chatLogs]);
 
   // Dynamic Real-time Multilingual Activity Loop Simulation
   useEffect(() => {
@@ -143,14 +157,15 @@ export default function UltimateJetPesaCockpit() {
         if (gameStatus !== 'idle') {
           setGameStatus('idle');
           setMultiplier(1.0);
-          // Audio confirmation queue for countdown trigger state
           playSynthesizedTone(440, 'triangle', 0.05, 0.03);
+          
+          // CRITICAL REQUIREMENT: Clear outdated previous round bets and roll new active users instantly
+          generateFreshBetsFeed();
         }
         setCountdownProgress(((countdownInterval - offsetMs) / countdownInterval) * 100);
 
-        // Perform internal ticks every full second inside loading states
         if (offsetMs % 1000 < 20) {
-          playSynthesizedTone(320, 'sine', 0.03, 0.02); // Loading clock sound
+          playSynthesizedTone(320, 'sine', 0.03, 0.02); 
         }
 
         setDeckA(prev => { if(prev.hasBetNext && !prev.hasBetCurrent) { return {...prev, hasBetCurrent: true, hasBetNext: prev.isAuto}; } return prev; });
@@ -196,7 +211,7 @@ export default function UltimateJetPesaCockpit() {
     return () => cancelAnimationFrame(animationId.current);
   }, [deckA, deckB, gameStatus, balance]);
 
-  // Guaranteed Visibility Viewport Engine with Vector Trail Integration
+  // Viewport Engine with Vector Trail Integration
   const renderRadarCanvas = (offsetMs, countdownLimit) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -211,7 +226,6 @@ export default function UltimateJetPesaCockpit() {
     if (offsetMs >= countdownLimit && gameStatus === 'running') {
       const secondsInAir = (offsetMs - countdownLimit) / 1000;
       
-      // Locked safe boundaries to prevent clipping out of view
       let cx = 50 + (W - 140) * Math.min(secondsInAir / 9, 1);
       let cy = (H - 50) - (H - 130) * (Math.min(multiplier - 1, 6) / 6);
 
@@ -222,18 +236,18 @@ export default function UltimateJetPesaCockpit() {
       ctx.shadowBlur = 20; ctx.shadowColor = '#e11d48';
       ctx.stroke(); ctx.shadowBlur = 0;
 
-      // Glow Underlay Vector Mapping
+      // Glow Underlay
       ctx.lineTo(cx, H - 50); ctx.lineTo(50, H - 50); ctx.closePath();
       const underGradient = ctx.createLinearGradient(50, cy, 50, H - 50);
       underGradient.addColorStop(0, 'rgba(225, 29, 72, 0.22)');
       underGradient.addColorStop(1, 'transparent');
       ctx.fillStyle = underGradient; ctx.fill();
 
-      // Premium Aircraft Graphics Assembly
+      // Aircraft Assembly (Guaranteed Visibility)
       ctx.save(); ctx.translate(cx, cy); ctx.rotate(Math.sin(secondsInAir * 8) * 0.015 - 0.04);
       ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.moveTo(25, 0); ctx.quadraticCurveTo(10, -9, -12, -7); ctx.lineTo(-18, 0); ctx.lineTo(-12, 7); ctx.quadraticCurveTo(10, 9, 25, 0); ctx.fill();
       ctx.fillStyle = '#e11d48'; ctx.beginPath(); ctx.moveTo(-3, -7); ctx.lineTo(-18, -16); ctx.lineTo(-14, -5); ctx.closePath(); ctx.fill();
-      ctx.fillStyle = '#a855f7'; ctx.beginPath(); ctx.moveTo(8, -5); ctx.quadraticCurveTo(18, -2, 25, 0); ctx.quadraticCurveTo(18, 2, 8, 5); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = '#a855f7'; ctx.beginPath(); ctx.moveTo(8, -5); ctx.quadraticCurveTo(18, -2, 25, 0); ctx.quadraticGrow = ctx.quadraticCurveTo(18, 2, 8, 5); ctx.closePath(); ctx.fill();
       ctx.restore();
     }
   };
@@ -247,9 +261,9 @@ export default function UltimateJetPesaCockpit() {
     setMyBetsHistory(p => [{ roundId: Date.now().toString().slice(-5), stake: activeState.wager, multiplier: multVal, yieldAmount: rawWin, status: 'WON' }, ...p]);
     
     // Play professional Hurray Synthesized Melodic Fanfare
-    playSynthesizedTone(523.25, 'sine', 0.15, 0.05); // C5
-    setTimeout(() => playSynthesizedTone(659.25, 'sine', 0.15, 0.05), 100); // E5
-    setTimeout(() => playSynthesizedTone(783.99, 'sine', 0.3, 0.06), 200); // G5
+    playSynthesizedTone(523.25, 'sine', 0.15, 0.05); 
+    setTimeout(() => playSynthesizedTone(659.25, 'sine', 0.15, 0.05), 100); 
+    setTimeout(() => playSynthesizedTone(783.99, 'sine', 0.3, 0.06), 200); 
     
     confetti({ particleCount: 90, spread: 65, origin: { y: 0.35 } });
     triggerToast(`🎉 Deck ${deckName} Auto Cashout hit @ ${multVal}x! Recieved KES ${rawWin.toFixed(2)}`, "success");
@@ -261,7 +275,6 @@ export default function UltimateJetPesaCockpit() {
   };
 
   const placeWagerIntent = (targetDeck) => {
-    // Direct protection logic if the wallet has no funds
     if (balance <= 0) {
       triggerToast("❌ Operation Aborted: Your wallet reads exactly KES 0.00. Please complete a deposit execution.", "error");
       return;
@@ -301,7 +314,6 @@ export default function UltimateJetPesaCockpit() {
     if (isA) setDeckA(p => ({ ...p, hasBetCurrent: false }));
     else setDeckB(p => ({ ...p, hasBetCurrent: false }));
 
-    // Execute standard success audio notes
     playSynthesizedTone(587.33, 'sine', 0.12, 0.05);
     setTimeout(() => playSynthesizedTone(880.00, 'sine', 0.25, 0.05), 110);
 
@@ -309,10 +321,10 @@ export default function UltimateJetPesaCockpit() {
     triggerToast(`🎉 Manual Cashout Approved! + KES ${preciseWin.toFixed(2)}`, "success");
   };
 
-  // Secure Message Transmission Control with Premium Wallet Validation Constraint
   const broadcastChatMessage = () => {
     if (!chatInput.trim()) return;
     
+    // Explicit condition block for KES 1000+ verification boundary requirement
     if (balance <= 1000) {
       triggerToast("⚠️ Premium Lobby Limitation: Only users possessing a wallet state above KES 1,000 can send a message.", "error");
       return;
@@ -350,9 +362,9 @@ export default function UltimateJetPesaCockpit() {
   };
 
   return (
-    <div style={{ background: '#07080e', color: '#f1f5f9', minHeight: '100vh', fontFamily: "'Plus Jakarta Sans', sans-serif", display: 'flex', flexDirection: 'column' }}>
+    <div style={{ background: '#07080e', color: '#f1f5f9', height: '100vh', maxHeight: '100vh', fontFamily: "'Plus Jakarta Sans', sans-serif", display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
       
-      {/* Dynamic Floating Dynamic Toast Bubble Cluster */}
+      {/* Toast Alert Engine Overlay */}
       <div style={{ position: 'fixed', top: '85px', left: '50%', transform: 'translateX(-50%)', zIndex: 99999, display: 'flex', flexDirection: 'column', gap: '8px', width: '90%', maxWidth: '440px' }}>
         {toasts.map(t => (
           <div key={t.id} style={{ background: t.type === 'error' ? 'rgba(220,38,38,0.95)' : t.type === 'success' ? 'rgba(22,163,74,0.95)' : 'rgba(30,27,75,0.95)', color: '#fff', padding: '12px 24px', borderRadius: '30px', boxShadow: '0 16px 32px rgba(0,0,0,0.6)', fontWeight: '800', fontSize: '13px', textAlign: 'center', border: '1px solid rgba(255,255,255,0.15)', backdropFilter: 'blur(10px)' }}>
@@ -361,8 +373,8 @@ export default function UltimateJetPesaCockpit() {
         ))}
       </div>
 
-      {/* Glossy Operational Navigation HUD Header */}
-      <header style={{ background: 'rgba(12,14,24,0.75)', backdropFilter: 'blur(16px)', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 20px', position: 'sticky', top: 0, zIndex: 99 }}>
+      {/* Glossy Header HUD */}
+      <header style={{ background: 'rgba(12,14,24,0.75)', backdropFilter: 'blur(16px)', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 20px', flexShrink: 0, zIndex: 99 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <span style={{ fontSize: '24px', fontWeight: '900', letterSpacing: '-1px', background: 'linear-gradient(to right, #fff, #94a3b8)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>JETPESA</span>
           <button style={{ background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.3)', color: '#22c55e', fontSize: '10px', fontWeight: '800', padding: '3px 10px', borderRadius: '20px', cursor: 'pointer' }} onClick={() => setIsProvablyModalOpen(true)}>🛡️ PROVABLY FAIR</button>
@@ -373,32 +385,32 @@ export default function UltimateJetPesaCockpit() {
           <button onClick={() => setIsRainActive(!isRainActive)} style={{ background: isRainActive ? '#a855f7' : 'rgba(255,255,255,0.05)', border: 'none', color: '#fff', padding: '5px 12px', borderRadius: '8px', fontSize: '11px', fontWeight: '800', cursor: 'pointer' }}>🌧️ RAIN</button>
           
           <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.08)', padding: '3px 3px 3px 14px', borderRadius: '30px', gap: '10px' }}>
-            <span style={{ color: '#22c55e', fontWeight: '900', fontSize: '14px', letterSpacing: '0.25px' }}>{balance.toFixed(2)} KES</span>
-            <button onClick={() => setIsDepositModalOpen(true)} style={{ background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)', border: 'none', color: '#fff', fontWeight: '900', padding: '8px 20px', borderRadius: '20px', cursor: 'pointer', fontSize: '12px', boxShadow: '0 4px 12px rgba(22,163,74,0.3)' }}>DEPOSIT</button>
+            <span style={{ color: '#22c55e', fontWeight: '900', fontSize: '14px' }}>{balance.toFixed(2)} KES</span>
+            <button onClick={() => setIsDepositModalOpen(true)} style={{ background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)', border: 'none', color: '#fff', fontWeight: '900', padding: '8px 20px', borderRadius: '20px', cursor: 'pointer', fontSize: '12px' }}>DEPOSIT</button>
           </div>
         </div>
       </header>
 
       {/* Multiline Velocity History Row */}
-      <div style={{ display: 'flex', gap: '8px', background: '#040509', padding: '10px 20px', overflowX: 'auto', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+      <div style={{ display: 'flex', gap: '8px', background: '#040509', padding: '10px 20px', overflowX: 'auto', borderBottom: '1px solid rgba(255,255,255,0.04)', flexShrink: 0 }}>
         {historyTape.map((h, i) => (
-          <div key={i} style={{ background: h > 2 ? 'linear-gradient(135deg, #a855f7 0%, #6b21a8 100%)' : 'rgba(255,255,255,0.05)', color: h > 2 ? '#fff' : '#94a3b8', padding: '4px 14px', borderRadius: '6px', fontSize: '11px', fontWeight: '900', border: '1px solid rgba(255,255,255,0.05)' }}>
+          <div key={i} style={{ background: h > 2 ? 'linear-gradient(135deg, #a855f7 0%, #6b21a8 100%)' : 'rgba(255,255,255,0.05)', color: h > 2 ? '#fff' : '#94a3b8', padding: '4px 14px', borderRadius: '6px', fontSize: '11px', fontWeight: '900', flexShrink: 0, border: '1px solid rgba(255,255,255,0.05)' }}>
             {h.toFixed(2)}x
           </div>
         ))}
       </div>
 
-      {/* Core Dynamic Screen Layout Structure Grid */}
-      <div className="cockpitMainLayout" style={{ flex: 1, display: 'grid', padding: '16px', gap: '16px', boxSizing: 'border-box' }}>
+      {/* Core Layout Grid: Viewport bound heights block any resizing bugs from incoming data cascades */}
+      <div className="cockpitMainLayout" style={{ flex: 1, display: 'grid', padding: '16px', gap: '16px', boxSizing: 'border-box', minHeight: 0, height: 'calc(100% - 130px)' }}>
         
-        {/* BLOCK 1: DATA VERIFICATION MATRIX AND PERSONAL ACCOUNT HISTORY */}
-        <div className="leftPanelLayout" style={{ background: 'rgba(18,20,32,0.6)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '16px', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-          <div style={{ display: 'flex', background: 'rgba(0,0,0,0.2)', padding: '4px' }}>
-            <button onClick={() => setActiveTab('all')} style={{ flex: 1, padding: '12px', background: activeTab === 'all' ? 'rgba(255,255,255,0.06)' : 'transparent', border: 'none', color: '#fff', fontSize: '11px', fontWeight: '800', borderRadius: '8px', cursor: 'pointer' }}>ALL LIVE STAKES</button>
-            <button onClick={() => setActiveTab('mine')} style={{ flex: 1, padding: '12px', background: activeTab === 'mine' ? 'rgba(255,255,255,0.06)' : 'transparent', border: 'none', color: '#fff', fontSize: '11px', fontWeight: '800', borderRadius: '8px', cursor: 'pointer' }}>MY BET HISTORY</button>
+        {/* PANEL 1: ENFORCED CONTAINER HEIGHT BLOCK - ALL LIVE STAKES & PERSONAL ACCOUNT HISTORY */}
+        <div className="leftPanelLayout" style={{ background: 'rgba(18,20,32,0.6)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '16px', display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0, overflow: 'hidden' }}>
+          <div style={{ display: 'flex', background: 'rgba(0,0,0,0.2)', padding: '4px', flexShrink: 0 }}>
+            <button onClick={() => setActiveTab('all')} style={{ flex: 1, padding: '12px', background: activeTab === 'all' ? 'rgba(255,255,255,0.06)' : 'transparent', border: 'none', color: '#fff', fontSize: '11px', fontWeight: '800', borderRadius: '8px', cursor: 'pointer' }}>ALL LIVE ({activePlayersCount})</button>
+            <button onClick={() => setActiveTab('mine')} style={{ flex: 1, padding: '12px', background: activeTab === 'mine' ? 'rgba(255,255,255,0.06)' : 'transparent', border: 'none', color: '#fff', fontSize: '11px', fontWeight: '800', borderRadius: '8px', cursor: 'pointer' }}>MY BETS</button>
           </div>
           
-          <div style={{ flex: 1, overflowY: 'auto', padding: '10px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', padding: '10px', minHeight: 0 }}>
             {activeTab === 'all' ? (
               liveBetsFeed.map((b, i) => (
                 <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 10px', background: b.won ? 'rgba(34,197,94,0.05)' : 'transparent', borderBottom: '1px solid rgba(255,255,255,0.02)', fontSize: '12px' }}>
@@ -409,7 +421,7 @@ export default function UltimateJetPesaCockpit() {
               ))
             ) : (
               myBetsHistory.length === 0 ? (
-                <div style={{ textAlign: 'center', color: '#475569', fontSize: '12px', marginTop: '40px', fontWeight: '600' }}>No historical wagers verified for this local window sequence.</div>
+                <div style={{ textAlign: 'center', color: '#475569', fontSize: '12px', marginTop: '40px', fontWeight: '600' }}>No local round wagers recorded.</div>
               ) : (
                 myBetsHistory.map((m, i) => (
                   <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px', background: 'rgba(0,0,0,0.15)', borderRadius: '8px', marginBottom: '6px', fontSize: '12px', border: '1px solid rgba(255,255,255,0.02)' }}>
@@ -428,12 +440,11 @@ export default function UltimateJetPesaCockpit() {
           </div>
         </div>
 
-        {/* BLOCK 2: VISUAL MONITOR FLIGHT CANVAS AND ADJUSTABLE WAGER CONTROLS */}
-        <div className="centerPanelLayout" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        {/* PANEL 2: PROTECTED STABLE RADAR COCKPIT HOUSING WAGER PANELS */}
+        <div className="centerPanelLayout" style={{ display: 'flex', flexDirection: 'column', gap: '16px', height: '100%', minHeight: 0 }}>
           
-          <div style={{ flex: 1, background: '#020306', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.05)', position: 'relative', overflow: 'hidden', minHeight: '300px', boxShadow: 'inset 0 0 40px rgba(0,0,0,0.9)' }}>
+          <div style={{ flex: 1, background: '#020306', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.05)', position: 'relative', overflow: 'hidden', minHeight: 0, boxShadow: 'inset 0 0 40px rgba(0,0,0,0.9)' }}>
             
-            {/* Countdown State Graphical Interface Overlay */}
             {gameStatus === 'idle' && (
               <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(4,5,9,0.94)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', zIndex: 10 }}>
                 <div style={{ width: '70%', maxWidth: '300px', background: 'rgba(255,255,255,0.03)', padding: '5px', borderRadius: '12px', border: '1px solid rgba(34,197,94,0.2)' }}>
@@ -460,8 +471,8 @@ export default function UltimateJetPesaCockpit() {
             )}
           </div>
 
-          {/* Elevated High Capacity Dashboard Control Center Panel Block */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', background: 'rgba(18,20,32,0.8)', border: '1px solid rgba(255,255,255,0.08)', padding: '18px', borderRadius: '20px', boxShadow: '0 20px 40px rgba(0,0,0,0.5)' }}>
+          {/* Elevated High Visibility Fixed Dashboard Controls */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', background: 'rgba(18,20,32,0.8)', border: '1px solid rgba(255,255,255,0.08)', padding: '18px', borderRadius: '20px', flexShrink: 0 }}>
             
             {/* Wager Grid Module A */}
             <div style={{ background: 'rgba(0,0,0,0.25)', border: '1px solid rgba(255,255,255,0.04)', padding: '14px', borderRadius: '14px' }}>
@@ -479,7 +490,7 @@ export default function UltimateJetPesaCockpit() {
                   </button>
                 ) : (
                   <button onClick={() => placeWagerIntent('A')} style={{ flex: 1, padding: '14px', background: deckA.hasBetNext ? '#475569' : '#22c55e', border: 'none', color: '#fff', fontWeight: '900', fontSize: '14px', borderRadius: '8px', cursor: 'pointer' }}>
-                    {deckA.hasBetNext ? 'CANCEL WAITING' : `BET\n${deckA.wager} KES`}
+                    {deckA.hasBetNext ? 'CANCEL' : `BET\n${deckA.wager} KES`}
                   </button>
                 )}
               </div>
@@ -501,7 +512,7 @@ export default function UltimateJetPesaCockpit() {
                   </button>
                 ) : (
                   <button onClick={() => placeWagerIntent('B')} style={{ flex: 1, padding: '14px', background: deckB.hasBetNext ? '#475569' : '#16a34a', border: 'none', color: '#fff', fontWeight: '900', fontSize: '14px', borderRadius: '8px', cursor: 'pointer' }}>
-                    {deckB.hasBetNext ? 'CANCEL WAITING' : `BET\n${deckB.wager} KES`}
+                    {deckB.hasBetNext ? 'CANCEL' : `BET\n${deckB.wager} KES`}
                   </button>
                 )}
               </div>
@@ -510,45 +521,46 @@ export default function UltimateJetPesaCockpit() {
           </div>
         </div>
 
-        {/* BLOCK 3: PREMIUM METROPOLITAN WHATSAPP-STYLED LOBBY INTERACTION PORTAL */}
-        <div className="rightPanelLayout" style={{ background: '#0b141a', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '16px', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 12px 24px rgba(0,0,0,0.4)' }}>
+        {/* PANEL 3: ENFORCED HEIGHT BLOCK - WHATSAPP LOBBY INTERACTION PORTAL */}
+        <div className="rightPanelLayout" style={{ background: '#0b141a', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '16px', display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0, overflow: 'hidden', boxShadow: '0 12px 24px rgba(0,0,0,0.4)' }}>
           
-          <div style={{ background: '#202c33', padding: '14px 16px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div style={{ background: '#202c33', padding: '14px 16px', display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
             <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#00a884' }} />
-            <span style={{ fontWeight: '800', fontSize: '14px', color: '#e9edef' }}>Dynamic Multi-Dialect Lobby Lounge</span>
+            <span style={{ fontWeight: '800', fontSize: '14px', color: '#e9edef' }}>Lobby Lounge Chat Room</span>
           </div>
 
-          {/* Premium Chat Flow Frame */}
-          <div style={{ flex: 1, padding: '16px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '10px', background: '#0b141a' }}>
+          {/* Internal Scrollable Core Frame */}
+          <div style={{ flex: 1, padding: '16px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '10px', background: '#0b141a', minHeight: 0 }}>
             {chatLogs.map((c, i) => {
               const isMe = c.user === '🦈070***01';
               return (
-                <div key={i} style={{ alignSelf: isMe ? 'flex-end' : 'flex-start', maxWidth: '85%', background: isMe ? '#005c4b' : '#202c33', padding: '8px 12px', borderRadius: '10px', position: 'relative', boxShadow: '0 1px 2px rgba(0,0,0,0.3)' }}>
+                <div key={i} style={{ alignSelf: isMe ? 'flex-end' : 'flex-start', maxWidth: '85%', background: isMe ? '#005c4b' : '#202c33', padding: '8px 12px', borderRadius: '10px', position: 'relative', boxShadow: '0 1px 2px rgba(0,0,0,0.3)', flexShrink: 0 }}>
                   {!isMe && <span style={{ color: '#30d6b5', fontWeight: '800', fontSize: '11px', display: 'block', marginBottom: '3px' }}>{c.user}</span>}
                   <span style={{ color: '#e9edef', fontSize: '12.5px', lineHeight: '1.4', wordBreak: 'break-word', display: 'block' }}>{c.msg}</span>
                   <span style={{ display: 'block', textTransform: 'uppercase', textAlign: 'right', fontSize: '9px', color: 'rgba(255,255,255,0.4)', marginTop: '4px' }}>{c.time}</span>
                 </div>
               );
             })}
+            <div ref={chatEndRef} />
           </div>
 
-          {/* Message Transmission Footing Panel */}
-          <div style={{ padding: '10px 14px', background: '#202c33', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <input type="text" placeholder={balance > 1000 ? "Type chat message..." : "Requires KES 1000+ wallet balance"} disabled={balance <= 1000} value={chatInput} onChange={e => setChatInput(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') broadcastChatMessage(); }} style={{ flex: 1, padding: '10px 14px', background: '#2a3942', border: 'none', color: '#fff', borderRadius: '8px', fontSize: '13px' }} />
+          {/* Fixed Non-Expanding Message Transmission Footer Panel */}
+          <div style={{ padding: '10px 14px', background: '#202c33', display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+            <input type="text" placeholder={balance > 1000 ? "Type chat message..." : "Requires KES 1001+ balance"} disabled={balance <= 1000} value={chatInput} onChange={e => setChatInput(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') broadcastChatMessage(); }} style={{ flex: 1, padding: '10px 14px', background: '#2a3942', border: 'none', color: '#fff', borderRadius: '8px', fontSize: '13px' }} />
             <button onClick={broadcastChatMessage} style={{ background: '#00a884', border: 'none', width: '38px', height: '38px', borderRadius: '50%', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px' }}>➔</button>
           </div>
         </div>
 
       </div>
 
-      {/* Persistent Nav Tab Footing Row Layer for Compact Displays */}
-      <div className="mobileUtilityFooterBar" style={{ background: '#0c0d12', borderTop: '1px solid rgba(255,255,255,0.06)', display: 'none', justifyContent: 'space-around', padding: '12px 0', position: 'sticky', bottom: 0, zIndex: 999 }}>
-        <button onClick={() => setMobileActivePanel('bets')} style={{ background: 'transparent', border: 'none', color: mobileActivePanel === 'bets' ? '#22c55e' : '#64748b', fontSize: '12px', fontWeight: '800' }}>📊 HISTORIC</button>
-        <button onClick={() => setMobileActivePanel('game')} style={{ background: 'transparent', border: 'none', color: mobileActivePanel === 'game' ? '#e11d48' : '#64748b', fontSize: '12px', fontWeight: '800' }}>🚀 RADAR HUD</button>
-        <button onClick={() => setMobileActivePanel('chat')} style={{ background: 'transparent', border: 'none', color: mobileActivePanel === 'chat' ? '#38bdf8' : '#64748b', fontSize: '12px', fontWeight: '800' }}>💬 ROOM CHAT</button>
+      {/* Persistent Nav Tab Footing Row Layer for Mobile Only Display */}
+      <div className="mobileUtilityFooterBar" style={{ background: '#0c0d12', borderTop: '1px solid rgba(255,255,255,0.06)', display: 'none', justifyContent: 'space-around', padding: '12px 0', position: 'sticky', bottom: 0, zIndex: 999, flexShrink: 0 }}>
+        <button onClick={() => setMobileActivePanel('bets')} style={{ background: 'transparent', border: 'none', color: mobileActivePanel === 'bets' ? '#22c55e' : '#64748b', fontSize: '12px', fontWeight: '800' }}>📊 DATA LIVE</button>
+        <button onClick={() => setMobileActivePanel('game')} style={{ background: 'transparent', border: 'none', color: mobileActivePanel === 'game' ? '#e11d48' : '#64748b', fontSize: '12px', fontWeight: '800' }}>🚀 RADAR HUB</button>
+        <button onClick={() => setMobileActivePanel('chat')} style={{ background: 'transparent', border: 'none', color: mobileActivePanel === 'chat' ? '#38bdf8' : '#64748b', fontSize: '12px', fontWeight: '800' }}>💬 LOBBY ROOM</button>
       </div>
 
-      {/* MPESA SECURE PAYMENT HANDSHAKE MODAL */}
+      {/* MPESA TRANSACTION PANEL */}
       {isDepositModalOpen && (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '12px' }}>
           <div style={{ background: '#0c0d12', border: '1px solid #22c55e', borderRadius: '20px', width: '100%', maxWidth: '350px', padding: '26px', position: 'relative' }}>
@@ -565,27 +577,22 @@ export default function UltimateJetPesaCockpit() {
               <input type="text" value={inputPhone} onChange={e => setInputPhone(e.target.value)} placeholder="07XXXXXXXX" style={{ width: '92%', padding: '12px', marginTop: '4px', background: '#141622', border: '1px solid rgba(255,255,255,0.08)', color: '#fff', fontSize: '14px', borderRadius: '8px' }} />
             </div>
 
-            <div style={{ marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <input type="checkbox" id="remPhone" checked={rememberPhone} onChange={e => setRememberPhone(e.target.checked)} style={{ width: '16px', height: '16px', accentColor: '#22c55e' }} />
-              <label htmlFor="remPhone" style={{ fontSize: '12px', color: '#94a3b8', fontWeight: '600', cursor: 'pointer' }}>Cache terminal credentials</label>
-            </div>
-
             <button onClick={handlePaymentInitiation} disabled={loadingDeposit} style={{ width: '100%', padding: '14px', background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)', border: 'none', color: '#fff', fontWeight: '900', borderRadius: '10px', cursor: 'pointer' }}>
-              {loadingDeposit ? 'SYNCHRONIZING TRANSACTION...' : 'AUTHORIZE DEPOSIT'}
+              {loadingDeposit ? 'SYNCHRONIZING...' : 'AUTHORIZE DEPOSIT'}
             </button>
           </div>
         </div>
       )}
 
-      {/* CORE DISPLAY RESPONSIVE DESIGN STYLING COEFFICIENTS */}
+      {/* RESPONSIVE STRUCTURE DEFINITION */}
       <style>{`
-        .cockpitMainLayout { grid-template-columns: 310px 1fr 300px; height: calc(100vh - 125px); }
+        .cockpitMainLayout { grid-template-columns: 310px 1fr 310px; }
         @media (max-width: 992px) {
-          .cockpitMainLayout { grid-template-columns: 1fr !important; height: auto !important; padding-bottom: 75px !important; }
+          .cockpitMainLayout { grid-template-columns: 1fr !important; height: calc(100% - 130px) !important; padding-bottom: 20px !important; }
           .mobileUtilityFooterBar { display: flex !important; }
-          .leftPanelLayout { display: ${mobileActivePanel === 'bets' ? 'flex !important' : 'none !important'}; height: 68vh; }
-          .centerPanelLayout { display: ${mobileActivePanel === 'game' ? 'flex !important' : 'none !important'}; }
-          .rightPanelLayout { display: ${mobileActivePanel === 'chat' ? 'flex !important' : 'none !important'}; height: 68vh; }
+          .leftPanelLayout { display: ${mobileActivePanel === 'bets' ? 'flex !important' : 'none !important'}; height: 100% !important; }
+          .centerPanelLayout { display: ${mobileActivePanel === 'game' ? 'flex !important' : 'none !important'}; height: 100% !important; }
+          .rightPanelLayout { display: ${mobileActivePanel === 'chat' ? 'flex !important' : 'none !important'}; height: 100% !important; }
         }
       `}</style>
 
