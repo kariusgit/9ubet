@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { auth, db } from '../../firebaseConfig';
-import { onAuthStateChanged, signOut } from 'firebase/auth';
+import { onAuthStateChanged } from 'firebase/auth';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { useTheme } from '../layout';
 import confetti from 'canvas-confetti';
@@ -14,6 +14,9 @@ export default function MobileResponsiveDashboard() {
   const [balance, setBalance] = useState(0.0);
   const [phoneProfile, setPhoneProfile] = useState('');
   
+  // Responsive Layout Window State
+  const [isMobileLayout, setIsMobileLayout] = useState(false);
+
   const [wager, setWager] = useState(10);
   const [isAutoBet, setIsAutoBet] = useState(false);
   const [isAutoCashout, setIsAutoCashout] = useState(false);
@@ -26,7 +29,6 @@ export default function MobileResponsiveDashboard() {
   const [loadingDeposit, setLoadingDeposit] = useState(false);
   const [depAmt, setDepAmt] = useState(100);
 
-  // Live Fake Bets Matrix
   const [fakeBets, setFakeBets] = useState([]);
   
   const canvasRef = useRef(null);
@@ -45,7 +47,7 @@ export default function MobileResponsiveDashboard() {
     ctx.moveTo(20, 0);          // Nose
     ctx.lineTo(-5, -8);         // Left Wingtip connection
     ctx.lineTo(-20, -18);       // Left Wingtip edge
-    ctx.lineTo(-12, -4);        // Inner fusilage frame edge
+    ctx.lineTo(-12, -4);        // Inner fuselage frame edge
     ctx.lineTo(-18, 0);         // Tail engine core point
     ctx.lineTo(-12, 4);
     ctx.lineTo(-20, 18);        // Right Wingtip edge
@@ -54,6 +56,19 @@ export default function MobileResponsiveDashboard() {
     ctx.fill();
     ctx.restore();
   };
+
+  useEffect(() => {
+    // Safe client-only window size check execution
+    const handleResizeLayout = () => {
+      setIsMobileLayout(window.innerWidth < 900);
+    };
+
+    // Run once on mount to establish precise screen target boundaries
+    handleResizeLayout();
+
+    window.addEventListener('resize', handleResizeLayout);
+    return () => window.removeEventListener('resize', handleResizeLayout);
+  }, []);
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (curr) => {
@@ -67,12 +82,12 @@ export default function MobileResponsiveDashboard() {
         }
       }
     });
-    // Build real-time active betting log layout mock profiles
+
     const usersList = ['Wanjiku_M', 'Kip_Fx', 'Achieng_O', 'Juma_Dev', 'Mutua_X', 'Naliaka_S'];
     setFakeBets(usersList.map(u => ({ user: u, amt: Math.floor(Math.random()*500)+20, mult: (Math.random()*4+1).toFixed(2), won: Math.random()>0.5 })));
     
     return () => unsub();
-  }, []);
+  }, [router]);
 
   useEffect(() => {
     if (user) prepRoundCycle();
@@ -126,7 +141,6 @@ export default function MobileResponsiveDashboard() {
         let cx = 50 + (W - 120) * Math.min(t / 12, 1);
         let cy = (H - 50) - (H - 120) * (Math.min(currentMult - 1, 8) / 8);
 
-        // Vector tracking trail path draw mapping
         ctx.beginPath(); ctx.moveTo(50, H - 50);
         ctx.quadraticCurveTo((50+cx)/1.7, H - 50, cx, cy);
         ctx.strokeStyle = '#e11d48'; ctx.lineWidth = 4; ctx.stroke();
@@ -188,7 +202,7 @@ export default function MobileResponsiveDashboard() {
       </div>
 
       {/* Main Responsive Grid Layout Engine */}
-      <div style={{ display: 'flex', flexDirection: window.innerWidth < 900 ? 'column' : 'row', gap: '16px' }}>
+      <div style={{ display: 'flex', flexDirection: isMobileLayout ? 'column' : 'row', gap: '16px' }}>
         
         {/* Cockpit Simulation Arena Column */}
         <div style={{ flex: 2, display: 'flex', flexDirection: 'column', gap: '16px' }}>
