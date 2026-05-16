@@ -37,6 +37,9 @@ export default function RootLayout({ children }) {
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="true" />
         <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+       <meta name="title" content="JetPesa | Fly High & Cash Out Instantly | Africa\'s No.1 Instant Multiplier Crash Game" />
+       <meta name="description" content="Experience real-time multiplier crash gaming. Predict the crash point and win up to 100x your stake instantly with automated M-Pesa funding. Place your stakes, track the flight velocity, and cash out instantly via Safaricom M-Pesa." />
+       <meta name="keywords" content="JetPesa, Aviator game Kenya, Crash game M-Pesa, Betting , Instant win KES" />
       </head>
       <body style={{ margin: 0, padding: 0, overflowX: 'hidden' }}>
         <ThemeProvider>
