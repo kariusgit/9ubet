@@ -3,19 +3,6 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
-export const metadata = {
-  title: 'JetPesa | Africa\'s No.1 Instant Multiplier Crash Game',
-  description: 'Experience real-time multiplier crash gaming. Place your stakes, track the flight velocity, and cash out instantly via Safaricom M-Pesa.',
-  keywords: ['JetPesa', 'Aviator game Kenya', 'Crash game M-Pesa', 'Betting simulator', 'Instant win KES'],
-  openGraph: {
-    title: 'JetPesa | Fly High & Cash Out Instantly',
-    description: 'Predict the crash point and win up to 100x your stake instantly with automated M-Pesa funding.',
-    siteName: 'JetPesa',
-    locale: 'en_KE',
-    type: 'website',
-  },
-};
-
 export default function JetPesaLandingPage() {
   const router = useRouter();
 
