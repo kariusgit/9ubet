@@ -1,107 +1,238 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { auth, db } from '../firebaseConfig';
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
-import { doc, setDoc } from 'firebase/firestore';
+import Link from 'next/link';
 
-export default function GlassmorphismAuthGateway() {
+export default function JetPesaLandingPage() {
   const router = useRouter();
-  const [isSignUp, setIsSignUp] = useState(false);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [phone, setPhone] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [gateError, setGateError] = useState('');
 
-  const executeGateTransaction = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setGateError('');
-    try {
-      if (isSignUp) {
-        if (!phone.startsWith('07') && !phone.startsWith('01')) {
-          throw new Error('Please provide a valid Safaricom phone format structure.');
+  // Simulated Live Demo Engine Matrix
+  const [demoMultiplier, setDemoMultiplier] = useState(1.0);
+  const [demoStatus, setDemoStatus] = useState('running'); // running, crashed, loading
+  const [demoProgress, setDemoProgress] = useState(100);
+  const [demoBets, setDemoBets] = useState([]);
+  const [totalPoolUsers, setTotalPoolUsers] = useState(3452);
+  
+  const canvasRef = useRef(null);
+  const animationId = useRef(null);
+
+  // Background Demo Loop simulating continuous wins
+  useEffect(() => {
+    let startTime = Date.now();
+    const cycleDuration = 16000; // 16 second round loops
+
+    function runDemoLoop() {
+      const elapsed = (Date.now() - startTime) % cycleDuration;
+
+      // Phase 1: Waiting/Loading (3 Seconds)
+      if (elapsed < 3000) {
+        if (demoStatus !== 'loading') {
+          setDemoStatus('loading');
+          setDemoMultiplier(1.0);
+          generateDemoBets();
         }
-        const credential = await createUserWithEmailAndPassword(auth, email, password);
-        await setDoc(doc(db, "users", credential.user.uid), {
-          uid: credential.user.uid,
-          email,
-          mpesaPhone: phone,
-          walletBalance: 0.0,
-          secretDepositSum: 0,
-          secretLossSum: 0,
-          secretFreeBets: 0,
-          createdAt: new Date().toISOString()
-        });
-      } else {
-        await signInWithEmailAndPassword(auth, email, password);
+        setDemoProgress(((3000 - elapsed) / 3000) * 100);
+      } 
+      // Phase 2: Flight Simulation Active (10 Seconds Max)
+      else if (elapsed < 13000) {
+        setDemoStatus('running');
+        const flightSeconds = (elapsed - 3000) / 1000;
+        const currentMult = parseFloat(Math.pow(Math.E, 0.09 * flightSeconds).toFixed(2));
+        
+        // Predetermined simulated crash point for the homepage demo loop
+        if (currentMult >= 2.45) {
+          setDemoStatus('crashed');
+          setDemoMultiplier(2.45);
+        } else {
+          setDemoMultiplier(currentMult);
+          // Simulate dynamic live cashouts dropping off as multiplier rises
+          setDemoBets(prev => prev.map(b => {
+            if (!b.cashedOut && Math.random() > 0.92 && currentMult > b.autoTarget) {
+              return { ...b, cashedOut: true, finalMult: currentMult, winAmount: Math.floor(b.stake * currentMult) };
+            }
+            return b;
+          }));
+        }
+      } 
+      // Phase 3: Post Crash View Window (3 Seconds)
+      else {
+        setDemoStatus('crashed');
       }
-      router.push('/dashboard');
-    } catch (err) {
-      setGateError(err.message.replace("Firebase:", ""));
-    } finally {
-      setLoading(false);
+
+      drawDemoRadar(elapsed);
+      animationId.current = requestAnimationFrame(runDemoLoop);
+    }
+
+    function generateDemoBets() {
+      const initialAvatars = ['🦈', '🦁', '🦅', '🐆', '🦊', '🦏'];
+      const prefixes = ['071***', '072***', '079***', '070***', '011***'];
+      setTotalPoolUsers(Math.floor(Math.random() * 800 + 3100));
+
+      setDemoBets(Array.from({ length: 6 }, (_, i) => ({
+        user: initialAvatars[i % initialAvatars.length] + prefixes[i % prefixes.length] + Math.floor(Math.random() * 89 + 10),
+        stake: [200, 500, 1000, 1500, 2500, 5000][i],
+        autoTarget: parseFloat((1.2 + i * 0.2).toFixed(2)),
+        cashedOut: false,
+        winAmount: 0,
+        finalMult: 1.0
+      })));
+    }
+
+    animationId.current = requestAnimationFrame(runDemoLoop);
+    return () => cancelAnimationFrame(animationId.current);
+  }, [demoStatus]);
+
+  // Vector Canvas drawing engine for the mini landing display
+  const drawDemoRadar = (elapsed) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const W = canvas.width; const H = canvas.height;
+    ctx.clearRect(0, 0, W, H);
+
+    // Subtle technical grid matrix
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.02)'; ctx.lineWidth = 1;
+    for (let i = 0; i < W; i += 40) { ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, H); ctx.stroke(); }
+    for (let j = 0; j < H; j += 30) { ctx.beginPath(); ctx.moveTo(0, j); ctx.lineTo(W, j); ctx.stroke(); }
+
+    if (elapsed >= 3000 && demoStatus === 'running') {
+      const airTime = (elapsed - 3000) / 1000;
+      let cx = 40 + (W - 100) * Math.min(airTime / 7, 1);
+      let cy = (H - 40) - (H - 100) * (Math.min(demoMultiplier - 1, 1.5) / 1.5);
+
+      // Neon Vector line curve trail
+      ctx.beginPath(); ctx.moveTo(40, H - 40);
+      ctx.quadraticCurveTo((40 + cx) / 2, H - 30, cx, cy);
+      ctx.strokeStyle = '#e11d48'; ctx.lineWidth = 4;
+      ctx.stroke();
+
+      // Jet Glow fill
+      ctx.lineTo(cx, H - 40); ctx.lineTo(40, H - 40); ctx.closePath();
+      const grad = ctx.createLinearGradient(40, cy, 40, H - 40);
+      grad.addColorStop(0, 'rgba(225, 29, 72, 0.15)');
+      grad.addColorStop(1, 'transparent');
+      ctx.fillStyle = grad; ctx.fill();
+
+      // Miniature Geometric Jet representation
+      ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.moveTo(cx + 15, cy); ctx.lineTo(cx - 10, cy - 6); ctx.lineTo(cx - 10, cy + 6); ctx.closePath(); ctx.fill();
     }
   };
 
   return (
-    <div style={{ minHeight: '100vh', background: 'radial-gradient(circle at 50% 50%, #11131e 0%, #050609 100%)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px', fontFamily: "'Plus Jakarta Sans', sans-serif", overflow: 'hidden', position: 'relative' }}>
+    <div style={{ background: '#07080e', color: '#f1f5f9', minHeight: '100vh', fontFamily: "'Plus Jakarta Sans', sans-serif", display: 'flex', flexDirection: 'column' }}>
       
-      {/* Background Ambient Blur Blobs */}
-      <div style={{ position: 'absolute', width: '350px', height: '350px', background: 'rgba(225,29,72,0.15)', borderRadius: '50%', filter: 'blur(80px)', top: '10%', left: '15%', pointerEvents: 'none' }} />
-      <div style={{ position: 'absolute', width: '400px', height: '400px', background: 'rgba(168,85,247,0.12)', borderRadius: '50%', filter: 'blur(100px)', bottom: '10%', right: '15%', pointerEvents: 'none' }} />
+      {/* Structural HUD Top Navigation */}
+      <nav style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px 40px', background: 'rgba(12,14,24,0.6)', borderBottom: '1px solid rgba(255,255,255,0.05)', backdropFilter: 'blur(12px)' }}>
+        <div style={{ fontSize: '24px', fontWeight: '900', letterSpacing: '-1px' }}>JETPESA</div>
+        <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
+          <Link href="/auth?tab=login" style={{ color: '#94a3b8', textDecoration: 'none', fontSize: '14px', fontWeight: '700' }}>Login</Link>
+          <Link href="/auth?tab=signup" style={{ background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)', color: '#fff', textDecoration: 'none', padding: '10px 24px', borderRadius: '30px', fontSize: '13px', fontWeight: '800', boxShadow: '0 8px 20px rgba(34,197,94,0.2)' }}>Join Now</Link>
+        </div>
+      </nav>
 
-      <div style={{ textAlign: 'center', marginBottom: '28px', zIndex: 2 }}>
-        <h1 style={{ fontSize: '3.2rem', fontWeight: '900', color: '#fff', letterSpacing: '-1.5px', margin: '0 0 8px 0', textTransform: 'uppercase' }}>
-          JetPesa<span style={{ color: '#e11d48' }}>.🚀</span>
-        </h1>
-        <p style={{ color: '#94a3b8', fontSize: '15px', fontWeight: '600', maxWidth: '440px', margin: '0 auto', lineHeight: '1.5' }}>
-          The fastest multiplying crash arena in East Africa. Watch the altitude swell, retain control, and unlock financial scale in seconds.
-        </p>
-      </div>
-
-      {/* Glassmorphic Portal Core Frame */}
-      <div style={{ width: '100%', maxWidth: '400px', background: 'rgba(18, 20, 32, 0.45)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '24px', padding: '32px', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.7)', zIndex: 2 }}>
+      {/* CORE HERO SECTION HOUSING DYNAMIC DEMO ENGINE */}
+      <section style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '40px', maxWidth: '1200px', margin: '60px auto', padding: '0 20px', alignItems: 'center', flex: 1 }}>
         
-        <div style={{ display: 'flex', background: 'rgba(0,0,0,0.25)', padding: '4px', borderRadius: '12px', marginBottom: '24px' }}>
-          <button onClick={() => { setIsSignUp(false); setGateError(''); }} style={{ flex: 1, padding: '10px', background: !isSignUp ? 'rgba(255,255,255,0.08)' : 'transparent', border: 'none', color: '#fff', fontSize: '13px', fontWeight: '800', borderRadius: '8px', cursor: 'pointer', transition: 'all 0.2s' }}>LOGIN</button>
-          <button onClick={() => { setIsSignUp(true); setGateError(''); }} style={{ flex: 1, padding: '10px', background: isSignUp ? 'rgba(255,255,255,0.08)' : 'transparent', border: 'none', color: '#fff', fontSize: '13px', fontWeight: '800', borderRadius: '8px', cursor: 'pointer', transition: 'all 0.2s' }}>SIGN UP</button>
+        {/* Copy / Value Proposition Block */}
+        <div>
+          <span style={{ color: '#22c55e', background: 'rgba(34,197,94,0.1)', padding: '6px 14px', borderRadius: '20px', fontSize: '12px', fontWeight: '800', letterSpacing: '0.5px' }}>🚀 AFRICA\'S NO. 1 INSTANT MULTIPLIER CRASH GAME</span>
+          <h1 style={{ fontSize: '3.5rem', fontWeight: '900', lineHeight: '1.1', margin: '20px 0', letterSpacing: '-1.5px' }}>
+            Watch the Jet Fly.<br />Scale Your Balance.<br />Cash Out Before it Crashes.
+          </h1>
+          <p style={{ color: '#94a3b8', fontSize: '16px', lineHeight: '1.6', maxWidth: '480px', marginBottom: '35px' }}>
+            Experience real-time financial tracking algorithms. Place your stakes, track the explosive velocity multiplier arc, and watch profits lock up in seconds. Fast payouts via Safaricom M-Pesa instantly.
+          </p>
+          
+          <div style={{ display: 'flex', gap: '20px' }}>
+            <Link href="/auth?tab=signup" style={{ padding: '16px 40px', background: 'linear-gradient(135deg, #e11d48 0%, #be123c 100%)', color: '#fff', fontWeight: '900', borderRadius: '12px', textDecoration: 'none', fontSize: '15px', boxShadow: '0 10px 25px rgba(225,29,72,0.3)' }}>START EARNING INSTANTLY</Link>
+          </div>
+
+          {/* Value Highlights Grid */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginTop: '50px', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '30px' }}>
+            <div>
+              <h4 style={{ margin: '0 0 4px 0', fontSize: '18px', color: '#fff' }}>⚡ KES 49 Minimum</h4>
+              <p style={{ margin: 0, color: '#64748b', fontSize: '13px' }}>Start small, test your strategies, risk-free.</p>
+            </div>
+            <div>
+              <h4 style={{ margin: '0 0 4px 0', fontSize: '18px', color: '#22c55e' }}>🔒 Instant STK Push</h4>
+              <p style={{ margin: 0, color: '#64748b', fontSize: '13px' }}>Direct automated wallet funding within seconds.</p>
+            </div>
+          </div>
         </div>
 
-        {gateError && (
-          <div style={{ background: 'rgba(220,38,38,0.15)', border: '1px solid rgba(220,38,38,0.4)', color: '#ef4444', padding: '10px 14px', borderRadius: '10px', fontSize: '12px', fontWeight: '700', marginBottom: '16px', textAlign: 'center' }}>
-            {gateError}
-          </div>
-        )}
-
-        <form onSubmit={executeGateTransaction} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <div>
-            <label style={{ fontSize: '11px', color: '#94a3b8', fontWeight: '700', display: 'block', marginBottom: '6px' }}>EMAIL PROFILE NODE</label>
-            <input type="email" required value={email} onChange={e => setEmail(e.target.value)} placeholder="pilot@jetpesa.com" style={{ width: '100%', padding: '12px 14px', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.06)', color: '#fff', borderRadius: '10px', fontSize: '14px', boxSizing: 'border-box' }} />
-          </div>
-
-          {isSignUp && (
-            <div>
-              <label style={{ fontSize: '11px', color: '#94a3b8', fontWeight: '700', display: 'block', marginBottom: '6px' }}>SAFARICOM TELEPHONE (M-PESA)</label>
-              <input type="text" required value={phone} onChange={e => setPhone(e.target.value)} placeholder="0712345678" style={{ width: '100%', padding: '12px 14px', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.06)', color: '#fff', borderRadius: '10px', fontSize: '14px', boxSizing: 'border-box' }} />
+        {/* Dynamic Interactive Game Dashboard Simulator Box */}
+        <div style={{ background: '#0e111a', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '24px', padding: '20px', boxShadow: '0 30px 60px rgba(0,0,0,0.6)', position: 'relative', overflow: 'hidden' }}>
+          
+          {/* Header HUD Bar simulation */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', borderBottom: '1px solid rgba(255,255,255,0.04)', paddingBottom: '10px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#22c55e' }} />
+              <span style={{ fontSize: '12px', fontWeight: '800', color: '#94a3b8' }}>LIVE SYSTEM SIMULATOR ({totalPoolUsers} online)</span>
             </div>
-          )}
-
-          <div>
-            <label style={{ fontSize: '11px', color: '#94a3b8', fontWeight: '700', display: 'block', marginBottom: '6px' }}>SECURE ACCESS KEY</label>
-            <input type="password" required value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" style={{ width: '100%', padding: '12px 14px', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.06)', color: '#fff', borderRadius: '10px', fontSize: '14px', boxSizing: 'border-box' }} />
+            <span style={{ fontSize: '11px', background: 'rgba(255,255,255,0.05)', padding: '3px 8px', borderRadius: '4px', fontWeight: '700' }}>DEMO VIEW ONLY</span>
           </div>
 
-          <button type="submit" disabled={loading} style={{ width: '100%', padding: '14px', marginTop: '8px', background: 'linear-gradient(135deg, #e11d48 0%, #be123c 100%)', border: 'none', color: '#fff', fontWeight: '900', fontSize: '14px', borderRadius: '10px', cursor: 'pointer', boxShadow: '0 8px 20px rgba(225,29,72,0.35)', transition: 'transform 0.2s' }}>
-            {loading ? 'SYNCHRONIZING SECURE TUNNEL...' : isSignUp ? 'REGISTER PROFILE & RECEIVE BONUS' : 'START RADAR OPERATIONS'}
-          </button>
-        </form>
+          {/* Interactive Core Flight Monitor Frame */}
+          <div style={{ height: '24px', background: '#020306', borderRadius: '12px', position: 'relative', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.03)' }}>
+            
+            {demoStatus === 'loading' && (
+              <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(4,5,9,0.95)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', zIndex: 5 }}>
+                <div style={{ width: '50%', height: '4px', background: 'rgba(255,255,255,0.05)', borderRadius: '2px', position: 'relative' }}>
+                  <div style={{ height: '100%', background: '#22c55e', width: `${demoProgress}%`, transition: 'width 0.1s linear' }} />
+                </div>
+                <span style={{ fontSize: '10px', color: '#64748b', fontWeight: '800', marginTop: '6px' }}>NEXT FLIGHT PREPARING...</span>
+              </div>
+            )}
 
-        <p style={{ textAlign: 'center', fontSize: '12px', color: '#475569', marginTop: '20px', fontWeight: '600', margin: '20px 0 0 0' }}>
-          By establishing connectivity, you certify your age parameter is strictly 18+.
-        </p>
-      </div>
+            <canvas ref={canvasRef} width={480} height={220} style={{ width: '100%', height: '100%', display: 'block' }} />
+
+            {demoStatus !== 'loading' && (
+              <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', textAlign: 'center', pointerEvents: 'none' }}>
+                {demoStatus === 'crashed' ? (
+                  <span style={{ color: '#e11d48', fontSize: '2.5rem', fontWeight: '900' }}>FLEW AWAY @ {demoMultiplier.toFixed(2)}x</span>
+                ) : (
+                  <span style={{ color: '#fff', fontSize: '4rem', fontWeight: '900', textShadow: '0 0 20px rgba(255,255,255,0.15)' }}>{demoMultiplier.toFixed(2)}x</span>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Live Dynamic Automated Tracking Bets Ledger */}
+          <div style={{ marginTop: '16px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            <span style={{ fontSize: '11px', fontWeight: '800', color: '#475569', trackingLetter: '0.5px' }}>LIVE ROUND ALLOCATIONS</span>
+            <div style={{ maxHeight: '160px', overflow: 'hidden', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              {demoBets.map((b, idx) => (
+                <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', background: b.cashedOut ? 'rgba(34,197,94,0.06)' : 'rgba(0,0,0,0.2)', borderRadius: '8px', border: b.cashedOut ? '1px solid rgba(34,197,94,0.15)' : '1px solid transparent', fontSize: '12px' }}>
+                  <span style={{ color: '#94a3b8', fontWeight: '700' }}>{b.user}</span>
+                  <span style={{ fontWeight: '800', color: '#fff' }}>{b.stake} KES</span>
+                  {b.cashedOut ? (
+                    <span style={{ color: '#22c55e', fontWeight: '900', background: 'rgba(34,197,94,0.1)', padding: '2px 8px', borderRadius: '4px' }}>
+                      CASH OUT @ {b.finalMult.toFixed(2)}x (+{b.winAmount} KES)
+                    </span>
+                  ) : (
+                    <span style={{ color: demoStatus === 'crashed' ? '#e11d48' : '#475569', fontWeight: '800' }}>
+                      {demoStatus === 'crashed' ? 'Lost' : 'In Flight'}
+                    </span>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      {styleAdjustmentBlock}
     </div>
   );
 }
+
+const styleAdjustmentBlock = (
+  <style>{`
+    @media (max-width: 992px) {
+      main, section { grid-template-columns: 1fr !important; text-align: center; margin-top: 20px !important; }
+      p { margin: 0 auto 30px auto !important; }
+      div { justify-content: center; }
+    }
+  `}</style>
+);
