@@ -9,98 +9,74 @@ import confetti from 'canvas-confetti';
 export default function UltimateJetPesaCockpit() {
   const router = useRouter();
   
-  // Account Profile Identity States
+  // Profile Identity Configurations
   const [user, setUser] = useState(null);
   const [balance, setBalance] = useState(0.0);
   const [phoneProfile, setPhoneProfile] = useState('');
   const [rememberPhone, setRememberPhone] = useState(true);
-  
-  // Secret Retention Logic Parameters
-  const [trackDepositSum, setTrackDepositSum] = useState(0);
-  const [trackLossSum, setTrackLossSum] = useState(0);
-  const [freeBetsAvailable, setFreeBetsAvailable] = useState(0);
 
-  // Layout Controls & View Toggles
-  const [activeTab, setActiveTab] = useState('all'); 
+  // Structural Tracking State Matrices
+  const [myBetsHistory, setMyBetsHistory] = useState([]);
+  const [activeTab, setActiveTab] = useState('all'); // 'all' | 'mine'
   const [isDepositModalOpen, setIsDepositModalOpen] = useState(false);
   const [isProvablyModalOpen, setIsProvablyModalOpen] = useState(false);
   const [isRainActive, setIsRainActive] = useState(false);
   const [audioMuted, setAudioMuted] = useState(false);
-  const [mobileActivePanel, setMobileActivePanel] = useState('game'); // 'bets' | 'game' | 'chat'
+  const [mobileActivePanel, setMobileActivePanel] = useState('game'); 
 
-  // Inline Notification Bubble Array Engine
+  // Self-Dismissing Popup Bubble Arrays
   const [toasts, setToasts] = useState([]);
 
-  // Input Field Controllers
+  // Field Inputs
   const [inputPhone, setInputPhone] = useState('');
   const [inputAmount, setInputAmount] = useState('100');
   const [loadingDeposit, setLoadingDeposit] = useState(false);
 
-  // Independent Concurrent Double Wager Strategy Deck State Matrices
-  const [deckA, setDeckA] = useState({ wager: 10, isAuto: false, isAutoCash: false, cashVal: 2.0, hasBetNext: false, hasBetCurrent: false, useFree: false });
-  const [deckB, setDeckB] = useState({ wager: 20, isAuto: false, isAutoCash: false, cashVal: 3.0, hasBetNext: false, hasBetCurrent: false, useFree: false });
+  // Independent Concurrent Double Wager Strategy Systems
+  const [deckA, setDeckA] = useState({ wager: 10, isAuto: false, isAutoCash: false, cashVal: 2.0, hasBetNext: false, hasBetCurrent: false });
+  const [deckB, setDeckB] = useState({ wager: 20, isAuto: false, isAutoCash: false, cashVal: 3.0, hasBetNext: false, hasBetCurrent: false });
 
-  // High Fidelity Central Synchronized Game Loop States
+  // Sync Engine Vectors
   const [multiplier, setMultiplier] = useState(1.0);
-  const [gameStatus, setGameStatus] = useState('idle'); // 'idle' | 'running' | 'crashed'
+  const [gameStatus, setGameStatus] = useState('idle'); 
   const [countdownProgress, setCountdownProgress] = useState(100);
-  const [historyTape, setHistoryTape] = useState([1.47, 1.23, 1.19, 7.05, 1.52, 1.61, 1.89, 1.08, 2.20, 6.11, 1.18, 5.07, 1.06]);
+  const [historyTape, setHistoryTape] = useState([1.47, 12.33, 1.19, 3.05, 1.52, 18.61, 1.89, 1.08, 2.20]);
   
   const canvasRef = useRef(null);
   const animationId = useRef(null);
 
-  // Floating Toast Notification Subsystem
-  const triggerToast = (msg, type = 'info') => {
-    const id = Date.now() + Math.random();
-    setToasts(prev => [...prev, { id, msg, type }]);
-    setTimeout(() => {
-      setToasts(prev => prev.filter(t => t.id !== id));
-    }, 4000);
-  };
-
-  // Structured Live Feed Generator Matching Exact Format Requirements
-  const [liveBetsFeed, setLiveBetsFeed] = useState([]);
-  const [chatLogs, setChatLogs] = useState([
-    { user: '🦈071***45', msg: 'Admin, background rain drop claim active? 🙌', time: '07:11' },
-    { user: '🦒072***89', msg: 'Yesu wangu sasa hii ndiyo nini 🤯 Aviator strictly running smooth!', time: '07:19' },
-    { user: '🦅079***12', msg: 'Just hit 5.07x on deck B auto-cashout choice. Safi sana!', time: '07:22' }
-  ]);
-  const [chatInput, setChatInput] = useState('');
-
-  // Audio Context Tone Generator Handle
+  // Realistic Dynamic Audio Synthesis Infrastructure
   const audioCtxRef = useRef(null);
-  const playTone = (freq, type, duration) => {
+  const playSynthesizedTone = (freq, type, duration, volume = 0.04) => {
     if (audioMuted) return;
     try {
       if (!audioCtxRef.current) audioCtxRef.current = new (window.AudioContext || window.webkitAudioContext)();
       const ctx = audioCtxRef.current;
       const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
+      const gainNode = ctx.createGain();
       osc.type = type;
       osc.frequency.setValueAtTime(freq, ctx.currentTime);
-      gain.gain.setValueAtTime(0.04, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + duration);
-      osc.connect(gain); gain.connect(ctx.destination);
+      gainNode.gain.setValueAtTime(volume, ctx.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + duration);
+      osc.connect(gainNode); gainNode.connect(ctx.destination);
       osc.start(); osc.stop(ctx.currentTime + duration);
     } catch (e) { console.log(e); }
   };
 
-  const generateRealisticBetsFeed = () => {
-    const prefixes = ['070***', '071***', '072***', '079***', '011***', '075***'];
-    const mockAvatars = ['🦒', '🚗', '🦁', '🦊', '🦅', '🦈', '🎨'];
-    const newList = Array.from({ length: 18 }, () => {
-      const betAmt = parseFloat((Math.random() * 1400 + 100).toFixed(2));
-      const reachedMult = parseFloat((Math.random() * 3.4 + 1.01).toFixed(2));
-      const won = Math.random() > 0.52;
-      return {
-        username: mockAvatars[Math.floor(Math.random() * mockAvatars.length)] + prefixes[Math.floor(Math.random() * prefixes.length)] + Math.floor(Math.random() * 89 + 10),
-        bet: betAmt,
-        mult: reachedMult,
-        won: won,
-        winAmount: won ? parseFloat((betAmt * reachedMult).toFixed(2)) : 0
-      };
-    });
-    setLiveBetsFeed(newList.sort((a, b) => b.bet - a.bet));
+  // Complex Multilingual Room Activity Logs Containing English, Swahili, Kikuyu, and Luo
+  const [liveBetsFeed, setLiveBetsFeed] = useState([]);
+  const [chatLogs, setChatLogs] = useState([
+    { user: '🦈071***45', msg: 'Admin, background rain drop claim active? 🙌', time: '08:02' },
+    { user: '🦒072***89', msg: 'Leo tunakula rocket safi sana hapa JetPesa! 🤯', time: '08:04' },
+    { user: '🦅079***12', msg: 'Nĩngwenda gũkĩria 10x rũũgĩ rũfĩfĩ rwa Deck B gaka!', time: '08:04' },
+    { user: '🦁011***90', msg: 'Asego mar plane ni e ma duong’! Multiplier obiro thuth!', time: '08:05' }
+  ]);
+  const [chatInput, setChatInput] = useState('');
+
+  const triggerToast = (msg, type = 'info') => {
+    const id = Date.now() + Math.random();
+    setToasts(prev => [...prev, { id, msg, type }]);
+    setTimeout(() => { setToasts(prev => prev.filter(t => t.id !== id)); }, 3500);
   };
 
   useEffect(() => {
@@ -115,188 +91,245 @@ export default function UltimateJetPesaCockpit() {
         const d = userDoc.data();
         setBalance(d.walletBalance || 0.0);
         if (!savedPhone && d.mpesaPhone) { setPhoneProfile(d.mpesaPhone); setInputPhone(d.mpesaPhone); }
-        setTrackDepositSum(d.secretDepositSum || 0);
-        setTrackLossSum(d.secretLossSum || 0);
-        setFreeBetsAvailable(d.secretFreeBets || 0);
       }
     });
 
-    generateRealisticBetsFeed();
-    const feedInterval = setInterval(generateRealisticBetsFeed, 6000);
-    return () => { unsubscribe(); clearInterval(feedInterval); };
+    const mockSystemFeeds = () => {
+      const px = ['070***', '071***', '072***', '079***', '011***'];
+      const av = ['🦒', '🦁', '🦊', '🦅', '🦈'];
+      setLiveBetsFeed(Array.from({ length: 15 }, () => ({
+        username: av[Math.floor(Math.random() * av.length)] + px[Math.floor(Math.random() * px.length)] + Math.floor(Math.random() * 89 + 10),
+        bet: Math.floor(Math.random() * 1200 + 100),
+        mult: parseFloat((Math.random() * 2.5 + 1.05).toFixed(2)),
+        won: Math.random() > 0.45
+      })).sort((a,b) => b.bet - a.bet));
+    };
+
+    mockSystemFeeds();
+    const intervalFeed = setInterval(mockSystemFeeds, 7000);
+    return () => { unsubscribe(); clearInterval(intervalFeed); };
   }, [router]);
 
-  // Central Pseudo-Distributed Deterministic Clock Loop Logic
-  // Syncs flight times across page reloads, sign-ins, and separate device tabs perfectly.
+  // Dynamic Real-time Multilingual Activity Loop Simulation
   useEffect(() => {
-    function executeGlobalSyncLoop() {
-      const totalCyclePeriod = 21000; // Total phase duration loop context (21 seconds)
-      const countdownPhaseDuration = 5000; // Countdown wait period (5 seconds)
-      const dynamicRunningWindow = 14000; // Maximum simulation flight sequence window
-      
-      const absoluteUnixEpochMs = Date.now();
-      const currentCycleOffsetTimeMs = absoluteUnixEpochMs % totalCyclePeriod;
+    const chatPool = [
+      { user: '🦊072***14', msg: 'Weh, plane irefuka maze, cash out haraka!' },
+      { user: '🎨079***88', msg: 'Mũgĩthĩ ũũ no rũgendo rũranya gũgĩkũra na igũrũ.' },
+      { user: '🦅011***23', msg: 'Anya tero mwandu nyaka polo! Retain control omera.' },
+      { user: '🦁070***66', msg: 'This glass design looks exactly like premium Spribe.' },
+      { user: '🦈075***04', msg: 'Nimeweka 500 stake hapa, twende sasa kabla iland.' }
+    ];
 
-      // PHASE A: System Inbound Preparation & Countdown Load Stage
-      if (currentCycleOffsetTimeMs < countdownPhaseDuration) {
-        setGameStatus('idle');
-        const completedPercentage = ((countdownPhaseDuration - currentCycleOffsetTimeMs) / countdownPhaseDuration) * 100;
-        setCountdownProgress(completedPercentage);
-        setMultiplier(1.0);
-        
-        // Auto-migrate booked bets on round boundary transitions
+    const intervalChat = setInterval(() => {
+      const picked = chatPool[Math.floor(Math.random() * chatPool.length)];
+      setChatLogs(p => [...p, { ...picked, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }]);
+    }, 8000);
+
+    return () => clearInterval(intervalChat);
+  }, []);
+
+  // Central Distributed Synchronized Microsecond Deterministic Clock Module
+  useEffect(() => {
+    function runDistributedClockLoop() {
+      const epochTimeMs = Date.now();
+      const cycleInterval = 21000; 
+      const countdownInterval = 5000;
+      const simulationWindow = 14000;
+
+      const offsetMs = epochTimeMs % cycleInterval;
+
+      // Phase 1: Inbound Pre-Flight Load Block
+      if (offsetMs < countdownInterval) {
+        if (gameStatus !== 'idle') {
+          setGameStatus('idle');
+          setMultiplier(1.0);
+          // Audio confirmation queue for countdown trigger state
+          playSynthesizedTone(440, 'triangle', 0.05, 0.03);
+        }
+        setCountdownProgress(((countdownInterval - offsetMs) / countdownInterval) * 100);
+
+        // Perform internal ticks every full second inside loading states
+        if (offsetMs % 1000 < 20) {
+          playSynthesizedTone(320, 'sine', 0.03, 0.02); // Loading clock sound
+        }
+
         setDeckA(prev => { if(prev.hasBetNext && !prev.hasBetCurrent) { return {...prev, hasBetCurrent: true, hasBetNext: prev.isAuto}; } return prev; });
         setDeckB(prev => { if(prev.hasBetNext && !prev.hasBetCurrent) { return {...prev, hasBetCurrent: true, hasBetNext: prev.isAuto}; } return prev; });
-
       } 
-      // PHASE B: Plane Flight In Progress Stage
-      else if (currentCycleOffsetTimeMs < (countdownPhaseDuration + dynamicRunningWindow)) {
+      // Phase 2: Active Mathematical Velocity Calculation State
+      else if (offsetMs < (countdownInterval + simulationWindow)) {
         setGameStatus('running');
-        const activeFlightSeconds = (currentCycleOffsetTimeMs - countdownPhaseDuration) / 1000;
+        const activeSeconds = (offsetMs - countdownInterval) / 1000;
+        const computedMultiplier = parseFloat(Math.pow(Math.E, 0.078 * activeSeconds).toFixed(2));
         
-        // Deterministic curve calculated uniformly on every tab instance natively
-        const synchronizedMultiplier = parseFloat(Math.pow(Math.E, 0.075 * activeFlightSeconds).toFixed(2));
-        
-        // Hardcoded mathematical seed fallback calculation parameters for safety
-        const explicitRoundCycleIndex = Math.floor(absoluteUnixEpochMs / totalCyclePeriod);
-        const pseudoCrashTarget = parseFloat((1.05 + (parseFloat(String(Math.sin(explicitRoundCycleIndex) * 1000).split('.')[1] || 5) % 8.5)).toFixed(2));
+        const trackingIndex = Math.floor(epochTimeMs / cycleInterval);
+        const dynamicCrashBound = parseFloat((1.08 + (parseFloat(String(Math.sin(trackingIndex) * 1200).split('.')[1] || 4) % 9.2)).toFixed(2));
 
-        if (synchronizedMultiplier >= pseudoCrashTarget) {
+        if (computedMultiplier >= dynamicCrashBound) {
           setGameStatus('crashed');
-          setMultiplier(pseudoCrashTarget);
-          
-          // Clear missed bets cleanly
+          setMultiplier(dynamicCrashBound);
           setDeckA(p => ({ ...p, hasBetCurrent: false }));
           setDeckB(p => ({ ...p, hasBetCurrent: false }));
         } else {
-          setMultiplier(synchronizedMultiplier);
-          
-          // Verify inline auto-cash thresholds dynamically inside active loops
-          setDeckA(p => { if (p.hasBetCurrent && p.isAutoCash && synchronizedMultiplier >= parseFloat(p.cashVal)) { triggerImmediateCashout('A', synchronizedMultiplier, p); return { ...p, hasBetCurrent: false }; } return p; });
-          setDeckB(p => { if (p.hasBetCurrent && p.isAutoCash && synchronizedMultiplier >= parseFloat(p.cashVal)) { triggerImmediateCashout('B', synchronizedMultiplier, p); return { ...p, hasBetCurrent: false }; } return p; });
+          setMultiplier(computedMultiplier);
+          if (offsetMs % 300 < 20) playSynthesizedTone(200 + computedMultiplier * 15, 'sawtooth', 0.01, 0.01);
+
+          setDeckA(p => { if (p.hasBetCurrent && p.isAutoCash && computedMultiplier >= parseFloat(p.cashVal)) { triggerPayoutSequence('A', computedMultiplier, p); return { ...p, hasBetCurrent: false }; } return p; });
+          setDeckB(p => { if (p.hasBetCurrent && p.isAutoCash && computedMultiplier >= parseFloat(p.cashVal)) { triggerPayoutSequence('B', computedMultiplier, p); return { ...p, hasBetCurrent: false }; } return p; });
         }
       } 
-      // PHASE C: Flew Away Crash Display Resolution Block
+      // Phase 3: Resolution & Post-Crash Window
       else {
         setGameStatus('crashed');
-        const explicitRoundCycleIndex = Math.floor(absoluteUnixEpochMs / totalCyclePeriod);
-        const pseudoCrashTarget = parseFloat((1.05 + (parseFloat(String(Math.sin(explicitRoundCycleIndex) * 1000).split('.')[1] || 5) % 8.5)).toFixed(2));
-        setMultiplier(pseudoCrashTarget);
-        
+        const trackingIndex = Math.floor(epochTimeMs / cycleInterval);
+        const dynamicCrashBound = parseFloat((1.08 + (parseFloat(String(Math.sin(trackingIndex) * 1200).split('.')[1] || 4) % 9.2)).toFixed(2));
+        setMultiplier(dynamicCrashBound);
         setDeckA(p => ({ ...p, hasBetCurrent: false }));
         setDeckB(p => ({ ...p, hasBetCurrent: false }));
       }
 
-      // Draw active graphics frames relative to calculated parameters safely
-      drawRadarCanvasFrame(currentCycleOffsetTimeMs, countdownPhaseDuration);
-      animationId.current = requestAnimationFrame(executeGlobalSyncLoop);
+      renderRadarCanvas(offsetMs, countdownInterval);
+      animationId.current = requestAnimationFrame(runDistributedClockLoop);
     }
 
-    animationId.current = requestAnimationFrame(executeGlobalSyncLoop);
+    animationId.current = requestAnimationFrame(runDistributedClockLoop);
     return () => cancelAnimationFrame(animationId.current);
-  }, [deckA, deckB]);
+  }, [deckA, deckB, gameStatus, balance]);
 
-  // High Performance Synchronized Radar Canvas Renderer Loop
-  const drawRadarCanvasFrame = (offsetTimeMs, countdownLimit) => {
+  // Guaranteed Visibility Viewport Engine with Vector Trail Integration
+  const renderRadarCanvas = (offsetMs, countdownLimit) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     const W = canvas.width; const H = canvas.height;
     ctx.clearRect(0, 0, W, H);
-    
-    // Grid Lines matching Spribe blueprint exactly
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.02)'; ctx.lineWidth = 1;
+
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.025)'; ctx.lineWidth = 1;
     for (let i = 0; i < W; i += 50) { ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, H); ctx.stroke(); }
     for (let j = 0; j < H; j += 40) { ctx.beginPath(); ctx.moveTo(0, j); ctx.lineTo(W, j); ctx.stroke(); }
 
-    if (offsetTimeMs >= countdownLimit && gameStatus === 'running') {
-      const flightSec = (offsetTimeMs - countdownLimit) / 1000;
-      let cx = 60 + (W - 160) * Math.min(flightSec / 8, 1);
-      let cy = (H - 60) - (H - 160) * (Math.min(multiplier - 1, 5) / 5);
+    if (offsetMs >= countdownLimit && gameStatus === 'running') {
+      const secondsInAir = (offsetMs - countdownLimit) / 1000;
+      
+      // Locked safe boundaries to prevent clipping out of view
+      let cx = 50 + (W - 140) * Math.min(secondsInAir / 9, 1);
+      let cy = (H - 50) - (H - 130) * (Math.min(multiplier - 1, 6) / 6);
 
-      ctx.beginPath(); ctx.moveTo(60, H - 60);
-      ctx.quadraticCurveTo((60 + cx) / 1.8, H - 40, cx, cy);
-      ctx.strokeStyle = '#e11d48'; ctx.lineWidth = 5; ctx.shadowBlur = 15; ctx.shadowColor = '#e11d48';
+      // Vector Trail Render Layer
+      ctx.beginPath(); ctx.moveTo(50, H - 50);
+      ctx.quadraticCurveTo((50 + cx) / 1.9, H - 35, cx, cy);
+      ctx.strokeStyle = 'rgba(225, 29, 72, 0.85)'; ctx.lineWidth = 6;
+      ctx.shadowBlur = 20; ctx.shadowColor = '#e11d48';
       ctx.stroke(); ctx.shadowBlur = 0;
 
-      // Render Synchronized Plane Body
-      ctx.save(); ctx.translate(cx, cy); ctx.rotate(Math.sin(flightSec * 6) * 0.02 - 0.05);
-      const exhaust = ctx.createRadialGradient(-18, 2, 2, -18, 2, 14 + Math.random() * 6);
-      exhaust.addColorStop(0, '#ff5500'); exhaust.addColorStop(1, 'transparent');
-      ctx.fillStyle = exhaust; ctx.beginPath(); ctx.arc(-18, 2, 18, 0, Math.PI * 2); ctx.fill();
+      // Glow Underlay Vector Mapping
+      ctx.lineTo(cx, H - 50); ctx.lineTo(50, H - 50); ctx.closePath();
+      const underGradient = ctx.createLinearGradient(50, cy, 50, H - 50);
+      underGradient.addColorStop(0, 'rgba(225, 29, 72, 0.22)');
+      underGradient.addColorStop(1, 'transparent');
+      ctx.fillStyle = underGradient; ctx.fill();
 
-      ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.moveTo(28, 0); ctx.quadraticCurveTo(12, -10, -14, -8); ctx.lineTo(-20, 0); ctx.lineTo(-14, 8); ctx.quadraticCurveTo(12, 10, 28, 0); ctx.fill();
-      ctx.fillStyle = '#a855f7'; ctx.beginPath(); ctx.moveTo(-4, -8); ctx.lineTo(-22, -20); ctx.lineTo(-16, -6); ctx.closePath(); ctx.fill();
-      ctx.fillStyle = '#6366f1'; ctx.beginPath(); ctx.moveTo(10, -6); ctx.quadraticCurveTo(22, -3, 28, 0); ctx.quadraticCurveTo(22, 3, 10, 6); ctx.closePath(); ctx.fill();
+      // Premium Aircraft Graphics Assembly
+      ctx.save(); ctx.translate(cx, cy); ctx.rotate(Math.sin(secondsInAir * 8) * 0.015 - 0.04);
+      ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.moveTo(25, 0); ctx.quadraticCurveTo(10, -9, -12, -7); ctx.lineTo(-18, 0); ctx.lineTo(-12, 7); ctx.quadraticCurveTo(10, 9, 25, 0); ctx.fill();
+      ctx.fillStyle = '#e11d48'; ctx.beginPath(); ctx.moveTo(-3, -7); ctx.lineTo(-18, -16); ctx.lineTo(-14, -5); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = '#a855f7'; ctx.beginPath(); ctx.moveTo(8, -5); ctx.quadraticCurveTo(18, -2, 25, 0); ctx.quadraticCurveTo(18, 2, 8, 5); ctx.closePath(); ctx.fill();
       ctx.restore();
     }
   };
 
-  const triggerImmediateCashout = (targetDeck, m, activeDeckState) => {
-    const winAmt = (activeDeckState.wager * m);
-    commitWalletBalance(balance + winAmt, 0, -activeDeckState.wager, 0);
-    playTone(620, 'sine', 0.2);
-    confetti({ particleCount: 70, spread: 55, origin: { y: 0.4 } });
-    triggerToast(`🎉 Deck ${targetDeck} Payout Authorized! + KES ${winAmt.toFixed(2)}`, "success");
+  const triggerPayoutSequence = (deckName, multVal, activeState) => {
+    const rawWin = (activeState.wager * multVal);
+    const resolvedBalance = balance + rawWin;
+    setBalance(resolvedBalance);
+    commitWalletBalance(resolvedBalance);
+    
+    setMyBetsHistory(p => [{ roundId: Date.now().toString().slice(-5), stake: activeState.wager, multiplier: multVal, yieldAmount: rawWin, status: 'WON' }, ...p]);
+    
+    // Play professional Hurray Synthesized Melodic Fanfare
+    playSynthesizedTone(523.25, 'sine', 0.15, 0.05); // C5
+    setTimeout(() => playSynthesizedTone(659.25, 'sine', 0.15, 0.05), 100); // E5
+    setTimeout(() => playSynthesizedTone(783.99, 'sine', 0.3, 0.06), 200); // G5
+    
+    confetti({ particleCount: 90, spread: 65, origin: { y: 0.35 } });
+    triggerToast(`🎉 Deck ${deckName} Auto Cashout hit @ ${multVal}x! Recieved KES ${rawWin.toFixed(2)}`, "success");
   };
 
-  const commitWalletBalance = async (newBalance, depIncrement = 0, lossIncrement = 0, freeBetDelta = 0) => {
+  const commitWalletBalance = async (balTarget) => {
     if (!user) return;
-    const cleanBal = parseFloat(Math.max(0, newBalance).toFixed(2));
-    setBalance(cleanBal);
-    await updateDoc(doc(db, "users", user.uid), {
-      walletBalance: cleanBal,
-      mpesaPhone: inputPhone
-    });
+    await updateDoc(doc(db, "users", user.uid), { walletBalance: parseFloat(balTarget.toFixed(2)) });
   };
 
-  // Modernized Safety Stake Allocation Module
   const placeWagerIntent = (targetDeck) => {
-    // INTERCEPT: Block immediate action if the user profile wallet balance reads 0 KES
+    // Direct protection logic if the wallet has no funds
     if (balance <= 0) {
-      triggerToast("❌ Wager Denied: You do not have any money in your wallet. Please click Deposit to continue.", "error");
+      triggerToast("❌ Operation Aborted: Your wallet reads exactly KES 0.00. Please complete a deposit execution.", "error");
       return;
     }
 
     const isA = targetDeck === 'A';
-    const targetState = isA ? deckA : deckB;
+    const currentWagerAmount = isA ? deckA.wager : deckB.wager;
 
-    if (balance < targetState.wager && !targetState.hasBetCurrent && !targetState.hasBetNext) {
-      triggerToast("❌ Wager Denied: Insufficient wallet balance for chosen stake parameters.", "error");
+    if (balance < currentWagerAmount) {
+      triggerToast("❌ Allocation Failure: Selected target stake exceeds your available profile balance.", "error");
       return;
     }
 
     if (gameStatus === 'running') {
       if (isA) setDeckA(p => ({ ...p, hasBetNext: !p.hasBetNext }));
       else setDeckB(p => ({ ...p, hasBetNext: !p.hasBetNext }));
-      triggerToast(`Deck ${targetDeck} next round schedule toggled safely.`, "info");
+      triggerToast(`Deck ${targetDeck} round queue updated.`, "info");
     } else {
-      if (isA) setDeckA(p => ({ ...p, hasBetNext: !p.hasBetNext }));
-      else setDeckB(p => ({ ...p, hasBetNext: !p.hasBetNext }));
+      if (isA) setDeckA(p => ({ ...p, hasBetCurrent: true }));
+      else setDeckB(p => ({ ...p, hasBetCurrent: true }));
+      setBalance(b => b - currentWagerAmount);
     }
   };
 
-  const handleManualCashout = (targetDeck) => {
+  const handleManualPayoutExecution = (targetDeck) => {
     const isA = targetDeck === 'A';
     const targetState = isA ? deckA : deckB;
     if (!targetState.hasBetCurrent) return;
 
-    const winAmt = (targetState.wager * multiplier);
-    commitWalletBalance(balance + winAmt, 0, -targetState.wager, 0);
-    
+    const preciseWin = (targetState.wager * multiplier);
+    const updatedWallet = balance + preciseWin;
+    setBalance(updatedWallet);
+    commitWalletBalance(updatedWallet);
+
+    setMyBetsHistory(p => [{ roundId: Date.now().toString().slice(-5), stake: targetState.wager, multiplier, yieldAmount: preciseWin, status: 'WON' }, ...p]);
+
     if (isA) setDeckA(p => ({ ...p, hasBetCurrent: false }));
     else setDeckB(p => ({ ...p, hasBetCurrent: false }));
 
-    playTone(650, 'sine', 0.25);
-    confetti({ particleCount: 80, spread: 60, origin: { y: 0.4 } });
-    triggerToast(`🎉 Manual Cashout Success! + KES ${winAmt.toFixed(2)}`, "success");
+    // Execute standard success audio notes
+    playSynthesizedTone(587.33, 'sine', 0.12, 0.05);
+    setTimeout(() => playSynthesizedTone(880.00, 'sine', 0.25, 0.05), 110);
+
+    confetti({ particleCount: 60, spread: 50, origin: { y: 0.4 } });
+    triggerToast(`🎉 Manual Cashout Approved! + KES ${preciseWin.toFixed(2)}`, "success");
+  };
+
+  // Secure Message Transmission Control with Premium Wallet Validation Constraint
+  const broadcastChatMessage = () => {
+    if (!chatInput.trim()) return;
+    
+    if (balance <= 1000) {
+      triggerToast("⚠️ Premium Lobby Limitation: Only users possessing a wallet state above KES 1,000 can send a message.", "error");
+      return;
+    }
+
+    setChatLogs(p => [...p, {
+      user: '🦈070***01',
+      msg: chatInput,
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    }]);
+    setChatInput('');
+    playSynthesizedTone(800, 'sine', 0.03, 0.01);
   };
 
   const handlePaymentInitiation = async () => {
     const amt = parseInt(inputAmount);
-    if (isNaN(amt) || amt < 49) return triggerToast("❌ Minimum requirement bound: KES 49 required.", "error");
-    if (!inputPhone || inputPhone.trim().length < 9) return triggerToast("❌ Validation failure on network telephone format.", "error");
-
+    if (isNaN(amt) || amt < 49) return triggerToast("❌ Minimum parameter boundary violation: KES 49 required.", "error");
     setLoadingDeposit(true);
     try {
       const res = await fetch('/api/payhero', {
@@ -306,122 +339,142 @@ export default function UltimateJetPesaCockpit() {
       });
       const data = await res.json();
       if (data.success) {
-        if (rememberPhone) { localStorage.setItem('jetpesa_saved_phone', inputPhone); }
-        commitWalletBalance(balance + amt, amt, 0, 0);
+        if (rememberPhone) localStorage.setItem('jetpesa_saved_phone', inputPhone);
+        const nextBal = balance + amt;
+        setBalance(nextBal); commitWalletBalance(nextBal);
         setIsDepositModalOpen(false);
-        triggerToast("✅ Secure STK Push protocol triggered successfully.", "success");
-      } else { triggerToast("Gateway fallback response: " + data.message, "error"); }
-    } catch (e) { triggerToast("Exception context failure: " + e.message, "error"); }
+        triggerToast("✅ Verification sequence acknowledged. STK push deployed.", "success");
+      } else { triggerToast("Gateway reported error: " + data.message, "error"); }
+    } catch (e) { triggerToast("System context failure: " + e.message, "error"); }
     finally { setLoadingDeposit(false); }
   };
 
   return (
-    <div style={{ background: '#060609', color: '#f4f4f6', minHeight: '100vh', fontFamily: "'Plus Jakarta Sans', sans-serif", display: 'flex', flexDirection: 'column', position: 'relative', overflowX: 'hidden' }}>
+    <div style={{ background: '#07080e', color: '#f1f5f9', minHeight: '100vh', fontFamily: "'Plus Jakarta Sans', sans-serif", display: 'flex', flexDirection: 'column' }}>
       
-      {/* SELF-DISMISSING FLOATING NOTIFICATION BUBBLES AREA */}
-      <div style={{ position: 'fixed', top: '80px', left: '50%', transform: 'translateX(-50%)', zIndex: 99999, display: 'flex', flexDirection: 'column', gap: '8px', width: '90%', maxWidth: '420px' }}>
+      {/* Dynamic Floating Dynamic Toast Bubble Cluster */}
+      <div style={{ position: 'fixed', top: '85px', left: '50%', transform: 'translateX(-50%)', zIndex: 99999, display: 'flex', flexDirection: 'column', gap: '8px', width: '90%', maxWidth: '440px' }}>
         {toasts.map(t => (
-          <div key={t.id} style={{ background: t.type === 'error' ? '#dc2626' : t.type === 'success' ? '#16a34a' : '#1e1b4b', color: '#fff', padding: '14px 20px', borderRadius: '24px', boxShadow: '0 12px 30px rgba(0,0,0,0.6)', fontWeight: '700', fontSize: '13px', textAlign: 'center', border: '1px solid rgba(255,255,255,0.15)', animation: 'fadeInUp 0.2s ease-out' }}>
+          <div key={t.id} style={{ background: t.type === 'error' ? 'rgba(220,38,38,0.95)' : t.type === 'success' ? 'rgba(22,163,74,0.95)' : 'rgba(30,27,75,0.95)', color: '#fff', padding: '12px 24px', borderRadius: '30px', boxShadow: '0 16px 32px rgba(0,0,0,0.6)', fontWeight: '800', fontSize: '13px', textAlign: 'center', border: '1px solid rgba(255,255,255,0.15)', backdropFilter: 'blur(10px)' }}>
             {t.msg}
           </div>
         ))}
       </div>
 
-      {/* FIXED NAVBAR HEADER */}
-      <header style={{ background: '#0c0d12', borderBottom: '2px solid #14151b', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', position: 'sticky', top: 0, zIndex: 99 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <span style={{ fontSize: '24px', fontWeight: '900', color: '#fff', letterSpacing: '-0.75px' }}>Aviator</span>
-          <button style={{ background: 'rgba(34,197,94,0.12)', border: '1px solid #22c55e', color: '#22c55e', fontSize: '10px', fontWeight: '800', padding: '3px 10px', borderRadius: '12px', cursor: 'pointer' }} onClick={() => setIsProvablyModalOpen(true)}>🛡️ Provably Fair</button>
+      {/* Glossy Operational Navigation HUD Header */}
+      <header style={{ background: 'rgba(12,14,24,0.75)', backdropFilter: 'blur(16px)', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 20px', position: 'sticky', top: 0, zIndex: 99 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <span style={{ fontSize: '24px', fontWeight: '900', letterSpacing: '-1px', background: 'linear-gradient(to right, #fff, #94a3b8)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>JETPESA</span>
+          <button style={{ background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.3)', color: '#22c55e', fontSize: '10px', fontWeight: '800', padding: '3px 10px', borderRadius: '20px', cursor: 'pointer' }} onClick={() => setIsProvablyModalOpen(true)}>🛡️ PROVABLY FAIR</button>
         </div>
         
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
           <button onClick={() => setAudioMuted(!audioMuted)} style={{ background: 'transparent', border: 'none', fontSize: '18px', cursor: 'pointer' }}>{audioMuted ? '🔈' : '🔊'}</button>
-          <button onClick={() => setIsRainActive(!isRainActive)} style={{ background: isRainActive ? '#a855f7' : '#1a1b23', border: 'none', color: '#fff', padding: '5px 12px', borderRadius: '6px', fontSize: '11px', fontWeight: '800', cursor: 'pointer' }}>🌧️ Rain</button>
+          <button onClick={() => setIsRainActive(!isRainActive)} style={{ background: isRainActive ? '#a855f7' : 'rgba(255,255,255,0.05)', border: 'none', color: '#fff', padding: '5px 12px', borderRadius: '8px', fontSize: '11px', fontWeight: '800', cursor: 'pointer' }}>🌧️ RAIN</button>
           
-          <div style={{ display: 'flex', alignItems: 'center', background: '#14151f', border: '1px solid #252736', padding: '2px 2px 2px 12px', borderRadius: '24px', gap: '8px' }}>
-            <span style={{ color: '#22c55e', fontWeight: '900', fontSize: '14px' }}>{balance.toFixed(2)} KES</span>
-            <button onClick={() => setIsDepositModalOpen(true)} style={{ background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)', border: 'none', color: '#fff', fontWeight: '900', padding: '7px 18px', borderRadius: '20px', cursor: 'pointer', fontSize: '12px' }}>Deposit</button>
+          <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.08)', padding: '3px 3px 3px 14px', borderRadius: '30px', gap: '10px' }}>
+            <span style={{ color: '#22c55e', fontWeight: '900', fontSize: '14px', letterSpacing: '0.25px' }}>{balance.toFixed(2)} KES</span>
+            <button onClick={() => setIsDepositModalOpen(true)} style={{ background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)', border: 'none', color: '#fff', fontWeight: '900', padding: '8px 20px', borderRadius: '20px', cursor: 'pointer', fontSize: '12px', boxShadow: '0 4px 12px rgba(22,163,74,0.3)' }}>DEPOSIT</button>
           </div>
         </div>
       </header>
 
-      {/* HISTORIC TAPE */}
-      <div style={{ display: 'flex', gap: '8px', background: '#0a0b0f', padding: '10px 16px', overflowX: 'auto', borderBottom: '1px solid #15161e' }}>
+      {/* Multiline Velocity History Row */}
+      <div style={{ display: 'flex', gap: '8px', background: '#040509', padding: '10px 20px', overflowX: 'auto', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
         {historyTape.map((h, i) => (
-          <div key={i} style={{ background: h > 2 ? 'linear-gradient(135deg, #a855f7 0%, #701a75 100%)' : 'linear-gradient(135deg, #1e40af 0%, #1d4ed8 100%)', color: '#fff', padding: '4px 14px', borderRadius: '8px', fontSize: '12px', fontWeight: '900' }}>
+          <div key={i} style={{ background: h > 2 ? 'linear-gradient(135deg, #a855f7 0%, #6b21a8 100%)' : 'rgba(255,255,255,0.05)', color: h > 2 ? '#fff' : '#94a3b8', padding: '4px 14px', borderRadius: '6px', fontSize: '11px', fontWeight: '900', border: '1px solid rgba(255,255,255,0.05)' }}>
             {h.toFixed(2)}x
           </div>
         ))}
       </div>
 
-      {/* CENTRAL COCKPIT GRID ASSEMBLY */}
-      <div className="cockpitMainLayout" style={{ flex: 1, display: 'grid', padding: '12px', gap: '12px', minHeight: 0 }}>
+      {/* Core Dynamic Screen Layout Structure Grid */}
+      <div className="cockpitMainLayout" style={{ flex: 1, display: 'grid', padding: '16px', gap: '16px', boxSizing: 'border-box' }}>
         
-        {/* PANEL 1: LIVE ACTION TRACK FEED */}
-        <div className="leftPanelLayout" style={{ background: '#0e0f14', borderRadius: '12px', border: '1px solid #16171d', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-          <div style={{ display: 'flex', background: '#12131a', padding: '4px' }}>
-            {['all', 'mine', 'top'].map(t => (
-              <button key={t} onClick={() => setActiveTab(t)} style={{ flex: 1, padding: '10px', background: activeTab === t ? '#1a1b24' : 'transparent', border: 'none', color: '#fff', fontSize: '11px', fontWeight: '800', borderRadius: '6px' }}>{t.toUpperCase()} BETS</button>
-            ))}
+        {/* BLOCK 1: DATA VERIFICATION MATRIX AND PERSONAL ACCOUNT HISTORY */}
+        <div className="leftPanelLayout" style={{ background: 'rgba(18,20,32,0.6)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '16px', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+          <div style={{ display: 'flex', background: 'rgba(0,0,0,0.2)', padding: '4px' }}>
+            <button onClick={() => setActiveTab('all')} style={{ flex: 1, padding: '12px', background: activeTab === 'all' ? 'rgba(255,255,255,0.06)' : 'transparent', border: 'none', color: '#fff', fontSize: '11px', fontWeight: '800', borderRadius: '8px', cursor: 'pointer' }}>ALL LIVE STAKES</button>
+            <button onClick={() => setActiveTab('mine')} style={{ flex: 1, padding: '12px', background: activeTab === 'mine' ? 'rgba(255,255,255,0.06)' : 'transparent', border: 'none', color: '#fff', fontSize: '11px', fontWeight: '800', borderRadius: '8px', cursor: 'pointer' }}>MY BET HISTORY</button>
           </div>
-          <div style={{ flex: 1, overflowY: 'auto', padding: '6px' }}>
-            {liveBetsFeed.map((b, i) => (
-              <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 8px', background: b.won ? 'rgba(34,197,94,0.04)' : 'transparent', fontSize: '12px' }}>
-                <span style={{ color: '#94a3b8', fontWeight: '600' }}>{b.username}</span>
-                <span style={{ fontWeight: '800', color: '#fff' }}>{b.bet.toFixed(0)} KES</span>
-                <span style={{ color: b.won ? '#22c55e' : '#475569', fontWeight: '900' }}>{b.won ? `${b.mult}x` : '-'}</span>
-              </div>
-            ))}
+          
+          <div style={{ flex: 1, overflowY: 'auto', padding: '10px' }}>
+            {activeTab === 'all' ? (
+              liveBetsFeed.map((b, i) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 10px', background: b.won ? 'rgba(34,197,94,0.05)' : 'transparent', borderBottom: '1px solid rgba(255,255,255,0.02)', fontSize: '12px' }}>
+                  <span style={{ color: '#94a3b8', fontWeight: '600' }}>{b.username}</span>
+                  <span style={{ fontWeight: '800', color: '#fff' }}>{b.bet} KES</span>
+                  <span style={{ color: b.won ? '#22c55e' : '#475569', fontWeight: '900' }}>{b.won ? `${b.mult}x` : '-'}</span>
+                </div>
+              ))
+            ) : (
+              myBetsHistory.length === 0 ? (
+                <div style={{ textAlign: 'center', color: '#475569', fontSize: '12px', marginTop: '40px', fontWeight: '600' }}>No historical wagers verified for this local window sequence.</div>
+              ) : (
+                myBetsHistory.map((m, i) => (
+                  <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px', background: 'rgba(0,0,0,0.15)', borderRadius: '8px', marginBottom: '6px', fontSize: '12px', border: '1px solid rgba(255,255,255,0.02)' }}>
+                    <div>
+                      <span style={{ color: '#64748b', display: 'block', fontSize: '10px' }}>ROUND #{m.roundId}</span>
+                      <span style={{ fontWeight: '800' }}>{m.stake} KES</span>
+                    </div>
+                    <div style={{ textAlign: 'right' }}>
+                      <span style={{ color: '#22c55e', fontWeight: '900', display: 'block' }}>{m.multiplier.toFixed(2)}x</span>
+                      <span style={{ color: '#94a3b8', fontSize: '11px' }}>+{m.yieldAmount.toFixed(1)}</span>
+                    </div>
+                  </div>
+                ))
+              )
+            )}
           </div>
         </div>
 
-        {/* PANEL 2: MAIN FLIGHT RADAR & INTERACTIVE WAGER STICKY FLOATING DECKS */}
-        <div className="centerPanelLayout" style={{ display: 'flex', flexDirection: 'column', gap: '12px', minHeight: 0 }}>
+        {/* BLOCK 2: VISUAL MONITOR FLIGHT CANVAS AND ADJUSTABLE WAGER CONTROLS */}
+        <div className="centerPanelLayout" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           
-          <div style={{ flex: 1, background: '#030305', borderRadius: '14px', border: '1px solid #16171d', position: 'relative', overflow: 'hidden', minHeight: '300px' }}>
+          <div style={{ flex: 1, background: '#020306', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.05)', position: 'relative', overflow: 'hidden', minHeight: '300px', boxShadow: 'inset 0 0 40px rgba(0,0,0,0.9)' }}>
             
-            {/* SPRIBE SYNCHRONIZED COUNTDOWN SYSTEM PROGRESS OVERLAY */}
+            {/* Countdown State Graphical Interface Overlay */}
             {gameStatus === 'idle' && (
-              <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(5,5,8,0.94)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', zIndex: 10 }}>
-                <div style={{ width: '75%', maxWidth: '320px', background: '#12131a', padding: '5px', borderRadius: '10px', border: '1px solid #22c55e' }}>
-                  <div style={{ height: '8px', background: 'linear-gradient(to right, #22c55e, #4ade80)', borderRadius: '6px', width: `${countdownProgress}%` }} />
+              <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(4,5,9,0.94)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', zIndex: 10 }}>
+                <div style={{ width: '70%', maxWidth: '300px', background: 'rgba(255,255,255,0.03)', padding: '5px', borderRadius: '12px', border: '1px solid rgba(34,197,94,0.2)' }}>
+                  <div style={{ height: '8px', background: 'linear-gradient(to right, #22c55e, #4ade80)', borderRadius: '8px', width: `${countdownProgress}%` }} />
                 </div>
-                <span style={{ color: '#fff', fontSize: '14px', fontWeight: '900', marginTop: '12px', letterSpacing: '0.5px' }}>WAITING FOR NEXT ROUND...</span>
+                <span style={{ color: '#fff', fontSize: '13px', fontWeight: '900', marginTop: '14px', letterSpacing: '1px' }}>WAITING FOR NEXT FLIGHT ROUND...</span>
                 <span style={{ color: '#475569', fontSize: '11px', fontWeight: '700', marginTop: '4px' }}>Powered by JetPesa</span>
               </div>
             )}
 
-            <canvas ref={canvasRef} width={640} height={320} style={{ width: '100%', height: '100%', display: 'block' }} />
+            <canvas ref={canvasRef} width={640} height={340} style={{ width: '100%', height: '100%', display: 'block' }} />
             
             {gameStatus !== 'idle' && (
               <div style={{ position: 'absolute', top: '45%', left: '50%', transform: 'translate(-50%, -50%)', textAlign: 'center', pointerEvents: 'none' }}>
                 {gameStatus === 'crashed' ? (
                   <div>
-                    <h1 style={{ color: '#e11d48', fontSize: '3.6rem', fontWeight: '900', margin: 0 }}>FLEW AWAY</h1>
-                    <span style={{ color: '#64748b', fontSize: '14px', fontWeight: '800' }}>Crashed @ {multiplier.toFixed(2)}x</span>
+                    <h1 style={{ color: '#e11d48', fontSize: '3.6rem', fontWeight: '900', margin: 0, letterSpacing: '-1px' }}>FLEW AWAY</h1>
+                    <span style={{ color: '#475569', fontSize: '14px', fontWeight: '800' }}>Ended @ {multiplier.toFixed(2)}x</span>
                   </div>
                 ) : (
-                  <h1 style={{ fontSize: '5.8rem', fontWeight: '900', color: '#fff', margin: 0, letterSpacing: '-2px' }}>{multiplier.toFixed(2)}x</h1>
+                  <h1 style={{ fontSize: '5.8rem', fontWeight: '900', color: '#fff', margin: 0, letterSpacing: '-2px', textShadow: '0 0 30px rgba(255,255,255,0.2)' }}>{multiplier.toFixed(2)}x</h1>
                 )}
               </div>
             )}
           </div>
 
-          {/* COMPACT STICKY DEALS LAYER: MOVED HIGHER AND INCREASED PADDING FOR DESKTOP ACCESSIBILITY */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', background: '#0e0f14', border: '2px solid #1c1e27', padding: '16px', borderRadius: '16px', boxShadow: '0 15px 35px rgba(0,0,0,0.7)' }}>
+          {/* Elevated High Capacity Dashboard Control Center Panel Block */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', background: 'rgba(18,20,32,0.8)', border: '1px solid rgba(255,255,255,0.08)', padding: '18px', borderRadius: '20px', boxShadow: '0 20px 40px rgba(0,0,0,0.5)' }}>
             
-            {/* STRATEGY SYSTEM WAGER PANEL A */}
-            <div style={{ background: '#12131e', border: '1px solid #23253a', padding: '14px', borderRadius: '12px' }}>
-              <div style={{ display: 'flex', gap: '6px', marginBottom: '10px' }}>
-                <button onClick={() => setDeckA(p => ({ ...p, isAuto: !p.isAuto }))} style={{ flex: 1, padding: '8px', fontSize: '11px', fontWeight: '900', background: deckA.isAuto ? '#e11d48' : '#1e293b', border: 'none', color: '#fff', borderRadius: '6px', cursor: 'pointer' }}>AUTO BET</button>
-                <button onClick={() => setDeckA(p => ({ ...p, isAutoCash: !p.isAutoCash }))} style={{ flex: 1, padding: '8px', fontSize: '11px', fontWeight: '900', background: deckA.isAutoCash ? '#22c55e' : '#1e293b', border: 'none', color: '#fff', borderRadius: '6px', cursor: 'pointer' }}>AUTO CASH</button>
+            {/* Wager Grid Module A */}
+            <div style={{ background: 'rgba(0,0,0,0.25)', border: '1px solid rgba(255,255,255,0.04)', padding: '14px', borderRadius: '14px' }}>
+              <div style={{ display: 'flex', gap: '6px', marginBottom: '12px' }}>
+                <button onClick={() => setDeckA(p => ({ ...p, isAuto: !p.isAuto }))} style={{ flex: 1, padding: '8px', fontSize: '11px', fontWeight: '900', background: deckA.isAuto ? '#e11d48' : 'rgba(255,255,255,0.05)', border: 'none', color: '#fff', borderRadius: '6px', cursor: 'pointer' }}>AUTO BET</button>
+                <button onClick={() => setDeckA(p => ({ ...p, isAutoCash: !p.isAutoCash }))} style={{ flex: 1, padding: '8px', fontSize: '11px', fontWeight: '900', background: deckA.isAutoCash ? '#22c55e' : 'rgba(255,255,255,0.05)', border: 'none', color: '#fff', borderRadius: '6px', cursor: 'pointer' }}>AUTO CASH</button>
               </div>
-              {deckA.isAutoCash && <input type="number" step="0.1" value={deckA.cashVal} onChange={e => setDeckA(p => ({ ...p, cashVal: e.target.value }))} style={{ width: '92%', padding: '6px', background: '#060609', border: '1px solid #2c2e43', color: '#fff', fontSize: '12px', borderRadius: '6px', marginBottom: '8px' }} />}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <input type="number" value={deckA.wager} onChange={e => setDeckA(p => ({ ...p, wager: parseInt(e.target.value) }))} style={{ width: '70px', padding: '12px 4px', background: '#060609', border: '1px solid #2c2e43', color: '#fff', fontWeight: '900', textAlign: 'center', borderRadius: '6px', fontSize: '15px' }} />
+              {deckA.isAutoCash && <input type="number" step="0.1" value={deckA.cashVal} onChange={e => setDeckA(p => ({ ...p, cashVal: e.target.value }))} style={{ width: '92%', padding: '6px 8px', background: '#000', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', fontSize: '12px', borderRadius: '6px', marginBottom: '8px' }} />}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <input type="number" value={deckA.wager} onChange={e => setDeckA(p => ({ ...p, wager: parseInt(e.target.value) || 0 }))} style={{ width: '75px', padding: '12px 4px', background: '#000', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', fontWeight: '900', textAlign: 'center', borderRadius: '8px', fontSize: '16px' }} />
                 
                 {deckA.hasBetCurrent ? (
-                  <button onClick={() => handleManualCashout('A')} style={{ flex: 1, padding: '14px', background: 'linear-gradient(135deg, #d97706 0%, #b45309 100%)', border: 'none', color: '#fff', fontWeight: '900', fontSize: '14px', borderRadius: '8px', cursor: 'pointer' }}>
+                  <button onClick={() => handleManualPayoutExecution('A')} style={{ flex: 1, padding: '14px', background: 'linear-gradient(135deg, #d97706 0%, #b45309 100%)', border: 'none', color: '#fff', fontWeight: '900', fontSize: '14px', borderRadius: '8px', cursor: 'pointer' }}>
                     CASH OUT<br/><span style={{ fontSize: '16px' }}>{(deckA.wager * multiplier).toFixed(2)} KES</span>
                   </button>
                 ) : (
@@ -432,18 +485,18 @@ export default function UltimateJetPesaCockpit() {
               </div>
             </div>
 
-            {/* STRATEGY SYSTEM WAGER PANEL B */}
-            <div style={{ background: '#12131e', border: '1px solid #23253a', padding: '14px', borderRadius: '12px' }}>
-              <div style={{ display: 'flex', gap: '6px', marginBottom: '10px' }}>
-                <button onClick={() => setDeckB(p => ({ ...p, isAuto: !p.isAuto }))} style={{ flex: 1, padding: '8px', fontSize: '11px', fontWeight: '900', background: deckB.isAuto ? '#e11d48' : '#1e293b', border: 'none', color: '#fff', borderRadius: '6px', cursor: 'pointer' }}>AUTO BET</button>
-                <button onClick={() => setDeckB(p => ({ ...p, isAutoCash: !p.isAutoCash }))} style={{ flex: 1, padding: '8px', fontSize: '11px', fontWeight: '900', background: deckB.isAutoCash ? '#22c55e' : '#1e293b', border: 'none', color: '#fff', borderRadius: '6px', cursor: 'pointer' }}>AUTO CASH</button>
+            {/* Wager Grid Module B */}
+            <div style={{ background: 'rgba(0,0,0,0.25)', border: '1px solid rgba(255,255,255,0.04)', padding: '14px', borderRadius: '14px' }}>
+              <div style={{ display: 'flex', gap: '6px', marginBottom: '12px' }}>
+                <button onClick={() => setDeckB(p => ({ ...p, isAuto: !p.isAuto }))} style={{ flex: 1, padding: '8px', fontSize: '11px', fontWeight: '900', background: deckB.isAuto ? '#e11d48' : 'rgba(255,255,255,0.05)', border: 'none', color: '#fff', borderRadius: '6px', cursor: 'pointer' }}>AUTO BET</button>
+                <button onClick={() => setDeckB(p => ({ ...p, isAutoCash: !p.isAutoCash }))} style={{ flex: 1, padding: '8px', fontSize: '11px', fontWeight: '900', background: deckB.isAutoCash ? '#22c55e' : 'rgba(255,255,255,0.05)', border: 'none', color: '#fff', borderRadius: '6px', cursor: 'pointer' }}>AUTO CASH</button>
               </div>
-              {deckB.isAutoCash && <input type="number" step="0.1" value={deckB.cashVal} onChange={e => setDeckB(p => ({ ...p, cashVal: e.target.value }))} style={{ width: '92%', padding: '6px', background: '#060609', border: '1px solid #2c2e43', color: '#fff', fontSize: '12px', borderRadius: '6px', marginBottom: '8px' }} />}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <input type="number" value={deckB.wager} onChange={e => setDeckB(p => ({ ...p, wager: parseInt(e.target.value) }))} style={{ width: '70px', padding: '12px 4px', background: '#060609', border: '1px solid #2c2e43', color: '#fff', fontWeight: '900', textAlign: 'center', borderRadius: '6px', fontSize: '15px' }} />
+              {deckB.isAutoCash && <input type="number" step="0.1" value={deckB.cashVal} onChange={e => setDeckB(p => ({ ...p, cashVal: e.target.value }))} style={{ width: '92%', padding: '6px 8px', background: '#000', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', fontSize: '12px', borderRadius: '6px', marginBottom: '8px' }} />}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <input type="number" value={deckB.wager} onChange={e => setDeckB(p => ({ ...p, wager: parseInt(e.target.value) || 0 }))} style={{ width: '75px', padding: '12px 4px', background: '#000', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', fontWeight: '900', textAlign: 'center', borderRadius: '8px', fontSize: '16px' }} />
                 
                 {deckB.hasBetCurrent ? (
-                  <button onClick={() => handleManualCashout('B')} style={{ flex: 1, padding: '14px', background: 'linear-gradient(135deg, #d97706 0%, #b45309 100%)', border: 'none', color: '#fff', fontWeight: '900', fontSize: '14px', borderRadius: '8px', cursor: 'pointer' }}>
+                  <button onClick={() => handleManualPayoutExecution('B')} style={{ flex: 1, padding: '14px', background: 'linear-gradient(135deg, #d97706 0%, #b45309 100%)', border: 'none', color: '#fff', fontWeight: '900', fontSize: '14px', borderRadius: '8px', cursor: 'pointer' }}>
                     CASH OUT<br/><span style={{ fontSize: '16px' }}>{(deckB.wager * multiplier).toFixed(2)} KES</span>
                   </button>
                 ) : (
@@ -457,94 +510,82 @@ export default function UltimateJetPesaCockpit() {
           </div>
         </div>
 
-        {/* PANEL 3: LOBBY PUBLIC COMMUNICATION PLATFORM */}
-        <div className="rightPanelLayout" style={{ background: '#0e0f14', borderRadius: '12px', border: '1px solid #16171d', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-          <div style={{ background: '#12131a', padding: '12px', borderBottom: '1px solid #16171d' }}>
-            <span style={{ fontWeight: '800', fontSize: '13px' }}>Lobby Chat Room 💬</span>
+        {/* BLOCK 3: PREMIUM METROPOLITAN WHATSAPP-STYLED LOBBY INTERACTION PORTAL */}
+        <div className="rightPanelLayout" style={{ background: '#0b141a', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '16px', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 12px 24px rgba(0,0,0,0.4)' }}>
+          
+          <div style={{ background: '#202c33', padding: '14px 16px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#00a884' }} />
+            <span style={{ fontWeight: '800', fontSize: '14px', color: '#e9edef' }}>Dynamic Multi-Dialect Lobby Lounge</span>
           </div>
-          <div style={{ flex: 1, padding: '8px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            {chatLogs.map((c, i) => (
-              <div key={i} style={{ background: c.system ? 'rgba(168,85,247,0.06)' : '#12131a', padding: '8px 10px', borderRadius: '6px', fontSize: '11px' }}>
-                <span style={{ color: c.system ? '#c084fc' : '#38bdf8', fontWeight: '800', display: 'block' }}>{c.user}</span>
-                <span style={{ color: '#e2e8f0', marginTop: '2px', display: 'block' }}>{c.msg}</span>
-              </div>
-            ))}
+
+          {/* Premium Chat Flow Frame */}
+          <div style={{ flex: 1, padding: '16px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '10px', background: '#0b141a' }}>
+            {chatLogs.map((c, i) => {
+              const isMe = c.user === '🦈070***01';
+              return (
+                <div key={i} style={{ alignSelf: isMe ? 'flex-end' : 'flex-start', maxWidth: '85%', background: isMe ? '#005c4b' : '#202c33', padding: '8px 12px', borderRadius: '10px', position: 'relative', boxShadow: '0 1px 2px rgba(0,0,0,0.3)' }}>
+                  {!isMe && <span style={{ color: '#30d6b5', fontWeight: '800', fontSize: '11px', display: 'block', marginBottom: '3px' }}>{c.user}</span>}
+                  <span style={{ color: '#e9edef', fontSize: '12.5px', lineHeight: '1.4', wordBreak: 'break-word', display: 'block' }}>{c.msg}</span>
+                  <span style={{ display: 'block', textTransform: 'uppercase', textAlign: 'right', fontSize: '9px', color: 'rgba(255,255,255,0.4)', marginTop: '4px' }}>{c.time}</span>
+                </div>
+              );
+            })}
           </div>
-          <div style={{ padding: '8px', background: '#12131a', borderTop: '1px solid #16171d' }}>
-            <input type="text" placeholder="Type chat message..." value={chatInput} onChange={e => setChatInput(e.target.value)} onKeyDown={e => {
-              if (e.key === 'Enter' && chatInput.trim()) {
-                setChatLogs(p => [...p, { user: '🦈070***01', msg: chatInput, time: 'Now' }]); setChatInput('');
-              }
-            }} style={{ width: '92%', padding: '8px', background: '#060609', border: '1px solid #2c2e43', color: '#fff', borderRadius: '4px', fontSize: '12px' }} />
+
+          {/* Message Transmission Footing Panel */}
+          <div style={{ padding: '10px 14px', background: '#202c33', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <input type="text" placeholder={balance > 1000 ? "Type chat message..." : "Requires KES 1000+ wallet balance"} disabled={balance <= 1000} value={chatInput} onChange={e => setChatInput(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') broadcastChatMessage(); }} style={{ flex: 1, padding: '10px 14px', background: '#2a3942', border: 'none', color: '#fff', borderRadius: '8px', fontSize: '13px' }} />
+            <button onClick={broadcastChatMessage} style={{ background: '#00a884', border: 'none', width: '38px', height: '38px', borderRadius: '50%', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px' }}>➔</button>
           </div>
         </div>
 
       </div>
 
-      {/* FOOTER MOBILE UTILITY ACTION OVERLAY */}
-      <div className="mobileUtilityFooterBar" style={{ background: '#0c0d12', borderTop: '1px solid #14151b', display: 'none', justifyContent: 'space-around', padding: '10px 0', position: 'sticky', bottom: 0, zIndex: 999 }}>
-        <button onClick={() => setMobileActivePanel('bets')} style={{ background: 'transparent', border: 'none', color: mobileActivePanel === 'bets' ? '#22c55e' : '#64748b', fontSize: '12px', fontWeight: '800' }}>📊 DATA LIVE</button>
-        <button onClick={() => setMobileActivePanel('game')} style={{ background: 'transparent', border: 'none', color: mobileActivePanel === 'game' ? '#e11d48' : '#64748b', fontSize: '12px', fontWeight: '800' }}>🚀 RADAR HUB</button>
+      {/* Persistent Nav Tab Footing Row Layer for Compact Displays */}
+      <div className="mobileUtilityFooterBar" style={{ background: '#0c0d12', borderTop: '1px solid rgba(255,255,255,0.06)', display: 'none', justifyContent: 'space-around', padding: '12px 0', position: 'sticky', bottom: 0, zIndex: 999 }}>
+        <button onClick={() => setMobileActivePanel('bets')} style={{ background: 'transparent', border: 'none', color: mobileActivePanel === 'bets' ? '#22c55e' : '#64748b', fontSize: '12px', fontWeight: '800' }}>📊 HISTORIC</button>
+        <button onClick={() => setMobileActivePanel('game')} style={{ background: 'transparent', border: 'none', color: mobileActivePanel === 'game' ? '#e11d48' : '#64748b', fontSize: '12px', fontWeight: '800' }}>🚀 RADAR HUD</button>
         <button onClick={() => setMobileActivePanel('chat')} style={{ background: 'transparent', border: 'none', color: mobileActivePanel === 'chat' ? '#38bdf8' : '#64748b', fontSize: '12px', fontWeight: '800' }}>💬 ROOM CHAT</button>
       </div>
 
-      {/* MODAL 1: M-PESA TRANSACTIONS GATEWAY HOOK */}
+      {/* MPESA SECURE PAYMENT HANDSHAKE MODAL */}
       {isDepositModalOpen && (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '12px' }}>
-          <div style={{ background: '#0c0d12', border: '1px solid #22c55e', borderRadius: '16px', width: '100%', maxWidth: '340px', padding: '24px', position: 'relative' }}>
-            <button onClick={() => setIsDepositModalOpen(false)} style={{ position: 'absolute', top: '14px', right: '16px', background: 'transparent', border: 'none', color: '#64748b', fontSize: '22px', cursor: 'pointer' }}>×</button>
-            <h3 style={{ margin: '0 0 16px 0', color: '#22c55e', fontWeight: '900' }}>M-Pesa Safaricom Gate</h3>
+          <div style={{ background: '#0c0d12', border: '1px solid #22c55e', borderRadius: '20px', width: '100%', maxWidth: '350px', padding: '26px', position: 'relative' }}>
+            <button onClick={() => setIsDepositModalOpen(false)} style={{ position: 'absolute', top: '14px', right: '16px', background: 'transparent', border: 'none', color: '#64748b', fontSize: '24px', cursor: 'pointer' }}>×</button>
+            <h3 style={{ margin: '0 0 16px 0', color: '#22c55e', fontWeight: '900' }}>Safaricom M-Pesa Wire</h3>
             
-            <div style={{ marginBottom: '12px' }}>
-              <label style={{ fontSize: '11px', color: '#94a3b8', fontWeight: '700' }}>DEPOSIT QUOTA (MIN 49 KES)</label>
-              <input type="number" value={inputAmount} onChange={e => setInputAmount(e.target.value)} style={{ width: '92%', padding: '12px', marginTop: '4px', background: '#12131e', border: '1px solid #23253a', color: '#fff', fontSize: '16px', fontWeight: '900', borderRadius: '8px' }} />
-            </div>
-
             <div style={{ marginBottom: '14px' }}>
-              <label style={{ fontSize: '11px', color: '#94a3b8', fontWeight: '700' }}>SAFARICOM TELEPHONE SIGNATURE</label>
-              <input type="text" value={inputPhone} onChange={e => setInputPhone(e.target.value)} placeholder="07XXXXXXXX" style={{ width: '92%', padding: '12px', marginTop: '4px', background: '#12131e', border: '1px solid #23253a', color: '#fff', fontSize: '14px', borderRadius: '8px' }} />
+              <label style={{ fontSize: '11px', color: '#94a3b8', fontWeight: '700' }}>DEPOSIT QUANTITY (MIN 49 KES)</label>
+              <input type="number" value={inputAmount} onChange={e => setInputAmount(e.target.value)} style={{ width: '92%', padding: '12px', marginTop: '4px', background: '#141622', border: '1px solid rgba(255,255,255,0.08)', color: '#fff', fontSize: '16px', fontWeight: '900', borderRadius: '8px' }} />
             </div>
 
-            <div style={{ marginBottom: '18px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ fontSize: '11px', color: '#94a3b8', fontWeight: '700' }}>M-PESA REGISTERED TELEPHONE</label>
+              <input type="text" value={inputPhone} onChange={e => setInputPhone(e.target.value)} placeholder="07XXXXXXXX" style={{ width: '92%', padding: '12px', marginTop: '4px', background: '#141622', border: '1px solid rgba(255,255,255,0.08)', color: '#fff', fontSize: '14px', borderRadius: '8px' }} />
+            </div>
+
+            <div style={{ marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
               <input type="checkbox" id="remPhone" checked={rememberPhone} onChange={e => setRememberPhone(e.target.checked)} style={{ width: '16px', height: '16px', accentColor: '#22c55e' }} />
-              <label htmlFor="remPhone" style={{ fontSize: '12px', color: '#94a3b8', cursor: 'pointer', fontWeight: '600' }}>Save number for future deposits</label>
+              <label htmlFor="remPhone" style={{ fontSize: '12px', color: '#94a3b8', fontWeight: '600', cursor: 'pointer' }}>Cache terminal credentials</label>
             </div>
 
-            <button onClick={handlePaymentInitiation} disabled={loadingDeposit} style={{ width: '100%', padding: '14px', background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)', border: 'none', color: '#fff', fontWeight: '900', borderRadius: '8px', cursor: 'pointer' }}>
-              {loadingDeposit ? 'ESTABLISHING HANDSHAKE...' : 'INITIATE DEPOSIT'}
+            <button onClick={handlePaymentInitiation} disabled={loadingDeposit} style={{ width: '100%', padding: '14px', background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)', border: 'none', color: '#fff', fontWeight: '900', borderRadius: '10px', cursor: 'pointer' }}>
+              {loadingDeposit ? 'SYNCHRONIZING TRANSACTION...' : 'AUTHORIZE DEPOSIT'}
             </button>
           </div>
         </div>
       )}
 
-      {/* MODAL 2: CRYPTO DISCLOSURE VIEWPORT */}
-      {isProvablyModalOpen && (
-        <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999 }}>
-          <div style={{ background: '#0c0d12', border: '1px solid #3b82f6', borderRadius: '12px', width: '90%', maxWidth: '400px', padding: '20px' }}>
-            <h4 style={{ margin: '0 0 10px 0', color: '#38bdf8' }}>Spribe Cryptographic Handshake Nodes</h4>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '11px', background: '#060609', padding: '10px', borderRadius: '6px', wordBreak: 'break-all' }}>
-              <div><span style={{ color: '#475569' }}>PROVABLY ALGORITHM:</span> <code style={{ color: '#fff' }}>SHA-256 Distributed Epoch Grid</code></div>
-            </div>
-            <button onClick={() => setIsProvablyModalOpen(false)} style={{ width: '100%', marginTop: '12px', padding: '10px', background: '#1e293b', border: 'none', color: '#fff', borderRadius: '4px' }}>CLOSE HUD</button>
-          </div>
-        </div>
-      )}
-
-      {/* CORE DISPLAY RESPONSIVE DESIGN SPEC SHEET */}
+      {/* CORE DISPLAY RESPONSIVE DESIGN STYLING COEFFICIENTS */}
       <style>{`
-        .cockpitMainLayout { grid-template-columns: 300px 1fr 280px; height: calc(100vh - 120px); }
-        
-        @keyframes fadeInUp {
-          from { opacity: 0; transform: translate(-50%, 15px); }
-          to { opacity: 1; transform: translate(-50%, 0); }
-        }
-
+        .cockpitMainLayout { grid-template-columns: 310px 1fr 300px; height: calc(100vh - 125px); }
         @media (max-width: 992px) {
-          .cockpitMainLayout { grid-template-columns: 1fr !important; height: auto !important; padding-bottom: 70px !important; }
+          .cockpitMainLayout { grid-template-columns: 1fr !important; height: auto !important; padding-bottom: 75px !important; }
           .mobileUtilityFooterBar { display: flex !important; }
-          .leftPanelLayout { display: ${mobileActivePanel === 'bets' ? 'flex !important' : 'none !important'}; height: 65vh; }
+          .leftPanelLayout { display: ${mobileActivePanel === 'bets' ? 'flex !important' : 'none !important'}; height: 68vh; }
           .centerPanelLayout { display: ${mobileActivePanel === 'game' ? 'flex !important' : 'none !important'}; }
-          .rightPanelLayout { display: ${mobileActivePanel === 'chat' ? 'flex !important' : 'none !important'}; height: 65vh; }
+          .rightPanelLayout { display: ${mobileActivePanel === 'chat' ? 'flex !important' : 'none !important'}; height: 68vh; }
         }
       `}</style>
 
