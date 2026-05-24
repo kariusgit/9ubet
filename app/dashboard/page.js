@@ -928,7 +928,7 @@ export default function UltimateJetPesaCockpit() {
         <input
           type="number"
           value={deck.wager}
-          onChange={(e) => setter((p) => ({ ...p, wager: parseInt(e.target.value) || 0 }))}
+          onChange={(e) =>   setter((p) => ({     ...p,     wager: Math.max(10, parseInt(e.target.value) || 10),   })) }
           style={wagerInput}
         />
 
