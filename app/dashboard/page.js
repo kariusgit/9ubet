@@ -244,11 +244,54 @@ export default function UltimateJetPesaCockpit() {
       ctx.fillStyle = underGradient; ctx.fill();
 
       // Aircraft Assembly (Guaranteed Visibility)
-      ctx.save(); ctx.translate(cx, cy); ctx.rotate(Math.sin(secondsInAir * 8) * 0.015 - 0.04);
-      ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.moveTo(25, 0); ctx.quadraticCurveTo(10, -9, -12, -7); ctx.lineTo(-18, 0); ctx.lineTo(-12, 7); ctx.quadraticCurveTo(10, 9, 25, 0); ctx.fill();
-      ctx.fillStyle = '#e11d48'; ctx.beginPath(); ctx.moveTo(-3, -7); ctx.lineTo(-18, -16); ctx.lineTo(-14, -5); ctx.closePath(); ctx.fill();
-      ctx.fillStyle = '#a855f7'; ctx.beginPath(); ctx.moveTo(8, -5); ctx.quadraticCurveTo(18, -2, 25, 0); ctx.quadraticGrow = ctx.quadraticCurveTo(18, 2, 8, 5); ctx.closePath(); ctx.fill();
-      ctx.restore();
+      ctx.save();
+ctx.translate(cx, cy);
+ctx.rotate(Math.sin(secondsInAir * 8) * 0.015 - 0.04);
+
+const planeSvg = `
+<svg xmlns="http://www.w3.org/2000/svg" width="120" height="60" viewBox="0 0 420 180">
+  <defs>
+    <linearGradient id="redBody" x1="0" x2="1">
+      <stop offset="0%" stop-color="#ff4b4b"/>
+      <stop offset="45%" stop-color="#e60012"/>
+      <stop offset="100%" stop-color="#8b0008"/>
+    </linearGradient>
+  </defs>
+
+  <g transform="rotate(-12 210 90)">
+    <path d="M145 100 L45 165 L280 113 Z"
+      fill="url(#redBody)"
+      stroke="#111"
+      stroke-width="3"/>
+
+    <path d="M70 80
+      C135 45, 260 38, 360 72
+      C375 77, 375 93, 358 98
+      C250 128, 135 122, 70 98
+      C50 91, 52 87, 70 80 Z"
+      fill="url(#redBody)"
+      stroke="#111"
+      stroke-width="3"/>
+
+    <ellipse cx="360" cy="85" rx="20" ry="14"
+      fill="#222"
+      stroke="#000"
+      stroke-width="3"/>
+  </g>
+</svg>
+`;
+
+const img = new Image();
+
+img.onload = () => {
+  ctx.drawImage(img, -55, -28, 110, 55);
+};
+
+img.src =
+  'data:image/svg+xml;charset=utf-8,' +
+  encodeURIComponent(planeSvg);
+
+ctx.restore();
     }
   };
 
