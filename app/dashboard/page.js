@@ -420,108 +420,134 @@ export default function UltimateJetPesaCockpit() {
     return () => cancelAnimationFrame(animationId.current);
   }, [deckA, deckB, gameStatus, balance, audioMuted]);
 
-  const renderRadarCanvas = (offsetMs, countdownLimit) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
+const renderRadarCanvas = (offsetMs, countdownLimit) => {
+  const canvas = canvasRef.current;
+  if (!canvas) return;
 
-    const ctx = canvas.getContext('2d');
-    const W = canvas.width;
-    const H = canvas.height;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width;
+  const H = canvas.height;
 
-    ctx.clearRect(0, 0, W, H);
+  ctx.clearRect(0, 0, W, H);
 
-    ctx.strokeStyle = 'rgba(255,255,255,0.025)';
-    ctx.lineWidth = 1;
+  ctx.strokeStyle = 'rgba(255,255,255,0.025)';
+  ctx.lineWidth = 1;
 
-    for (let i = 0; i < W; i += 50) {
-      ctx.beginPath();
-      ctx.moveTo(i, 0);
-      ctx.lineTo(i, H);
-      ctx.stroke();
+  for (let i = 0; i < W; i += 50) {
+    ctx.beginPath();
+    ctx.moveTo(i, 0);
+    ctx.lineTo(i, H);
+    ctx.stroke();
+  }
+
+  for (let j = 0; j < H; j += 40) {
+    ctx.beginPath();
+    ctx.moveTo(0, j);
+    ctx.lineTo(W, j);
+    ctx.stroke();
+  }
+
+  if (offsetMs >= countdownLimit && gameStatus === 'running') {
+    const secondsInAir = (offsetMs - countdownLimit) / 1000;
+
+    const flightProgress = Math.min(secondsInAir / 11, 1);
+    const smoothProgress = 1 - Math.pow(1 - flightProgress, 2.4);
+
+    const multiplierLift = Math.min((multiplier - 1) / 2.8, 1);
+    const liftFactor = Math.max(smoothProgress * 0.9, multiplierLift);
+
+    const startX = 50;
+    const baseY = H - 48;
+    const maxLift = H - 118;
+
+    const cx =
+      startX +
+      (W - 135) *
+      Math.min(Math.pow(flightProgress, 0.82), 1);
+
+    const cy =
+      baseY -
+      maxLift *
+      Math.min(liftFactor, 1);
+
+    const controlX = startX + (cx - startX) * 0.48;
+    const controlY =
+      baseY -
+      maxLift *
+      Math.min(liftFactor * 0.42, 0.62);
+
+    ctx.beginPath();
+    ctx.moveTo(startX, baseY);
+    ctx.quadraticCurveTo(controlX, controlY, cx, cy);
+
+    ctx.strokeStyle = 'rgba(225,29,72,0.98)';
+    ctx.lineWidth = 6;
+    ctx.shadowBlur = 28;
+    ctx.shadowColor = '#e11d48';
+    ctx.stroke();
+
+    ctx.shadowBlur = 0;
+
+    ctx.lineTo(cx, baseY);
+    ctx.lineTo(startX, baseY);
+    ctx.closePath();
+
+    const underGradient = ctx.createLinearGradient(startX, cy, startX, baseY);
+    underGradient.addColorStop(0, 'rgba(225,29,72,0.26)');
+    underGradient.addColorStop(0.45, 'rgba(225,29,72,0.1)');
+    underGradient.addColorStop(1, 'transparent');
+
+    ctx.fillStyle = underGradient;
+    ctx.fill();
+
+    const planeAngle =
+      -0.32 +
+      Math.min(liftFactor * 0.38, 0.26) +
+      Math.sin(secondsInAir * 5) * 0.018;
+
+    ctx.save();
+    ctx.translate(cx + 8, cy + 13);
+    ctx.rotate(planeAngle);
+    ctx.globalAlpha = 0.24;
+    ctx.filter = 'blur(11px)';
+
+    if (planeImageRef.current) {
+      ctx.drawImage(planeImageRef.current, -68, -32, 136, 64);
     }
 
-    for (let j = 0; j < H; j += 40) {
-      ctx.beginPath();
-      ctx.moveTo(0, j);
-      ctx.lineTo(W, j);
-      ctx.stroke();
+    ctx.restore();
+
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(planeAngle);
+    ctx.shadowBlur = 24;
+    ctx.shadowColor = 'rgba(255,255,255,0.32)';
+
+    if (planeImageRef.current) {
+      ctx.drawImage(planeImageRef.current, -68, -32, 136, 64);
     }
 
-    if (offsetMs >= countdownLimit && gameStatus === 'running') {
-      const secondsInAir = (offsetMs - countdownLimit) / 1000;
+    ctx.restore();
 
-      const cx = 50 + (W - 140) * Math.min(secondsInAir / 9, 1);
-      const cy =
-        H -
-        50 -
-        (H - 130) * (Math.min(multiplier - 1, 6) / 6);
-
+    for (let i = 0; i < 5; i++) {
       ctx.beginPath();
-      ctx.moveTo(50, H - 50);
-      ctx.quadraticCurveTo((50 + cx) / 1.9, H - 35, cx, cy);
+      ctx.arc(
+        cx - 36 - i * 11,
+        cy + Math.sin(secondsInAir * 9 + i) * 4,
+        2.2 + i * 0.35,
+        0,
+        Math.PI * 2
+      );
 
-      ctx.strokeStyle = 'rgba(225,29,72,0.95)';
-      ctx.lineWidth = 6;
-      ctx.shadowBlur = 26;
-      ctx.shadowColor = '#e11d48';
-      ctx.stroke();
+      ctx.fillStyle =
+        i % 2 === 0
+          ? 'rgba(255,255,255,0.48)'
+          : 'rgba(239,68,68,0.42)';
 
-      ctx.shadowBlur = 0;
-
-      ctx.lineTo(cx, H - 50);
-      ctx.lineTo(50, H - 50);
-      ctx.closePath();
-
-      const underGradient = ctx.createLinearGradient(50, cy, 50, H - 50);
-      underGradient.addColorStop(0, 'rgba(225,29,72,0.24)');
-      underGradient.addColorStop(1, 'transparent');
-
-      ctx.fillStyle = underGradient;
       ctx.fill();
-
-      ctx.save();
-      ctx.translate(cx + 6, cy + 10);
-      ctx.rotate(Math.sin(secondsInAir * 6) * 0.02 - 0.06);
-      ctx.globalAlpha = 0.22;
-      ctx.filter = 'blur(10px)';
-
-      if (planeImageRef.current) {
-        ctx.drawImage(planeImageRef.current, -58, -28, 118, 56);
-      }
-
-      ctx.restore();
-
-      ctx.save();
-      ctx.translate(cx, cy);
-      ctx.rotate(Math.sin(secondsInAir * 6) * 0.02 - 0.06);
-      ctx.shadowBlur = 22;
-      ctx.shadowColor = 'rgba(255,255,255,0.28)';
-
-      if (planeImageRef.current) {
-        ctx.drawImage(planeImageRef.current, -58, -28, 118, 56);
-      }
-
-      ctx.restore();
-
-      for (let i = 0; i < 4; i++) {
-        ctx.beginPath();
-        ctx.arc(
-          cx - 30 - i * 10,
-          cy + Math.sin(secondsInAir * 10 + i) * 3,
-          2 + i * 0.4,
-          0,
-          Math.PI * 2
-        );
-
-        ctx.fillStyle =
-          i % 2 === 0
-            ? 'rgba(255,255,255,0.5)'
-            : 'rgba(239,68,68,0.4)';
-
-        ctx.fill();
-      }
     }
-  };
+  }
+};
 
   const triggerPayoutSequence = (deckName, multVal, activeState) => {
     const rawWin = activeState.wager * multVal;
