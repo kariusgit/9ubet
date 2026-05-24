@@ -923,7 +923,7 @@ export default function UltimateJetPesaCockpit() {
       </div>
 
       <div style={wagerControlsRow}>
-        <button onClick={() => setter((p) => ({ ...p, wager: Math.max(1, p.wager - 10) }))} style={roundMiniButton}>−</button>
+        <button onClick={() => setter((p) => ({ ...p, wager: Math.max(10, p.wager - 10) }))} style={roundMiniButton}>−</button>
 
         <input
           type="number"
