@@ -57,7 +57,7 @@ export default function UltimateJetPesaCockpit() {
   const [multiplier, setMultiplier] = useState(1.0);
   const [gameStatus, setGameStatus] = useState('idle');
   const [countdownProgress, setCountdownProgress] = useState(100);
-  const [historyTape, setHistoryTape] = useState([
+  const [historyTape] = useState([
     1.47, 12.33, 1.19, 3.05, 1.52, 18.61, 1.89, 1.08, 2.2,
   ]);
 
@@ -122,7 +122,6 @@ export default function UltimateJetPesaCockpit() {
       }
 
       const ctx = audioCtxRef.current;
-
       if (ctx.state === 'suspended') ctx.resume();
 
       const osc = ctx.createOscillator();
@@ -345,11 +344,13 @@ export default function UltimateJetPesaCockpit() {
 
     ctx.save();
     ctx.strokeStyle = 'rgba(125, 211, 252, 0.34)';
-    ctx.lineWidth = 1.4;
+    ctx.lineWidth = W < 520 ? 1 : 1.4;
     ctx.shadowBlur = 8;
     ctx.shadowColor = 'rgba(56,189,248,0.45)';
 
-    for (let i = 0; i < 85; i++) {
+    const drops = W < 520 ? 48 : 85;
+
+    for (let i = 0; i < drops; i++) {
       const x = ((i * 71 + secondsInAir * 360) % (W + 120)) - 80;
       const y = ((i * 47 + secondsInAir * 620) % (H + 140)) - 80;
       ctx.beginPath();
@@ -374,14 +375,14 @@ export default function UltimateJetPesaCockpit() {
     ctx.strokeStyle = 'rgba(255,255,255,0.025)';
     ctx.lineWidth = 1;
 
-    for (let i = 0; i < W; i += 50) {
+    for (let i = 0; i < W; i += W < 520 ? 40 : 50) {
       ctx.beginPath();
       ctx.moveTo(i, 0);
       ctx.lineTo(i, H);
       ctx.stroke();
     }
 
-    for (let j = 0; j < H; j += 40) {
+    for (let j = 0; j < H; j += W < 520 ? 34 : 40) {
       ctx.beginPath();
       ctx.moveTo(0, j);
       ctx.lineTo(W, j);
@@ -398,11 +399,11 @@ export default function UltimateJetPesaCockpit() {
       const multiplierLift = Math.min((multiplier - 1) / 2.8, 1);
       const liftFactor = Math.max(smoothProgress * 0.9, multiplierLift);
 
-      const startX = 50;
-      const baseY = H - 48;
-      const maxLift = H - 118;
+      const startX = W < 520 ? 42 : 50;
+      const baseY = H - (W < 520 ? 54 : 48);
+      const maxLift = H - (W < 520 ? 135 : 118);
 
-      const cx = startX + (W - 135) * Math.min(Math.pow(flightProgress, 0.82), 1);
+      const cx = startX + (W - (W < 520 ? 120 : 135)) * Math.min(Math.pow(flightProgress, 0.82), 1);
       const cy = baseY - maxLift * Math.min(liftFactor, 1);
 
       const controlX = startX + (cx - startX) * 0.48;
@@ -413,7 +414,7 @@ export default function UltimateJetPesaCockpit() {
       ctx.quadraticCurveTo(controlX, controlY, cx, cy);
 
       ctx.strokeStyle = 'rgba(225,29,72,0.98)';
-      ctx.lineWidth = 6;
+      ctx.lineWidth = W < 520 ? 5 : 6;
       ctx.shadowBlur = 28;
       ctx.shadowColor = '#e11d48';
       ctx.stroke();
@@ -435,6 +436,9 @@ export default function UltimateJetPesaCockpit() {
         Math.min(liftFactor * 0.38, 0.26) +
         Math.sin(secondsInAir * 5) * 0.018;
 
+      const planeW = W < 520 ? 156 : 136;
+      const planeH = W < 520 ? 74 : 64;
+
       ctx.save();
       ctx.translate(cx + 8, cy + 13);
       ctx.rotate(planeAngle);
@@ -442,7 +446,7 @@ export default function UltimateJetPesaCockpit() {
       ctx.filter = 'blur(11px)';
 
       if (planeImageRef.current) {
-        ctx.drawImage(planeImageRef.current, -68, -32, 136, 64);
+        ctx.drawImage(planeImageRef.current, -planeW / 2, -planeH / 2, planeW, planeH);
       }
 
       ctx.restore();
@@ -454,7 +458,7 @@ export default function UltimateJetPesaCockpit() {
       ctx.shadowColor = 'rgba(255,255,255,0.32)';
 
       if (planeImageRef.current) {
-        ctx.drawImage(planeImageRef.current, -68, -32, 136, 64);
+        ctx.drawImage(planeImageRef.current, -planeW / 2, -planeH / 2, planeW, planeH);
       }
 
       ctx.restore();
@@ -717,12 +721,7 @@ export default function UltimateJetPesaCockpit() {
       </div>
 
       <div style={wagerControlsRow}>
-        <button
-          onClick={() => setter((p) => ({ ...p, wager: Math.max(1, p.wager - 10) }))}
-          style={roundMiniButton}
-        >
-          −
-        </button>
+        <button onClick={() => setter((p) => ({ ...p, wager: Math.max(1, p.wager - 10) }))} style={roundMiniButton}>−</button>
 
         <input
           type="number"
@@ -731,12 +730,7 @@ export default function UltimateJetPesaCockpit() {
           style={wagerInput}
         />
 
-        <button
-          onClick={() => setter((p) => ({ ...p, wager: p.wager + 10 }))}
-          style={roundMiniButton}
-        >
-          +
-        </button>
+        <button onClick={() => setter((p) => ({ ...p, wager: p.wager + 10 }))} style={roundMiniButton}>+</button>
       </div>
 
       <div style={quickStakeRow}>
@@ -811,7 +805,7 @@ export default function UltimateJetPesaCockpit() {
   );
 
   return (
-    <div style={{ background: '#07080e', color: '#f1f5f9', height: '100vh', maxHeight: '100vh', fontFamily: "'Plus Jakarta Sans', sans-serif", display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+    <div style={{ background: '#07080e', color: '#f1f5f9', minHeight: '100vh', height: '100dvh', fontFamily: "'Plus Jakarta Sans', sans-serif", display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
       <div style={{ position: 'fixed', top: '85px', left: '50%', transform: 'translateX(-50%)', zIndex: 99999, display: 'flex', flexDirection: 'column', gap: '8px', width: '90%', maxWidth: '440px' }}>
         {toasts.map((t) => (
           <div key={t.id} style={{ background: t.type === 'error' ? 'rgba(220,38,38,0.95)' : t.type === 'success' ? 'rgba(22,163,74,0.95)' : 'rgba(30,27,75,0.95)', color: '#fff', padding: '12px 24px', borderRadius: '30px', boxShadow: '0 16px 32px rgba(0,0,0,0.6)', fontWeight: '800', fontSize: '13px', textAlign: 'center', border: '1px solid rgba(255,255,255,0.15)', backdropFilter: 'blur(10px)' }}>
@@ -920,7 +914,7 @@ export default function UltimateJetPesaCockpit() {
               </div>
             )}
 
-            <canvas ref={canvasRef} width={640} height={340} style={{ width: '100%', height: '100%', display: 'block' }} />
+            <canvas ref={canvasRef} width={900} height={460} style={{ width: '100%', height: '100%', display: 'block' }} />
 
             {gameStatus !== 'idle' && (
               <div style={{ position: 'absolute', top: '45%', left: '50%', transform: 'translate(-50%, -50%)', textAlign: 'center', pointerEvents: 'none' }}>
@@ -936,7 +930,7 @@ export default function UltimateJetPesaCockpit() {
             )}
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', background: 'rgba(18,20,32,0.8)', border: '1px solid rgba(255,255,255,0.08)', padding: '18px', borderRadius: '20px', flexShrink: 0 }}>
+          <div className="betControlsGrid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', background: 'rgba(18,20,32,0.8)', border: '1px solid rgba(255,255,255,0.08)', padding: '18px', borderRadius: '20px', flexShrink: 0 }}>
             {renderDeckPanel('A', deckA, setDeckA, '#22c55e')}
             {renderDeckPanel('B', deckB, setDeckB, '#16a34a')}
           </div>
@@ -1050,13 +1044,28 @@ export default function UltimateJetPesaCockpit() {
       )}
 
       <style>{`
-        .cockpitMainLayout { grid-template-columns: 310px 1fr 310px; }
+        .cockpitMainLayout {
+          grid-template-columns: 310px minmax(0, 1fr) 310px;
+        }
+
+        canvas {
+          image-rendering: auto;
+        }
+
+        @media (max-width: 1180px) {
+          .cockpitMainLayout {
+            grid-template-columns: 260px minmax(0, 1fr) 260px !important;
+            gap: 10px !important;
+            padding: 10px !important;
+          }
+        }
 
         @media (max-width: 992px) {
           .cockpitMainLayout {
             grid-template-columns: 1fr !important;
-            height: calc(100% - 130px) !important;
-            padding-bottom: 20px !important;
+            height: calc(100dvh - 140px) !important;
+            padding: 10px !important;
+            padding-bottom: 74px !important;
           }
 
           .mobileUtilityFooterBar {
@@ -1076,6 +1085,80 @@ export default function UltimateJetPesaCockpit() {
           .rightPanelLayout {
             display: ${mobileActivePanel === 'chat' ? 'flex !important' : 'none !important'};
             height: 100% !important;
+          }
+
+          .centerPanelLayout > div:first-child {
+            min-height: 360px !important;
+          }
+
+          .betControlsGrid {
+            grid-template-columns: 1fr !important;
+            max-height: 310px;
+            overflow-y: auto;
+            padding: 12px !important;
+          }
+
+          header {
+            padding: 10px 12px !important;
+            gap: 8px !important;
+            flex-wrap: wrap;
+          }
+
+          header > div {
+            flex-wrap: wrap;
+          }
+
+          header span {
+            font-size: 20px !important;
+          }
+        }
+
+        @media (max-width: 560px) {
+          .cockpitMainLayout {
+            height: calc(100dvh - 156px) !important;
+            padding: 8px !important;
+            padding-bottom: 72px !important;
+          }
+
+          .centerPanelLayout {
+            gap: 10px !important;
+          }
+
+          .centerPanelLayout > div:first-child {
+            min-height: 330px !important;
+            border-radius: 16px !important;
+          }
+
+          .betControlsGrid {
+            max-height: 330px;
+            gap: 10px !important;
+            border-radius: 16px !important;
+          }
+
+          .mobileUtilityFooterBar {
+            padding: 9px 0 !important;
+          }
+
+          .mobileUtilityFooterBar button {
+            font-size: 10px !important;
+          }
+
+          h1 {
+            font-size: 3.2rem !important;
+          }
+        }
+
+        @media (max-width: 420px) {
+          .centerPanelLayout > div:first-child {
+            min-height: 300px !important;
+          }
+
+          h1 {
+            font-size: 2.7rem !important;
+          }
+
+          .cockpitMainLayout {
+            height: calc(100dvh - 170px) !important;
           }
         }
       `}</style>
