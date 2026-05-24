@@ -656,43 +656,107 @@ export default function UltimateJetPesaCockpit() {
     playSynthesizedTone(800, 'sine', 0.03, 0.01);
   };
 
-  const handlePaymentInitiation = async () => {
-    const amt = parseInt(inputAmount);
+ const handlePaymentInitiation = async () => {
+  const amt = parseInt(inputAmount, 10);
+  const cleanPhone = inputPhone.trim().replace(/\s+/g, '');
 
-    if (isNaN(amt) || amt < 49) {
-      triggerToast('❌ Minimum deposit is KES 49.', 'error');
-      return;
+  if (isNaN(amt) || amt < 49) {
+    triggerToast('❌ Minimum deposit is KES 49.', 'error');
+    return;
+  }
+
+  if ((!cleanPhone.startsWith('07') && !cleanPhone.startsWith('01')) || cleanPhone.length !== 10) {
+    triggerToast('❌ Enter a valid M-Pesa phone number.', 'error');
+    return;
+  }
+
+  if (!user?.uid) {
+    triggerToast('❌ Login session expired. Please sign in again.', 'error');
+    return;
+  }
+
+  setLoadingDeposit(true);
+
+  try {
+    const res = await fetch('/api/payhero', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        amount: amt,
+        phone: cleanPhone,
+        username: user.uid,
+      }),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok || !data.success) {
+      throw new Error(data.message || 'Payment initiation failed.');
     }
 
-    setLoadingDeposit(true);
+    if (rememberPhone) {
+      localStorage.setItem('jetpesa_saved_phone', cleanPhone);
+    }
 
-    try {
-      const res = await fetch('/api/payhero', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ amount: amt, phone: inputPhone, username: user.uid }),
-      });
+    triggerToast(data.message || 'STK push sent. Complete payment on your phone.', 'info');
 
-      const data = await res.json();
+    let attempts = 0;
+    const maxAttempts = 36;
 
-      if (data.success) {
-        if (rememberPhone) localStorage.setItem('jetpesa_saved_phone', inputPhone);
+    const poll = setInterval(async () => {
+      attempts += 1;
 
-        const nextBal = balance + amt;
+      try {
+        const statusRes = await fetch(`/api/payhero-status?reference=${data.reference}`);
+        const statusData = await statusRes.json();
 
-        setBalance(nextBal);
-        commitWalletBalance(nextBal);
-        setIsDepositModalOpen(false);
-        triggerToast('✅ STK push deployed.', 'success');
-      } else {
-        triggerToast('Gateway error: ' + data.message, 'error');
+        if (statusData.status === 'completed') {
+          clearInterval(poll);
+
+          const userDoc = await getDoc(doc(db, 'users', user.uid));
+          const freshBalance = userDoc.exists()
+            ? Number(userDoc.data().walletBalance || 0)
+            : balance;
+
+          setBalance(freshBalance);
+          setIsDepositModalOpen(false);
+          setLoadingDeposit(false);
+
+          triggerToast(`✅ Deposit confirmed. KES ${amt} added.`, 'success');
+        }
+
+        if (statusData.status === 'failed') {
+          clearInterval(poll);
+          setLoadingDeposit(false);
+
+          triggerToast(
+            `❌ ${statusData.failureReason || 'Payment failed or was cancelled.'}`,
+            'error'
+          );
+        }
+
+        if (attempts >= maxAttempts) {
+          clearInterval(poll);
+          setLoadingDeposit(false);
+
+          triggerToast(
+            '⏳ Payment is still pending. Wallet will update after confirmation.',
+            'info'
+          );
+        }
+      } catch (e) {
+        if (attempts >= maxAttempts) {
+          clearInterval(poll);
+          setLoadingDeposit(false);
+          triggerToast(`❌ ${e.message}`, 'error');
+        }
       }
-    } catch (e) {
-      triggerToast('System failure: ' + e.message, 'error');
-    } finally {
-      setLoadingDeposit(false);
-    }
-  };
+    }, 5000);
+  } catch (e) {
+    setLoadingDeposit(false);
+    triggerToast(`❌ ${e.message}`, 'error');
+  }
+};
 
   const renderDeckPanel = (name, deck, setter, color) => (
     <div key={name} style={deckPanelStyle}>
