@@ -685,6 +685,10 @@ export default function UltimateJetPesaCockpit() {
 
     const isA = targetDeck === 'A';
     const currentWagerAmount = isA ? deckA.wager : deckB.wager;
+    if (currentWagerAmount < 10) {
+    triggerToast('❌ Minimum wager is KES 10.', 'error');
+    return;
+      }
 
     if (balance < currentWagerAmount) {
       triggerToast('❌ Selected stake exceeds your available balance.', 'error');
