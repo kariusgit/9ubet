@@ -270,7 +270,9 @@ export default function UltimateJetPesaCockpit() {
       { user: '🦊072***14', msg: 'Weh, plane irefuka maze, cash out haraka!' },
       { user: '🎨079***88', msg: 'Mũgĩthĩ ũũ no rũgendo rũranya gũgĩkũra na igũrũ.' },
       { user: '🦅011***23', msg: 'Anya tero mwandu nyaka polo! Retain control omera.' },
-      { user: '🦁070***66', msg: 'This glass design looks exactly like premium Spribe.' },
+      { user: '🦁070***66', msg: 'Free bets admin please.....' },
+      { user: '🦁072***99', msg: '50k innit! hii ni ingine mwechecheeee' },
+       { user: '🦁010***45', msg: 'Wakuu mmenikula ata school fees, watu wanichangie please' },     
       { user: '🦈075***04', msg: 'Nimeweka 500 stake hapa, twende sasa kabla iland.' },
     ];
 
