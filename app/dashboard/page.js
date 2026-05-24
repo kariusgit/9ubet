@@ -29,7 +29,6 @@ export default function UltimateJetPesaCockpit() {
   const [mobileActivePanel, setMobileActivePanel] = useState('game');
 
   const [toasts, setToasts] = useState([]);
-
   const [inputPhone, setInputPhone] = useState('');
   const [inputAmount, setInputAmount] = useState('100');
   const [withdrawAmount, setWithdrawAmount] = useState('');
@@ -57,15 +56,9 @@ export default function UltimateJetPesaCockpit() {
   const [multiplier, setMultiplier] = useState(1.0);
   const [gameStatus, setGameStatus] = useState('idle');
   const [countdownProgress, setCountdownProgress] = useState(100);
-  const [historyTape] = useState([
+  const [historyTape, setHistoryTape] = useState([
     1.47, 12.33, 1.19, 3.05, 1.52, 18.61, 1.89, 1.08, 2.2,
   ]);
-
-  const canvasRef = useRef(null);
-  const animationId = useRef(null);
-  const chatEndRef = useRef(null);
-  const audioCtxRef = useRef(null);
-  const planeImageRef = useRef(null);
 
   const [activePlayersCount, setActivePlayersCount] = useState(3412);
   const [liveBetsFeed, setLiveBetsFeed] = useState([]);
@@ -76,6 +69,25 @@ export default function UltimateJetPesaCockpit() {
     { user: '🦅079***12', msg: 'Nĩngwenda gũkĩria 10x rũũgĩ rũfĩfĩ rwa Deck B gaka!', time: '08:04' },
     { user: '🦁011***90', msg: 'Asego mar plane ni e ma duong’! Multiplier obiro thuth!', time: '08:05' },
   ]);
+
+  const [provablyData, setProvablyData] = useState(null);
+  const [provablyLoading, setProvablyLoading] = useState(false);
+
+  const canvasRef = useRef(null);
+  const animationId = useRef(null);
+  const chatEndRef = useRef(null);
+  const audioCtxRef = useRef(null);
+  const planeImageRef = useRef(null);
+  const lastCycleRef = useRef(null);
+  const currentRoundRef = useRef({
+    nonce: 1,
+    crashPoint: 2.0,
+    serverSeedHash: '',
+    roundHash: '',
+    clientSeed: '',
+    algorithm: '',
+    verifyInput: '',
+  });
 
   useEffect(() => {
     const svgPlane = `
@@ -113,6 +125,12 @@ export default function UltimateJetPesaCockpit() {
     planeImageRef.current = img;
   }, []);
 
+  const triggerToast = (msg, type = 'info') => {
+    const id = Date.now() + Math.random();
+    setToasts((prev) => [...prev, { id, msg, type }]);
+    setTimeout(() => setToasts((prev) => prev.filter((t) => t.id !== id)), 3500);
+  };
+
   const playSynthesizedTone = (freq, type, duration, volume = 0.03) => {
     if (audioMuted) return;
 
@@ -141,31 +159,116 @@ export default function UltimateJetPesaCockpit() {
     }
   };
 
-  const triggerToast = (msg, type = 'info') => {
-    const id = Date.now() + Math.random();
-    setToasts((prev) => [...prev, { id, msg, type }]);
-    setTimeout(() => {
-      setToasts((prev) => prev.filter((t) => t.id !== id));
-    }, 3500);
-  };
-
-  const generateFreshBetsFeed = () => {
+  const makeRandomBet = () => {
     const px = ['070***', '071***', '072***', '079***', '011***', '074***', '010***'];
     const av = ['🦒', '🦁', '🦊', '🦅', '🦈', '🦏', '🐆', '🐊'];
 
+    return {
+      id: Date.now() + Math.random(),
+      username:
+        av[Math.floor(Math.random() * av.length)] +
+        px[Math.floor(Math.random() * px.length)] +
+        Math.floor(Math.random() * 89 + 10),
+      bet: Math.floor(Math.random() * 4800 + 100),
+      mult: parseFloat((Math.random() * 2.8 + 1.05).toFixed(2)),
+      won: Math.random() > 0.58,
+      status: 'queued',
+    };
+  };
+
+  const startFreshLiveBetsFeed = () => {
+    setLiveBetsFeed([]);
     setActivePlayersCount(Math.floor(Math.random() * 1500 + 3000));
 
-    setLiveBetsFeed(
-      Array.from({ length: 25 }, () => ({
-        username:
-          av[Math.floor(Math.random() * av.length)] +
-          px[Math.floor(Math.random() * px.length)] +
-          Math.floor(Math.random() * 89 + 10),
-        bet: Math.floor(Math.random() * 4800 + 100),
-        mult: parseFloat((Math.random() * 1.8 + 1.02).toFixed(2)),
-        won: Math.random() > 0.6,
-      })).sort((a, b) => b.bet - a.bet)
+    let count = 0;
+    const interval = setInterval(() => {
+      count += 1;
+
+      setLiveBetsFeed((prev) => {
+        const next = [makeRandomBet(), ...prev].slice(0, 28);
+        return next;
+      });
+
+      if (count >= 25) clearInterval(interval);
+    }, 120);
+  };
+
+  const updateLiveBetStatuses = (currentMultiplier) => {
+    setLiveBetsFeed((prev) =>
+      prev.map((b) => {
+        if (b.status !== 'queued') return b;
+
+        if (currentMultiplier >= b.mult && b.won) {
+          return {
+            ...b,
+            status: 'cashed',
+            payout: Math.floor(b.bet * b.mult),
+          };
+        }
+
+        return {
+          ...b,
+          status: 'flying',
+        };
+      })
     );
+  };
+
+  const markLiveBetsCrashed = () => {
+    setLiveBetsFeed((prev) =>
+      prev.map((b) =>
+        b.status === 'cashed'
+          ? b
+          : {
+              ...b,
+              status: 'lost',
+            }
+      )
+    );
+  };
+
+  const fetchProvablyRound = async (nonce, openModal = false) => {
+    try {
+      if (openModal) setProvablyLoading(true);
+
+      const res = await fetch(`/api/game/provably?nonce=${nonce}`, {
+        cache: 'no-store',
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        throw new Error(data.message || 'Could not load provably fair round.');
+      }
+
+      currentRoundRef.current = {
+        nonce: data.nonce,
+        crashPoint: Number(data.crashPoint || 1),
+        serverSeedHash: data.serverSeedHash,
+        roundHash: data.roundHash,
+        clientSeed: data.clientSeed,
+        algorithm: data.algorithm,
+        verifyInput: data.verifyInput,
+        houseEdge: data.houseEdge,
+      };
+
+      setProvablyData(currentRoundRef.current);
+
+      if (openModal) {
+        setIsProvablyModalOpen(true);
+      }
+
+      return currentRoundRef.current;
+    } catch (e) {
+      triggerToast(`❌ ${e.message}`, 'error');
+      return currentRoundRef.current;
+    } finally {
+      if (openModal) setProvablyLoading(false);
+    }
+  };
+
+  const openProvablyModal = async () => {
+    await fetchProvablyRound(currentRoundRef.current.nonce, true);
   };
 
   useEffect(() => {
@@ -202,7 +305,9 @@ export default function UltimateJetPesaCockpit() {
       }
     });
 
-    generateFreshBetsFeed();
+    fetchProvablyRound(1);
+    startFreshLiveBetsFeed();
+
     return () => unsubscribe();
   }, [router]);
 
@@ -223,6 +328,7 @@ export default function UltimateJetPesaCockpit() {
 
     const intervalChat = setInterval(() => {
       const picked = chatPool[Math.floor(Math.random() * chatPool.length)];
+
       setChatLogs((p) => [
         ...p,
         {
@@ -244,14 +350,24 @@ export default function UltimateJetPesaCockpit() {
       const cycleInterval = 21000;
       const countdownInterval = 5000;
       const simulationWindow = 14000;
+      const cycleIndex = Math.floor(epochTimeMs / cycleInterval);
       const offsetMs = epochTimeMs % cycleInterval;
+
+      if (lastCycleRef.current !== cycleIndex) {
+        lastCycleRef.current = cycleIndex;
+        const nextNonce = cycleIndex + 1;
+
+        startFreshLiveBetsFeed();
+        fetchProvablyRound(nextNonce);
+      }
+
+      const crashPoint = currentRoundRef.current.crashPoint || 2;
 
       if (offsetMs < countdownInterval) {
         if (gameStatus !== 'idle') {
           setGameStatus('idle');
           setMultiplier(1.0);
           playSynthesizedTone(440, 'triangle', 0.05, 0.03);
-          generateFreshBetsFeed();
         }
 
         setCountdownProgress(((countdownInterval - offsetMs) / countdownInterval) * 100);
@@ -279,21 +395,16 @@ export default function UltimateJetPesaCockpit() {
         const activeSeconds = (offsetMs - countdownInterval) / 1000;
         const computedMultiplier = parseFloat(Math.pow(Math.E, 0.078 * activeSeconds).toFixed(2));
 
-        const trackingIndex = Math.floor(epochTimeMs / cycleInterval);
-        const dynamicCrashBound = parseFloat(
-          (
-            1.08 +
-            (parseFloat(String(Math.sin(trackingIndex) * 1200).split('.')[1] || 4) % 9.2)
-          ).toFixed(2)
-        );
-
-        if (computedMultiplier >= dynamicCrashBound) {
+        if (computedMultiplier >= crashPoint) {
           setGameStatus('crashed');
-          setMultiplier(dynamicCrashBound);
+          setMultiplier(crashPoint);
+          markLiveBetsCrashed();
+          setHistoryTape((prev) => [crashPoint, ...prev].slice(0, 14));
           setDeckA((p) => ({ ...p, hasBetCurrent: false }));
           setDeckB((p) => ({ ...p, hasBetCurrent: false }));
         } else {
           setMultiplier(computedMultiplier);
+          updateLiveBetStatuses(computedMultiplier);
 
           if (offsetMs % 300 < 20) {
             playSynthesizedTone(200 + computedMultiplier * 15, 'sine', 0.015, 0.012);
@@ -317,16 +428,8 @@ export default function UltimateJetPesaCockpit() {
         }
       } else {
         setGameStatus('crashed');
-
-        const trackingIndex = Math.floor(epochTimeMs / cycleInterval);
-        const dynamicCrashBound = parseFloat(
-          (
-            1.08 +
-            (parseFloat(String(Math.sin(trackingIndex) * 1200).split('.')[1] || 4) % 9.2)
-          ).toFixed(2)
-        );
-
-        setMultiplier(dynamicCrashBound);
+        setMultiplier(crashPoint);
+        markLiveBetsCrashed();
         setDeckA((p) => ({ ...p, hasBetCurrent: false }));
         setDeckB((p) => ({ ...p, hasBetCurrent: false }));
       }
@@ -428,6 +531,7 @@ export default function UltimateJetPesaCockpit() {
       underGradient.addColorStop(0, 'rgba(225,29,72,0.26)');
       underGradient.addColorStop(0.45, 'rgba(225,29,72,0.1)');
       underGradient.addColorStop(1, 'transparent');
+
       ctx.fillStyle = underGradient;
       ctx.fill();
 
@@ -532,6 +636,7 @@ export default function UltimateJetPesaCockpit() {
 
     try {
       const nextBal = balance - amt;
+
       setBalance(nextBal);
       await commitWalletBalance(nextBal);
 
@@ -656,107 +761,136 @@ export default function UltimateJetPesaCockpit() {
     playSynthesizedTone(800, 'sine', 0.03, 0.01);
   };
 
- const handlePaymentInitiation = async () => {
-  const amt = parseInt(inputAmount, 10);
-  const cleanPhone = inputPhone.trim().replace(/\s+/g, '');
+  const handlePaymentInitiation = async () => {
+    const amt = parseInt(inputAmount, 10);
+    const cleanPhone = inputPhone.trim().replace(/\s+/g, '');
 
-  if (isNaN(amt) || amt < 49) {
-    triggerToast('❌ Minimum deposit is KES 49.', 'error');
-    return;
-  }
-
-  if ((!cleanPhone.startsWith('07') && !cleanPhone.startsWith('01')) || cleanPhone.length !== 10) {
-    triggerToast('❌ Enter a valid M-Pesa phone number.', 'error');
-    return;
-  }
-
-  if (!user?.uid) {
-    triggerToast('❌ Login session expired. Please sign in again.', 'error');
-    return;
-  }
-
-  setLoadingDeposit(true);
-
-  try {
-    const res = await fetch('/api/payhero', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        amount: amt,
-        phone: cleanPhone,
-        username: user.uid,
-      }),
-    });
-
-    const data = await res.json();
-
-    if (!res.ok || !data.success) {
-      throw new Error(data.message || 'Payment initiation failed.');
+    if (isNaN(amt) || amt < 49) {
+      triggerToast('❌ Minimum deposit is KES 49.', 'error');
+      return;
     }
 
-    if (rememberPhone) {
-      localStorage.setItem('jetpesa_saved_phone', cleanPhone);
+    if ((!cleanPhone.startsWith('07') && !cleanPhone.startsWith('01')) || cleanPhone.length !== 10) {
+      triggerToast('❌ Enter a valid M-Pesa phone number.', 'error');
+      return;
     }
 
-    triggerToast(data.message || 'STK push sent. Complete payment on your phone.', 'info');
+    if (!user?.uid) {
+      triggerToast('❌ Login session expired. Please sign in again.', 'error');
+      return;
+    }
 
-    let attempts = 0;
-    const maxAttempts = 36;
+    setLoadingDeposit(true);
 
-    const poll = setInterval(async () => {
-      attempts += 1;
+    try {
+      const res = await fetch('/api/payhero', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount: amt, phone: cleanPhone, username: user.uid }),
+      });
 
-      try {
-        const statusRes = await fetch(`/api/payhero-status?reference=${data.reference}`);
-        const statusData = await statusRes.json();
+      const data = await res.json();
 
-        if (statusData.status === 'completed') {
-          clearInterval(poll);
-
-          const userDoc = await getDoc(doc(db, 'users', user.uid));
-          const freshBalance = userDoc.exists()
-            ? Number(userDoc.data().walletBalance || 0)
-            : balance;
-
-          setBalance(freshBalance);
-          setIsDepositModalOpen(false);
-          setLoadingDeposit(false);
-
-          triggerToast(`✅ Deposit confirmed. KES ${amt} added.`, 'success');
-        }
-
-        if (statusData.status === 'failed') {
-          clearInterval(poll);
-          setLoadingDeposit(false);
-
-          triggerToast(
-            `❌ ${statusData.failureReason || 'Payment failed or was cancelled.'}`,
-            'error'
-          );
-        }
-
-        if (attempts >= maxAttempts) {
-          clearInterval(poll);
-          setLoadingDeposit(false);
-
-          triggerToast(
-            '⏳ Payment is still pending. Wallet will update after confirmation.',
-            'info'
-          );
-        }
-      } catch (e) {
-        if (attempts >= maxAttempts) {
-          clearInterval(poll);
-          setLoadingDeposit(false);
-          triggerToast(`❌ ${e.message}`, 'error');
-        }
+      if (!res.ok || !data.success) {
+        throw new Error(data.message || 'Payment initiation failed.');
       }
-    }, 5000);
-  } catch (e) {
-    setLoadingDeposit(false);
-    triggerToast(`❌ ${e.message}`, 'error');
-  }
-};
+
+      if (rememberPhone) {
+        localStorage.setItem('jetpesa_saved_phone', cleanPhone);
+      }
+
+      triggerToast(data.message || 'STK push sent. Complete payment on your phone.', 'info');
+
+      let attempts = 0;
+      const maxAttempts = 36;
+
+      const poll = setInterval(async () => {
+        attempts += 1;
+
+        try {
+          const statusRes = await fetch(`/api/payhero-status?reference=${data.reference}`);
+          const statusData = await statusRes.json();
+
+          if (statusData.status === 'completed') {
+            clearInterval(poll);
+
+            const userDoc = await getDoc(doc(db, 'users', user.uid));
+            const freshBalance = userDoc.exists()
+              ? Number(userDoc.data().walletBalance || 0)
+              : balance;
+
+            setBalance(freshBalance);
+            setIsDepositModalOpen(false);
+            setLoadingDeposit(false);
+
+            triggerToast(`✅ Deposit confirmed. KES ${amt} added.`, 'success');
+          }
+
+          if (statusData.status === 'failed') {
+            clearInterval(poll);
+            setLoadingDeposit(false);
+
+            triggerToast(`❌ ${statusData.failureReason || 'Payment failed or was cancelled.'}`, 'error');
+          }
+
+          if (attempts >= maxAttempts) {
+            clearInterval(poll);
+            setLoadingDeposit(false);
+
+            triggerToast('⏳ Payment is still pending. Wallet will update after confirmation.', 'info');
+          }
+        } catch (e) {
+          if (attempts >= maxAttempts) {
+            clearInterval(poll);
+            setLoadingDeposit(false);
+            triggerToast(`❌ ${e.message}`, 'error');
+          }
+        }
+      }, 5000);
+    } catch (e) {
+      setLoadingDeposit(false);
+      triggerToast(`❌ ${e.message}`, 'error');
+    }
+  };
+
+  const renderLiveBets = () => (
+    <div style={{ flex: 1, overflowY: 'auto', padding: '10px', minHeight: 0 }}>
+      <div style={liveTableHead}>
+        <span>Pilot</span>
+        <span>Stake</span>
+        <span>Status</span>
+      </div>
+
+      {liveBetsFeed.length === 0 ? (
+        <div style={emptyTableState}>
+          <div style={{ fontSize: '28px', marginBottom: '8px' }}>🛫</div>
+          <strong>Preparing new round</strong>
+          <span>New wagers are entering...</span>
+        </div>
+      ) : (
+        liveBetsFeed.map((b) => (
+          <div key={b.id} style={liveRow}>
+            <div style={{ minWidth: 0 }}>
+              <span style={liveUser}>{b.username}</span>
+              <span style={liveSub}>Round #{currentRoundRef.current.nonce}</span>
+            </div>
+
+            <span style={liveStake}>{b.bet} KES</span>
+
+            {b.status === 'cashed' ? (
+              <span style={winBadge}>{b.mult.toFixed(2)}x</span>
+            ) : b.status === 'lost' ? (
+              <span style={lostBadge}>Lost</span>
+            ) : b.status === 'flying' ? (
+              <span style={flyingBadge}>Flying</span>
+            ) : (
+              <span style={queueBadge}>Queued</span>
+            )}
+          </div>
+        ))
+      )}
+    </div>
+  );
 
   const renderDeckPanel = (name, deck, setter, color) => (
     <div key={name} style={deckPanelStyle}>
@@ -854,7 +988,7 @@ export default function UltimateJetPesaCockpit() {
             <>
               CANCEL
               <br />
-              <span style={{ fontSize: '12px' }}>Queued for next round</span>
+              <span style={{ fontSize: '12px' }}>Queued</span>
             </>
           ) : (
             <>
@@ -882,8 +1016,8 @@ export default function UltimateJetPesaCockpit() {
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <span style={{ fontSize: '24px', fontWeight: '900', letterSpacing: '-1px', background: 'linear-gradient(to right, #fff, #94a3b8)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>JETPESA</span>
 
-          <button style={{ background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.3)', color: '#22c55e', fontSize: '10px', fontWeight: '800', padding: '3px 10px', borderRadius: '20px', cursor: 'pointer' }} onClick={() => setIsProvablyModalOpen(true)}>
-            🛡️ PROVABLY FAIR
+          <button style={{ background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.3)', color: '#22c55e', fontSize: '10px', fontWeight: '800', padding: '3px 10px', borderRadius: '20px', cursor: 'pointer' }} onClick={openProvablyModal}>
+            🛡️ FAIR #{currentRoundRef.current.nonce}
           </button>
         </div>
 
@@ -896,18 +1030,12 @@ export default function UltimateJetPesaCockpit() {
             🌧️ RAIN
           </button>
 
-          <button
-            onClick={() => setIsProfileModalOpen(true)}
-            style={{ background: 'rgba(255,255,255,0.06)', border: 'none', color: '#fff', padding: '8px 14px', borderRadius: '20px', fontSize: '12px', fontWeight: '900', cursor: 'pointer' }}
-          >
+          <button onClick={() => setIsProfileModalOpen(true)} style={{ background: 'rgba(255,255,255,0.06)', border: 'none', color: '#fff', padding: '8px 14px', borderRadius: '20px', fontSize: '12px', fontWeight: '900', cursor: 'pointer' }}>
             👤 PROFILE
           </button>
 
           <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.08)', padding: '3px 3px 3px 12px', borderRadius: '30px', gap: '8px' }}>
-            <button
-              onClick={() => balance > 0 ? setIsWithdrawModalOpen(true) : triggerToast('Wallet is empty. Deposit first.', 'info')}
-              style={{ background: 'transparent', border: 'none', color: '#22c55e', fontWeight: '900', fontSize: '14px', cursor: balance > 0 ? 'pointer' : 'default' }}
-            >
+            <button onClick={() => balance > 0 ? setIsWithdrawModalOpen(true) : triggerToast('Wallet is empty. Deposit first.', 'info')} style={{ background: 'transparent', border: 'none', color: '#22c55e', fontWeight: '900', fontSize: '14px', cursor: balance > 0 ? 'pointer' : 'default' }}>
               {balance.toFixed(2)} KES
             </button>
 
@@ -930,7 +1058,7 @@ export default function UltimateJetPesaCockpit() {
         <div className="leftPanelLayout" style={{ background: 'rgba(18,20,32,0.6)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '16px', display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0, overflow: 'hidden' }}>
           <div style={{ display: 'flex', background: 'rgba(0,0,0,0.2)', padding: '4px', flexShrink: 0 }}>
             <button onClick={() => setActiveTab('all')} style={{ flex: 1, padding: '12px', background: activeTab === 'all' ? 'rgba(255,255,255,0.06)' : 'transparent', border: 'none', color: '#fff', fontSize: '11px', fontWeight: '800', borderRadius: '8px', cursor: 'pointer' }}>
-              ALL LIVE ({activePlayersCount})
+              LIVE ({activePlayersCount})
             </button>
 
             <button onClick={() => setActiveTab('mine')} style={{ flex: 1, padding: '12px', background: activeTab === 'mine' ? 'rgba(255,255,255,0.06)' : 'transparent', border: 'none', color: '#fff', fontSize: '11px', fontWeight: '800', borderRadius: '8px', cursor: 'pointer' }}>
@@ -938,35 +1066,31 @@ export default function UltimateJetPesaCockpit() {
             </button>
           </div>
 
-          <div style={{ flex: 1, overflowY: 'auto', padding: '10px', minHeight: 0 }}>
-            {activeTab === 'all' ? (
-              liveBetsFeed.map((b, i) => (
-                <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 10px', background: b.won ? 'rgba(34,197,94,0.05)' : 'transparent', borderBottom: '1px solid rgba(255,255,255,0.02)', fontSize: '12px' }}>
-                  <span style={{ color: '#94a3b8', fontWeight: '600' }}>{b.username}</span>
-                  <span style={{ fontWeight: '800', color: '#fff' }}>{b.bet} KES</span>
-                  <span style={{ color: b.won ? '#22c55e' : '#475569', fontWeight: '900' }}>{b.won ? `${b.mult}x` : '-'}</span>
-                </div>
-              ))
-            ) : myBetsHistory.length === 0 ? (
-              <div style={{ textAlign: 'center', color: '#475569', fontSize: '12px', marginTop: '40px', fontWeight: '600' }}>No local round wagers recorded.</div>
-            ) : (
-              myBetsHistory.map((m, i) => (
-                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px', background: 'rgba(0,0,0,0.15)', borderRadius: '8px', marginBottom: '6px', fontSize: '12px', border: '1px solid rgba(255,255,255,0.02)' }}>
-                  <div>
-                    <span style={{ color: '#64748b', display: 'block', fontSize: '10px' }}>ROUND #{m.roundId}</span>
-                    <span style={{ fontWeight: '800' }}>{m.stake} KES</span>
+          {activeTab === 'all' ? (
+            renderLiveBets()
+          ) : (
+            <div style={{ flex: 1, overflowY: 'auto', padding: '10px', minHeight: 0 }}>
+              {myBetsHistory.length === 0 ? (
+                <div style={{ textAlign: 'center', color: '#475569', fontSize: '12px', marginTop: '40px', fontWeight: '600' }}>No local round wagers recorded.</div>
+              ) : (
+                myBetsHistory.map((m, i) => (
+                  <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px', background: 'rgba(0,0,0,0.15)', borderRadius: '8px', marginBottom: '6px', fontSize: '12px', border: '1px solid rgba(255,255,255,0.02)' }}>
+                    <div>
+                      <span style={{ color: '#64748b', display: 'block', fontSize: '10px' }}>ROUND #{m.roundId}</span>
+                      <span style={{ fontWeight: '800' }}>{m.stake} KES</span>
+                    </div>
+                    <div style={{ textAlign: 'right' }}>
+                      <span style={{ color: '#22c55e', fontWeight: '900', display: 'block' }}>{m.multiplier.toFixed(2)}x</span>
+                      <span style={{ color: '#94a3b8', fontSize: '11px' }}>+{m.yieldAmount.toFixed(1)}</span>
+                    </div>
                   </div>
-                  <div style={{ textAlign: 'right' }}>
-                    <span style={{ color: '#22c55e', fontWeight: '900', display: 'block' }}>{m.multiplier.toFixed(2)}x</span>
-                    <span style={{ color: '#94a3b8', fontSize: '11px' }}>+{m.yieldAmount.toFixed(1)}</span>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
+                ))
+              )}
+            </div>
+          )}
         </div>
 
-        <div className="centerPanelLayout" style={{ display: 'flex', flexDirection: 'column', gap: '16px', height: '100%', minHeight: 0 }}>
+        <div className="centerPanelLayout" style={{ display: 'flex', flexDirection: 'column', gap: '12px', height: '100%', minHeight: 0 }}>
           <div style={{ flex: 1, background: '#020306', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.05)', position: 'relative', overflow: 'hidden', minHeight: 0, boxShadow: 'inset 0 0 40px rgba(0,0,0,0.9)' }}>
             {gameStatus === 'idle' && (
               <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(4,5,9,0.94)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', zIndex: 10 }}>
@@ -974,7 +1098,7 @@ export default function UltimateJetPesaCockpit() {
                   <div style={{ height: '8px', background: 'linear-gradient(to right, #22c55e, #4ade80)', borderRadius: '8px', width: `${countdownProgress}%` }} />
                 </div>
                 <span style={{ color: '#fff', fontSize: '13px', fontWeight: '900', marginTop: '14px', letterSpacing: '1px' }}>WAITING FOR NEXT FLIGHT ROUND...</span>
-                <span style={{ color: '#475569', fontSize: '11px', fontWeight: '700', marginTop: '4px' }}>Powered by JetPesa</span>
+                <span style={{ color: '#475569', fontSize: '11px', fontWeight: '700', marginTop: '4px' }}>New wagers loading...</span>
               </div>
             )}
 
@@ -994,7 +1118,7 @@ export default function UltimateJetPesaCockpit() {
             )}
           </div>
 
-          <div className="betControlsGrid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', background: 'rgba(18,20,32,0.8)', border: '1px solid rgba(255,255,255,0.08)', padding: '18px', borderRadius: '20px', flexShrink: 0 }}>
+          <div className="betControlsGrid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', background: 'rgba(18,20,32,0.8)', border: '1px solid rgba(255,255,255,0.08)', padding: '12px', borderRadius: '20px', flexShrink: 0 }}>
             {renderDeckPanel('A', deckA, setDeckA, '#22c55e')}
             {renderDeckPanel('B', deckB, setDeckB, '#16a34a')}
           </div>
@@ -1029,9 +1153,9 @@ export default function UltimateJetPesaCockpit() {
       </div>
 
       <div className="mobileUtilityFooterBar" style={{ background: '#0c0d12', borderTop: '1px solid rgba(255,255,255,0.06)', display: 'none', justifyContent: 'space-around', padding: '12px 0', position: 'sticky', bottom: 0, zIndex: 999, flexShrink: 0 }}>
-        <button onClick={() => setMobileActivePanel('bets')} style={{ background: 'transparent', border: 'none', color: mobileActivePanel === 'bets' ? '#22c55e' : '#64748b', fontSize: '12px', fontWeight: '800' }}>📊 DATA LIVE</button>
-        <button onClick={() => setMobileActivePanel('game')} style={{ background: 'transparent', border: 'none', color: mobileActivePanel === 'game' ? '#e11d48' : '#64748b', fontSize: '12px', fontWeight: '800' }}>🚀 RADAR HUB</button>
-        <button onClick={() => setMobileActivePanel('chat')} style={{ background: 'transparent', border: 'none', color: mobileActivePanel === 'chat' ? '#38bdf8' : '#64748b', fontSize: '12px', fontWeight: '800' }}>💬 LOBBY ROOM</button>
+        <button onClick={() => setMobileActivePanel('bets')} style={{ background: 'transparent', border: 'none', color: mobileActivePanel === 'bets' ? '#22c55e' : '#64748b', fontSize: '12px', fontWeight: '800' }}>📊 LIVE</button>
+        <button onClick={() => setMobileActivePanel('game')} style={{ background: 'transparent', border: 'none', color: mobileActivePanel === 'game' ? '#e11d48' : '#64748b', fontSize: '12px', fontWeight: '800' }}>🚀 GAME</button>
+        <button onClick={() => setMobileActivePanel('chat')} style={{ background: 'transparent', border: 'none', color: mobileActivePanel === 'chat' ? '#38bdf8' : '#64748b', fontSize: '12px', fontWeight: '800' }}>💬 CHAT</button>
       </div>
 
       {isDepositModalOpen && (
@@ -1107,6 +1231,42 @@ export default function UltimateJetPesaCockpit() {
         </div>
       )}
 
+      {isProvablyModalOpen && (
+        <div style={modalOverlay}>
+          <div style={modalBoxPurple}>
+            <button onClick={() => setIsProvablyModalOpen(false)} style={modalClose}>×</button>
+            <h3 style={{ margin: '0 0 8px 0', color: '#a855f7', fontWeight: '900' }}>Provably Fair Round</h3>
+
+            {provablyLoading ? (
+              <p style={{ color: '#94a3b8', fontSize: '13px' }}>Loading hash details...</p>
+            ) : (
+              <>
+                <div style={fairSummaryGrid}>
+                  <div style={fairMiniCard}>
+                    <span>Round</span>
+                    <strong>#{provablyData?.nonce || currentRoundRef.current.nonce}</strong>
+                  </div>
+                  <div style={fairMiniCard}>
+                    <span>Crash</span>
+                    <strong>{Number(provablyData?.crashPoint || currentRoundRef.current.crashPoint).toFixed(2)}x</strong>
+                  </div>
+                </div>
+
+                <HashLine label="Server Seed Hash" value={provablyData?.serverSeedHash || currentRoundRef.current.serverSeedHash} />
+                <HashLine label="Round Hash" value={provablyData?.roundHash || currentRoundRef.current.roundHash} />
+                <HashLine label="Client Seed" value={provablyData?.clientSeed || currentRoundRef.current.clientSeed} />
+                <HashLine label="Verify Input" value={provablyData?.verifyInput || currentRoundRef.current.verifyInput} />
+                <HashLine label="Algorithm" value={provablyData?.algorithm || currentRoundRef.current.algorithm || 'HMAC_SHA256'} />
+
+                <button onClick={() => fetchProvablyRound(currentRoundRef.current.nonce, true)} style={purpleButton}>
+                  REFRESH HASH DETAILS
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
       <style>{`
         .cockpitMainLayout {
           grid-template-columns: 310px minmax(0, 1fr) 310px;
@@ -1127,9 +1287,9 @@ export default function UltimateJetPesaCockpit() {
         @media (max-width: 992px) {
           .cockpitMainLayout {
             grid-template-columns: 1fr !important;
-            height: calc(100dvh - 140px) !important;
-            padding: 10px !important;
-            padding-bottom: 74px !important;
+            height: calc(100dvh - 138px) !important;
+            padding: 8px !important;
+            padding-bottom: 62px !important;
           }
 
           .mobileUtilityFooterBar {
@@ -1152,40 +1312,42 @@ export default function UltimateJetPesaCockpit() {
           }
 
           .centerPanelLayout > div:first-child {
-            min-height: 360px !important;
+            min-height: 345px !important;
           }
 
           .betControlsGrid {
-            grid-template-columns: 1fr !important;
-            max-height: 310px;
-            overflow-y: auto;
-            padding: 12px !important;
+            grid-template-columns: 1fr 1fr !important;
+            max-height: none !important;
+            overflow: visible !important;
+            padding: 8px !important;
+            gap: 8px !important;
           }
 
           header {
-            padding: 10px 12px !important;
-            gap: 8px !important;
+            padding: 8px 10px !important;
+            gap: 6px !important;
             flex-wrap: wrap;
           }
 
           header > div {
             flex-wrap: wrap;
+            gap: 7px !important;
           }
 
           header span {
-            font-size: 20px !important;
+            font-size: 19px !important;
           }
         }
 
         @media (max-width: 560px) {
           .cockpitMainLayout {
-            height: calc(100dvh - 156px) !important;
-            padding: 8px !important;
-            padding-bottom: 72px !important;
+            height: calc(100dvh - 150px) !important;
+            padding: 6px !important;
+            padding-bottom: 56px !important;
           }
 
           .centerPanelLayout {
-            gap: 10px !important;
+            gap: 7px !important;
           }
 
           .centerPanelLayout > div:first-child {
@@ -1194,13 +1356,13 @@ export default function UltimateJetPesaCockpit() {
           }
 
           .betControlsGrid {
-            max-height: 330px;
-            gap: 10px !important;
-            border-radius: 16px !important;
+            grid-template-columns: 1fr 1fr !important;
+            gap: 6px !important;
+            border-radius: 14px !important;
           }
 
           .mobileUtilityFooterBar {
-            padding: 9px 0 !important;
+            padding: 8px 0 !important;
           }
 
           .mobileUtilityFooterBar button {
@@ -1208,21 +1370,21 @@ export default function UltimateJetPesaCockpit() {
           }
 
           h1 {
-            font-size: 3.2rem !important;
+            font-size: 3.1rem !important;
           }
         }
 
         @media (max-width: 420px) {
           .centerPanelLayout > div:first-child {
-            min-height: 300px !important;
+            min-height: 305px !important;
           }
 
           h1 {
-            font-size: 2.7rem !important;
+            font-size: 2.65rem !important;
           }
 
           .cockpitMainLayout {
-            height: calc(100dvh - 170px) !important;
+            height: calc(100dvh - 164px) !important;
           }
         }
       `}</style>
@@ -1230,68 +1392,180 @@ export default function UltimateJetPesaCockpit() {
   );
 }
 
+function HashLine({ label, value }) {
+  return (
+    <div style={{ marginBottom: '10px' }}>
+      <label style={modalLabel}>{label}</label>
+      <div style={hashBox}>{value || 'Unavailable'}</div>
+    </div>
+  );
+}
+
+const liveTableHead = {
+  display: 'grid',
+  gridTemplateColumns: '1fr 72px 72px',
+  gap: '8px',
+  color: '#64748b',
+  fontSize: '10px',
+  fontWeight: '900',
+  textTransform: 'uppercase',
+  padding: '4px 8px 8px',
+};
+
+const liveRow = {
+  display: 'grid',
+  gridTemplateColumns: '1fr 72px 72px',
+  gap: '8px',
+  alignItems: 'center',
+  padding: '9px 10px',
+  background: 'linear-gradient(135deg, rgba(15,23,42,0.85), rgba(2,6,23,0.78))',
+  border: '1px solid rgba(255,255,255,0.055)',
+  borderRadius: '12px',
+  fontSize: '12px',
+  marginBottom: '7px',
+};
+
+const liveUser = {
+  display: 'block',
+  color: '#e2e8f0',
+  fontWeight: '900',
+  whiteSpace: 'nowrap',
+  overflow: 'hidden',
+  textOverflow: 'ellipsis',
+};
+
+const liveSub = {
+  display: 'block',
+  color: '#475569',
+  fontSize: '9px',
+  fontWeight: '800',
+  marginTop: '2px',
+};
+
+const liveStake = {
+  color: '#fff',
+  fontWeight: '900',
+  textAlign: 'right',
+};
+
+const winBadge = {
+  color: '#22c55e',
+  background: 'rgba(34,197,94,0.1)',
+  border: '1px solid rgba(34,197,94,0.22)',
+  borderRadius: '999px',
+  padding: '4px 8px',
+  fontSize: '11px',
+  fontWeight: '950',
+  textAlign: 'center',
+};
+
+const lostBadge = {
+  color: '#ef4444',
+  background: 'rgba(239,68,68,0.1)',
+  border: '1px solid rgba(239,68,68,0.22)',
+  borderRadius: '999px',
+  padding: '4px 8px',
+  fontSize: '11px',
+  fontWeight: '950',
+  textAlign: 'center',
+};
+
+const flyingBadge = {
+  color: '#38bdf8',
+  background: 'rgba(56,189,248,0.1)',
+  border: '1px solid rgba(56,189,248,0.22)',
+  borderRadius: '999px',
+  padding: '4px 8px',
+  fontSize: '11px',
+  fontWeight: '950',
+  textAlign: 'center',
+};
+
+const queueBadge = {
+  color: '#94a3b8',
+  background: 'rgba(148,163,184,0.1)',
+  border: '1px solid rgba(148,163,184,0.16)',
+  borderRadius: '999px',
+  padding: '4px 8px',
+  fontSize: '11px',
+  fontWeight: '950',
+  textAlign: 'center',
+};
+
+const emptyTableState = {
+  height: '70%',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  flexDirection: 'column',
+  color: '#64748b',
+  fontSize: '12px',
+  gap: '4px',
+  textAlign: 'center',
+};
+
 const deckPanelStyle = {
   background: 'rgba(0,0,0,0.28)',
   border: '1px solid rgba(255,255,255,0.06)',
-  padding: '14px',
-  borderRadius: '16px',
+  padding: '10px',
+  borderRadius: '14px',
 };
 
 const spribeToggleRow = {
   display: 'flex',
   background: '#111827',
   borderRadius: '999px',
-  padding: '4px',
-  marginBottom: '12px',
+  padding: '3px',
+  marginBottom: '8px',
 };
 
 const spribeTab = {
   flex: 1,
   border: 'none',
   borderRadius: '999px',
-  padding: '8px',
-  fontSize: '11px',
+  padding: '7px',
+  fontSize: '10px',
   fontWeight: '900',
   cursor: 'pointer',
 };
 
 const wagerControlsRow = {
   display: 'grid',
-  gridTemplateColumns: '34px 1fr 34px',
-  gap: '8px',
+  gridTemplateColumns: '30px 1fr 30px',
+  gap: '6px',
   alignItems: 'center',
-  marginBottom: '8px',
+  marginBottom: '6px',
 };
 
 const roundMiniButton = {
-  height: '34px',
+  height: '30px',
   borderRadius: '50%',
   border: 'none',
   background: '#1f2937',
   color: '#fff',
-  fontSize: '18px',
+  fontSize: '16px',
   fontWeight: '900',
   cursor: 'pointer',
 };
 
 const wagerInput = {
   width: '100%',
-  padding: '10px',
+  padding: '8px',
   background: '#030712',
   border: '1px solid rgba(255,255,255,0.1)',
   color: '#fff',
   fontWeight: '900',
   textAlign: 'center',
   borderRadius: '999px',
-  fontSize: '16px',
+  fontSize: '14px',
   boxSizing: 'border-box',
 };
 
 const quickStakeRow = {
   display: 'grid',
   gridTemplateColumns: 'repeat(4, 1fr)',
-  gap: '6px',
-  marginBottom: '12px',
+  gap: '4px',
+  marginBottom: '8px',
 };
 
 const quickStakeButton = {
@@ -1299,8 +1573,8 @@ const quickStakeButton = {
   border: 'none',
   color: '#cbd5e1',
   borderRadius: '999px',
-  padding: '6px',
-  fontSize: '11px',
+  padding: '5px 2px',
+  fontSize: '10px',
   fontWeight: '900',
   cursor: 'pointer',
 };
@@ -1309,15 +1583,15 @@ const autoCashRow = {
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'space-between',
-  marginBottom: '8px',
+  marginBottom: '6px',
 };
 
 const switchTrack = {
-  width: '42px',
-  height: '24px',
+  width: '40px',
+  height: '22px',
   borderRadius: '999px',
   border: 'none',
-  padding: '3px',
+  padding: '2px',
   cursor: 'pointer',
   transition: '0.2s',
 };
@@ -1333,39 +1607,39 @@ const switchKnob = {
 
 const autoCashInput = {
   width: '100%',
-  padding: '9px',
+  padding: '8px',
   background: '#030712',
   border: '1px solid rgba(255,255,255,0.1)',
   color: '#fff',
   borderRadius: '999px',
-  fontSize: '13px',
+  fontSize: '12px',
   fontWeight: '900',
   textAlign: 'center',
-  marginBottom: '12px',
+  marginBottom: '8px',
   boxSizing: 'border-box',
 };
 
 const betButton = {
   width: '100%',
-  padding: '14px',
+  padding: '11px',
   border: 'none',
   color: '#fff',
   fontWeight: '950',
-  fontSize: '14px',
-  borderRadius: '14px',
+  fontSize: '13px',
+  borderRadius: '12px',
   cursor: 'pointer',
   boxShadow: '0 10px 24px rgba(0,0,0,0.35)',
 };
 
 const cashOutButton = {
   width: '100%',
-  padding: '14px',
+  padding: '11px',
   background: 'linear-gradient(135deg, #f59e0b 0%, #b45309 100%)',
   border: 'none',
   color: '#fff',
   fontWeight: '950',
-  fontSize: '14px',
-  borderRadius: '14px',
+  fontSize: '13px',
+  borderRadius: '12px',
   cursor: 'pointer',
 };
 
@@ -1387,26 +1661,16 @@ const modalBoxBase = {
   background: '#0c0d12',
   borderRadius: '20px',
   width: '100%',
-  maxWidth: '360px',
+  maxWidth: '390px',
   padding: '26px',
   position: 'relative',
   boxShadow: '0 24px 60px rgba(0,0,0,0.55)',
 };
 
-const modalBoxGreen = {
-  ...modalBoxBase,
-  border: '1px solid #22c55e',
-};
-
-const modalBoxBlue = {
-  ...modalBoxBase,
-  border: '1px solid #38bdf8',
-};
-
-const modalBoxOrange = {
-  ...modalBoxBase,
-  border: '1px solid #f59e0b',
-};
+const modalBoxGreen = { ...modalBoxBase, border: '1px solid #22c55e' };
+const modalBoxBlue = { ...modalBoxBase, border: '1px solid #38bdf8' };
+const modalBoxOrange = { ...modalBoxBase, border: '1px solid #f59e0b' };
+const modalBoxPurple = { ...modalBoxBase, border: '1px solid #a855f7', maxWidth: '520px' };
 
 const modalClose = {
   position: 'absolute',
@@ -1420,9 +1684,11 @@ const modalClose = {
 };
 
 const modalLabel = {
+  display: 'block',
   fontSize: '11px',
   color: '#94a3b8',
-  fontWeight: '700',
+  fontWeight: '800',
+  marginBottom: '4px',
 };
 
 const modalInput = {
@@ -1434,6 +1700,38 @@ const modalInput = {
   color: '#fff',
   fontSize: '14px',
   borderRadius: '8px',
+};
+
+const hashBox = {
+  background: '#020617',
+  border: '1px solid rgba(255,255,255,0.08)',
+  color: '#e2e8f0',
+  padding: '10px',
+  borderRadius: '10px',
+  fontSize: '11px',
+  lineHeight: 1.45,
+  wordBreak: 'break-all',
+  fontFamily: 'monospace',
+};
+
+const fairSummaryGrid = {
+  display: 'grid',
+  gridTemplateColumns: '1fr 1fr',
+  gap: '10px',
+  margin: '14px 0',
+};
+
+const fairMiniCard = {
+  background: 'rgba(168,85,247,0.1)',
+  border: '1px solid rgba(168,85,247,0.22)',
+  borderRadius: '12px',
+  padding: '12px',
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '4px',
+  color: '#c4b5fd',
+  fontSize: '11px',
+  fontWeight: '900',
 };
 
 const greenButton = {
@@ -1462,6 +1760,18 @@ const orangeButton = {
   width: '100%',
   padding: '14px',
   background: 'linear-gradient(135deg, #f59e0b 0%, #b45309 100%)',
+  border: 'none',
+  color: '#fff',
+  fontWeight: '900',
+  borderRadius: '10px',
+  cursor: 'pointer',
+};
+
+const purpleButton = {
+  width: '100%',
+  padding: '13px',
+  marginTop: '6px',
+  background: 'linear-gradient(135deg, #a855f7 0%, #6b21a8 100%)',
   border: 'none',
   color: '#fff',
   fontWeight: '900',
