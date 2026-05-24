@@ -13,11 +13,16 @@ export default function UltimateJetPesaCockpit() {
   const [user, setUser] = useState(null);
   const [balance, setBalance] = useState(0.0);
   const [phoneProfile, setPhoneProfile] = useState('');
+  const [profileName, setProfileName] = useState('');
+  const [editPhone, setEditPhone] = useState('');
+  const [editName, setEditName] = useState('');
   const [rememberPhone, setRememberPhone] = useState(true);
 
   const [myBetsHistory, setMyBetsHistory] = useState([]);
   const [activeTab, setActiveTab] = useState('all');
   const [isDepositModalOpen, setIsDepositModalOpen] = useState(false);
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
   const [isProvablyModalOpen, setIsProvablyModalOpen] = useState(false);
   const [isRainActive, setIsRainActive] = useState(false);
   const [audioMuted, setAudioMuted] = useState(false);
@@ -27,7 +32,9 @@ export default function UltimateJetPesaCockpit() {
 
   const [inputPhone, setInputPhone] = useState('');
   const [inputAmount, setInputAmount] = useState('100');
+  const [withdrawAmount, setWithdrawAmount] = useState('');
   const [loadingDeposit, setLoadingDeposit] = useState(false);
+  const [loadingWithdraw, setLoadingWithdraw] = useState(false);
 
   const [deckA, setDeckA] = useState({
     wager: 10,
@@ -61,53 +68,14 @@ export default function UltimateJetPesaCockpit() {
   const planeImageRef = useRef(null);
 
   const [activePlayersCount, setActivePlayersCount] = useState(3412);
-
-  const playSynthesizedTone = (freq, type, duration, volume = 0.03) => {
-    if (audioMuted) return;
-
-    try {
-      if (!audioCtxRef.current) {
-        audioCtxRef.current = new (window.AudioContext ||
-          window.webkitAudioContext)();
-      }
-
-      const ctx = audioCtxRef.current;
-
-      if (ctx.state === 'suspended') {
-        ctx.resume();
-      }
-
-      const osc = ctx.createOscillator();
-      const gainNode = ctx.createGain();
-
-      osc.type = type;
-      osc.frequency.value = freq;
-
-      gainNode.gain.setValueAtTime(volume, ctx.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(
-        0.0001,
-        ctx.currentTime + duration
-      );
-
-      osc.connect(gainNode);
-      gainNode.connect(ctx.destination);
-
-      osc.start();
-      osc.stop(ctx.currentTime + duration);
-    } catch (e) {
-      console.log(e);
-    }
-  };
-
   const [liveBetsFeed, setLiveBetsFeed] = useState([]);
+  const [chatInput, setChatInput] = useState('');
   const [chatLogs, setChatLogs] = useState([
     { user: '🦈071***45', msg: 'Admin, background rain drop claim active? 🙌', time: '08:02' },
     { user: '🦒072***89', msg: 'Leo tunakula rocket safi sana hapa JetPesa! 🤯', time: '08:04' },
     { user: '🦅079***12', msg: 'Nĩngwenda gũkĩria 10x rũũgĩ rũfĩfĩ rwa Deck B gaka!', time: '08:04' },
     { user: '🦁011***90', msg: 'Asego mar plane ni e ma duong’! Multiplier obiro thuth!', time: '08:05' },
   ]);
-
-  const [chatInput, setChatInput] = useState('');
 
   useEffect(() => {
     const svgPlane = `
@@ -118,87 +86,61 @@ export default function UltimateJetPesaCockpit() {
             <stop offset="45%" stop-color="#e11d48"/>
             <stop offset="100%" stop-color="#7f1d1d"/>
           </linearGradient>
-
           <linearGradient id="glass" x1="0" x2="1">
             <stop offset="0%" stop-color="#dbeafe"/>
             <stop offset="100%" stop-color="#1e293b"/>
           </linearGradient>
-
           <filter id="shadow">
-            <feDropShadow dx="0" dy="8" stdDeviation="8"
-              flood-color="#000000"
-              flood-opacity="0.45"/>
+            <feDropShadow dx="0" dy="8" stdDeviation="8" flood-color="#000000" flood-opacity="0.45"/>
           </filter>
         </defs>
-
         <g filter="url(#shadow)" transform="rotate(-12 210 90)">
-          <path d="M70 98 L12 60 L110 84 Z"
-            fill="url(#bodyRed)"
-            stroke="#111827"
-            stroke-width="3"/>
-
-          <path d="M150 104 L40 168 L290 116 Z"
-            fill="url(#bodyRed)"
-            stroke="#111827"
-            stroke-width="4"/>
-
-          <path d="
-            M72 82
-            C145 44, 270 40, 360 74
-            C376 80, 376 96, 360 101
-            C260 130, 142 125, 72 100
-            C50 92, 50 88, 72 82 Z"
-            fill="url(#bodyRed)"
-            stroke="#111827"
-            stroke-width="4"/>
-
-          <path d="
-            M112 95
-            C175 84, 255 84, 340 92"
-            stroke="#ffffff"
-            stroke-width="5"
-            opacity="0.45"
-            fill="none"/>
-
-          <path d="
-            M160 68
-            C190 48, 230 50, 252 72
-            C222 78, 192 80, 160 68 Z"
-            fill="url(#glass)"
-            stroke="#111827"
-            stroke-width="2"/>
-
-          <path d="
-            M78 82
-            L48 28
-            C76 28, 98 50, 105 80 Z"
-            fill="url(#bodyRed)"
-            stroke="#111827"
-            stroke-width="4"/>
-
-          <ellipse cx="362" cy="88" rx="22" ry="15"
-            fill="#1e293b"
-            stroke="#000"
-            stroke-width="3"/>
-
-          <circle cx="382" cy="88" r="10"
-            fill="#d1d5db"
-            stroke="#111827"
-            stroke-width="3"/>
-
-          <circle cx="384" cy="88" r="4"
-            fill="#ffffff"
-            opacity="0.8"/>
+          <path d="M70 98 L12 60 L110 84 Z" fill="url(#bodyRed)" stroke="#111827" stroke-width="3"/>
+          <path d="M150 104 L40 168 L290 116 Z" fill="url(#bodyRed)" stroke="#111827" stroke-width="4"/>
+          <path d="M72 82 C145 44, 270 40, 360 74 C376 80, 376 96, 360 101 C260 130, 142 125, 72 100 C50 92, 50 88, 72 82 Z" fill="url(#bodyRed)" stroke="#111827" stroke-width="4"/>
+          <path d="M112 95 C175 84, 255 84, 340 92" stroke="#ffffff" stroke-width="5" opacity="0.45" fill="none"/>
+          <path d="M160 68 C190 48, 230 50, 252 72 C222 78, 192 80, 160 68 Z" fill="url(#glass)" stroke="#111827" stroke-width="2"/>
+          <path d="M78 82 L48 28 C76 28, 98 50, 105 80 Z" fill="url(#bodyRed)" stroke="#111827" stroke-width="4"/>
+          <ellipse cx="362" cy="88" rx="22" ry="15" fill="#1e293b" stroke="#000" stroke-width="3"/>
+          <circle cx="382" cy="88" r="10" fill="#d1d5db" stroke="#111827" stroke-width="3"/>
+          <circle cx="384" cy="88" r="4" fill="#ffffff" opacity="0.8"/>
         </g>
       </svg>
     `;
 
     const img = new Image();
-    img.src =
-      'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgPlane);
-
+    img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgPlane);
     planeImageRef.current = img;
   }, []);
+
+  const playSynthesizedTone = (freq, type, duration, volume = 0.03) => {
+    if (audioMuted) return;
+
+    try {
+      if (!audioCtxRef.current) {
+        audioCtxRef.current = new (window.AudioContext || window.webkitAudioContext)();
+      }
+
+      const ctx = audioCtxRef.current;
+
+      if (ctx.state === 'suspended') ctx.resume();
+
+      const osc = ctx.createOscillator();
+      const gainNode = ctx.createGain();
+
+      osc.type = type;
+      osc.frequency.value = freq;
+      gainNode.gain.setValueAtTime(volume, ctx.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + duration);
+
+      osc.connect(gainNode);
+      gainNode.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + duration);
+    } catch (e) {
+      console.log(e);
+    }
+  };
 
   const triggerToast = (msg, type = 'info') => {
     const id = Date.now() + Math.random();
@@ -233,6 +175,7 @@ export default function UltimateJetPesaCockpit() {
     if (savedPhone) {
       setInputPhone(savedPhone);
       setPhoneProfile(savedPhone);
+      setEditPhone(savedPhone);
     }
 
     const unsubscribe = onAuthStateChanged(auth, async (curr) => {
@@ -247,17 +190,20 @@ export default function UltimateJetPesaCockpit() {
 
       if (userDoc.exists()) {
         const d = userDoc.data();
+
         setBalance(d.walletBalance || 0.0);
+        setProfileName(d.displayName || '');
+        setEditName(d.displayName || '');
 
         if (!savedPhone && d.mpesaPhone) {
           setPhoneProfile(d.mpesaPhone);
           setInputPhone(d.mpesaPhone);
+          setEditPhone(d.mpesaPhone);
         }
       }
     });
 
     generateFreshBetsFeed();
-
     return () => unsubscribe();
   }, [router]);
 
@@ -272,7 +218,7 @@ export default function UltimateJetPesaCockpit() {
       { user: '🦅011***23', msg: 'Anya tero mwandu nyaka polo! Retain control omera.' },
       { user: '🦁070***66', msg: 'Free bets admin please.....' },
       { user: '🦁072***99', msg: '50k innit! hii ni ingine mwechecheeee' },
-       { user: '🦁010***45', msg: 'Wakuu mmenikula ata school fees, watu wanichangie please' },     
+      { user: '🦁010***45', msg: 'Wakuu mmenikula ata school fees, watu wanichangie please' },
       { user: '🦈075***04', msg: 'Nimeweka 500 stake hapa, twende sasa kabla iland.' },
     ];
 
@@ -299,7 +245,6 @@ export default function UltimateJetPesaCockpit() {
       const cycleInterval = 21000;
       const countdownInterval = 5000;
       const simulationWindow = 14000;
-
       const offsetMs = epochTimeMs % cycleInterval;
 
       if (offsetMs < countdownInterval) {
@@ -310,9 +255,7 @@ export default function UltimateJetPesaCockpit() {
           generateFreshBetsFeed();
         }
 
-        setCountdownProgress(
-          ((countdownInterval - offsetMs) / countdownInterval) * 100
-        );
+        setCountdownProgress(((countdownInterval - offsetMs) / countdownInterval) * 100);
 
         if (offsetMs % 1000 < 20) {
           playSynthesizedTone(320, 'sine', 0.03, 0.02);
@@ -320,41 +263,28 @@ export default function UltimateJetPesaCockpit() {
 
         setDeckA((prev) => {
           if (prev.hasBetNext && !prev.hasBetCurrent) {
-            return {
-              ...prev,
-              hasBetCurrent: true,
-              hasBetNext: prev.isAuto,
-            };
+            return { ...prev, hasBetCurrent: true, hasBetNext: prev.isAuto };
           }
-
           return prev;
         });
 
         setDeckB((prev) => {
           if (prev.hasBetNext && !prev.hasBetCurrent) {
-            return {
-              ...prev,
-              hasBetCurrent: true,
-              hasBetNext: prev.isAuto,
-            };
+            return { ...prev, hasBetCurrent: true, hasBetNext: prev.isAuto };
           }
-
           return prev;
         });
       } else if (offsetMs < countdownInterval + simulationWindow) {
         setGameStatus('running');
 
         const activeSeconds = (offsetMs - countdownInterval) / 1000;
-        const computedMultiplier = parseFloat(
-          Math.pow(Math.E, 0.078 * activeSeconds).toFixed(2)
-        );
+        const computedMultiplier = parseFloat(Math.pow(Math.E, 0.078 * activeSeconds).toFixed(2));
 
         const trackingIndex = Math.floor(epochTimeMs / cycleInterval);
         const dynamicCrashBound = parseFloat(
           (
             1.08 +
-            (parseFloat(String(Math.sin(trackingIndex) * 1200).split('.')[1] || 4) %
-              9.2)
+            (parseFloat(String(Math.sin(trackingIndex) * 1200).split('.')[1] || 4) % 9.2)
           ).toFixed(2)
         );
 
@@ -371,28 +301,18 @@ export default function UltimateJetPesaCockpit() {
           }
 
           setDeckA((p) => {
-            if (
-              p.hasBetCurrent &&
-              p.isAutoCash &&
-              computedMultiplier >= parseFloat(p.cashVal)
-            ) {
+            if (p.hasBetCurrent && p.isAutoCash && computedMultiplier >= parseFloat(p.cashVal)) {
               triggerPayoutSequence('A', computedMultiplier, p);
               return { ...p, hasBetCurrent: false };
             }
-
             return p;
           });
 
           setDeckB((p) => {
-            if (
-              p.hasBetCurrent &&
-              p.isAutoCash &&
-              computedMultiplier >= parseFloat(p.cashVal)
-            ) {
+            if (p.hasBetCurrent && p.isAutoCash && computedMultiplier >= parseFloat(p.cashVal)) {
               triggerPayoutSequence('B', computedMultiplier, p);
               return { ...p, hasBetCurrent: false };
             }
-
             return p;
           });
         }
@@ -403,8 +323,7 @@ export default function UltimateJetPesaCockpit() {
         const dynamicCrashBound = parseFloat(
           (
             1.08 +
-            (parseFloat(String(Math.sin(trackingIndex) * 1200).split('.')[1] || 4) %
-              9.2)
+            (parseFloat(String(Math.sin(trackingIndex) * 1200).split('.')[1] || 4) % 9.2)
           ).toFixed(2)
         );
 
@@ -418,138 +337,210 @@ export default function UltimateJetPesaCockpit() {
     }
 
     animationId.current = requestAnimationFrame(runDistributedClockLoop);
-
     return () => cancelAnimationFrame(animationId.current);
-  }, [deckA, deckB, gameStatus, balance, audioMuted]);
+  }, [deckA, deckB, gameStatus, balance, audioMuted, isRainActive]);
 
-const renderRadarCanvas = (offsetMs, countdownLimit) => {
-  const canvas = canvasRef.current;
-  if (!canvas) return;
-
-  const ctx = canvas.getContext('2d');
-  const W = canvas.width;
-  const H = canvas.height;
-
-  ctx.clearRect(0, 0, W, H);
-
-  ctx.strokeStyle = 'rgba(255,255,255,0.025)';
-  ctx.lineWidth = 1;
-
-  for (let i = 0; i < W; i += 50) {
-    ctx.beginPath();
-    ctx.moveTo(i, 0);
-    ctx.lineTo(i, H);
-    ctx.stroke();
-  }
-
-  for (let j = 0; j < H; j += 40) {
-    ctx.beginPath();
-    ctx.moveTo(0, j);
-    ctx.lineTo(W, j);
-    ctx.stroke();
-  }
-
-  if (offsetMs >= countdownLimit && gameStatus === 'running') {
-    const secondsInAir = (offsetMs - countdownLimit) / 1000;
-
-    const flightProgress = Math.min(secondsInAir / 11, 1);
-    const smoothProgress = 1 - Math.pow(1 - flightProgress, 2.4);
-
-    const multiplierLift = Math.min((multiplier - 1) / 2.8, 1);
-    const liftFactor = Math.max(smoothProgress * 0.9, multiplierLift);
-
-    const startX = 50;
-    const baseY = H - 48;
-    const maxLift = H - 118;
-
-    const cx =
-      startX +
-      (W - 135) *
-      Math.min(Math.pow(flightProgress, 0.82), 1);
-
-    const cy =
-      baseY -
-      maxLift *
-      Math.min(liftFactor, 1);
-
-    const controlX = startX + (cx - startX) * 0.48;
-    const controlY =
-      baseY -
-      maxLift *
-      Math.min(liftFactor * 0.42, 0.62);
-
-    ctx.beginPath();
-    ctx.moveTo(startX, baseY);
-    ctx.quadraticCurveTo(controlX, controlY, cx, cy);
-
-    ctx.strokeStyle = 'rgba(225,29,72,0.98)';
-    ctx.lineWidth = 6;
-    ctx.shadowBlur = 28;
-    ctx.shadowColor = '#e11d48';
-    ctx.stroke();
-
-    ctx.shadowBlur = 0;
-
-    ctx.lineTo(cx, baseY);
-    ctx.lineTo(startX, baseY);
-    ctx.closePath();
-
-    const underGradient = ctx.createLinearGradient(startX, cy, startX, baseY);
-    underGradient.addColorStop(0, 'rgba(225,29,72,0.26)');
-    underGradient.addColorStop(0.45, 'rgba(225,29,72,0.1)');
-    underGradient.addColorStop(1, 'transparent');
-
-    ctx.fillStyle = underGradient;
-    ctx.fill();
-
-    const planeAngle =
-      -0.32 +
-      Math.min(liftFactor * 0.38, 0.26) +
-      Math.sin(secondsInAir * 5) * 0.018;
+  const drawRain = (ctx, W, H, secondsInAir) => {
+    if (!isRainActive) return;
 
     ctx.save();
-    ctx.translate(cx + 8, cy + 13);
-    ctx.rotate(planeAngle);
-    ctx.globalAlpha = 0.24;
-    ctx.filter = 'blur(11px)';
+    ctx.strokeStyle = 'rgba(125, 211, 252, 0.34)';
+    ctx.lineWidth = 1.4;
+    ctx.shadowBlur = 8;
+    ctx.shadowColor = 'rgba(56,189,248,0.45)';
 
-    if (planeImageRef.current) {
-      ctx.drawImage(planeImageRef.current, -68, -32, 136, 64);
-    }
-
-    ctx.restore();
-
-    ctx.save();
-    ctx.translate(cx, cy);
-    ctx.rotate(planeAngle);
-    ctx.shadowBlur = 24;
-    ctx.shadowColor = 'rgba(255,255,255,0.32)';
-
-    if (planeImageRef.current) {
-      ctx.drawImage(planeImageRef.current, -68, -32, 136, 64);
-    }
-
-    ctx.restore();
-
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 85; i++) {
+      const x = ((i * 71 + secondsInAir * 360) % (W + 120)) - 80;
+      const y = ((i * 47 + secondsInAir * 620) % (H + 140)) - 80;
       ctx.beginPath();
-      ctx.arc(
-        cx - 36 - i * 11,
-        cy + Math.sin(secondsInAir * 9 + i) * 4,
-        2.2 + i * 0.35,
-        0,
-        Math.PI * 2
-      );
-
-      ctx.fillStyle =
-        i % 2 === 0
-          ? 'rgba(255,255,255,0.48)'
-          : 'rgba(239,68,68,0.42)';
-
-      ctx.fill();
+      ctx.moveTo(x, y);
+      ctx.lineTo(x - 9, y + 24);
+      ctx.stroke();
     }
-  }
-};
+
+    ctx.restore();
+  };
+
+  const renderRadarCanvas = (offsetMs, countdownLimit) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+    const W = canvas.width;
+    const H = canvas.height;
+
+    ctx.clearRect(0, 0, W, H);
+
+    ctx.strokeStyle = 'rgba(255,255,255,0.025)';
+    ctx.lineWidth = 1;
+
+    for (let i = 0; i < W; i += 50) {
+      ctx.beginPath();
+      ctx.moveTo(i, 0);
+      ctx.lineTo(i, H);
+      ctx.stroke();
+    }
+
+    for (let j = 0; j < H; j += 40) {
+      ctx.beginPath();
+      ctx.moveTo(0, j);
+      ctx.lineTo(W, j);
+      ctx.stroke();
+    }
+
+    if (offsetMs >= countdownLimit && gameStatus === 'running') {
+      const secondsInAir = (offsetMs - countdownLimit) / 1000;
+
+      drawRain(ctx, W, H, secondsInAir);
+
+      const flightProgress = Math.min(secondsInAir / 11, 1);
+      const smoothProgress = 1 - Math.pow(1 - flightProgress, 2.4);
+      const multiplierLift = Math.min((multiplier - 1) / 2.8, 1);
+      const liftFactor = Math.max(smoothProgress * 0.9, multiplierLift);
+
+      const startX = 50;
+      const baseY = H - 48;
+      const maxLift = H - 118;
+
+      const cx = startX + (W - 135) * Math.min(Math.pow(flightProgress, 0.82), 1);
+      const cy = baseY - maxLift * Math.min(liftFactor, 1);
+
+      const controlX = startX + (cx - startX) * 0.48;
+      const controlY = baseY - maxLift * Math.min(liftFactor * 0.42, 0.62);
+
+      ctx.beginPath();
+      ctx.moveTo(startX, baseY);
+      ctx.quadraticCurveTo(controlX, controlY, cx, cy);
+
+      ctx.strokeStyle = 'rgba(225,29,72,0.98)';
+      ctx.lineWidth = 6;
+      ctx.shadowBlur = 28;
+      ctx.shadowColor = '#e11d48';
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+
+      ctx.lineTo(cx, baseY);
+      ctx.lineTo(startX, baseY);
+      ctx.closePath();
+
+      const underGradient = ctx.createLinearGradient(startX, cy, startX, baseY);
+      underGradient.addColorStop(0, 'rgba(225,29,72,0.26)');
+      underGradient.addColorStop(0.45, 'rgba(225,29,72,0.1)');
+      underGradient.addColorStop(1, 'transparent');
+      ctx.fillStyle = underGradient;
+      ctx.fill();
+
+      const planeAngle =
+        -0.32 +
+        Math.min(liftFactor * 0.38, 0.26) +
+        Math.sin(secondsInAir * 5) * 0.018;
+
+      ctx.save();
+      ctx.translate(cx + 8, cy + 13);
+      ctx.rotate(planeAngle);
+      ctx.globalAlpha = 0.24;
+      ctx.filter = 'blur(11px)';
+
+      if (planeImageRef.current) {
+        ctx.drawImage(planeImageRef.current, -68, -32, 136, 64);
+      }
+
+      ctx.restore();
+
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.rotate(planeAngle);
+      ctx.shadowBlur = 24;
+      ctx.shadowColor = 'rgba(255,255,255,0.32)';
+
+      if (planeImageRef.current) {
+        ctx.drawImage(planeImageRef.current, -68, -32, 136, 64);
+      }
+
+      ctx.restore();
+
+      for (let i = 0; i < 5; i++) {
+        ctx.beginPath();
+        ctx.arc(
+          cx - 36 - i * 11,
+          cy + Math.sin(secondsInAir * 9 + i) * 4,
+          2.2 + i * 0.35,
+          0,
+          Math.PI * 2
+        );
+
+        ctx.fillStyle =
+          i % 2 === 0
+            ? 'rgba(255,255,255,0.48)'
+            : 'rgba(239,68,68,0.42)';
+
+        ctx.fill();
+      }
+    }
+  };
+
+  const commitWalletBalance = async (balTarget) => {
+    if (!user) return;
+
+    await updateDoc(doc(db, 'users', user.uid), {
+      walletBalance: parseFloat(balTarget.toFixed(2)),
+    });
+  };
+
+  const handleProfileUpdate = async () => {
+    if (!user) return;
+
+    const cleanPhone = editPhone.trim();
+
+    if ((!cleanPhone.startsWith('07') && !cleanPhone.startsWith('01')) || cleanPhone.length !== 10) {
+      triggerToast('❌ Enter a valid M-Pesa phone number.', 'error');
+      return;
+    }
+
+    await updateDoc(doc(db, 'users', user.uid), {
+      displayName: editName.trim(),
+      mpesaPhone: cleanPhone,
+    });
+
+    setProfileName(editName.trim());
+    setPhoneProfile(cleanPhone);
+    setInputPhone(cleanPhone);
+    localStorage.setItem('jetpesa_saved_phone', cleanPhone);
+
+    setIsProfileModalOpen(false);
+    triggerToast('✅ Profile updated successfully.', 'success');
+  };
+
+  const handleWithdrawExecution = async () => {
+    const amt = parseInt(withdrawAmount);
+
+    if (isNaN(amt) || amt < 50) {
+      triggerToast('❌ Minimum withdrawal is KES 50.', 'error');
+      return;
+    }
+
+    if (amt > balance) {
+      triggerToast('❌ Withdrawal exceeds wallet balance.', 'error');
+      return;
+    }
+
+    setLoadingWithdraw(true);
+
+    try {
+      const nextBal = balance - amt;
+      setBalance(nextBal);
+      await commitWalletBalance(nextBal);
+
+      setWithdrawAmount('');
+      setIsWithdrawModalOpen(false);
+
+      triggerToast(`✅ Withdrawal request submitted: KES ${amt}`, 'success');
+    } catch (e) {
+      triggerToast('Withdrawal failed: ' + e.message, 'error');
+    } finally {
+      setLoadingWithdraw(false);
+    }
+  };
 
   const triggerPayoutSequence = (deckName, multVal, activeState) => {
     const rawWin = activeState.wager * multVal;
@@ -574,26 +565,12 @@ const renderRadarCanvas = (offsetMs, countdownLimit) => {
     setTimeout(() => playSynthesizedTone(783.99, 'sine', 0.3, 0.06), 200);
 
     confetti({ particleCount: 90, spread: 65, origin: { y: 0.35 } });
-    triggerToast(
-      `🎉 Deck ${deckName} Auto Cashout hit @ ${multVal}x! Received KES ${rawWin.toFixed(2)}`,
-      'success'
-    );
-  };
-
-  const commitWalletBalance = async (balTarget) => {
-    if (!user) return;
-
-    await updateDoc(doc(db, 'users', user.uid), {
-      walletBalance: parseFloat(balTarget.toFixed(2)),
-    });
+    triggerToast(`🎉 Deck ${deckName} Auto Cashout hit @ ${multVal}x! Received KES ${rawWin.toFixed(2)}`, 'success');
   };
 
   const placeWagerIntent = (targetDeck) => {
     if (balance <= 0) {
-      triggerToast(
-        '❌ Operation Aborted: Your wallet reads exactly KES 0.00. Please complete a deposit execution.',
-        'error'
-      );
+      triggerToast('❌ Wallet reads KES 0.00. Please deposit first.', 'error');
       return;
     }
 
@@ -601,10 +578,7 @@ const renderRadarCanvas = (offsetMs, countdownLimit) => {
     const currentWagerAmount = isA ? deckA.wager : deckB.wager;
 
     if (balance < currentWagerAmount) {
-      triggerToast(
-        '❌ Allocation Failure: Selected target stake exceeds your available profile balance.',
-        'error'
-      );
+      triggerToast('❌ Selected stake exceeds your available balance.', 'error');
       return;
     }
 
@@ -651,20 +625,14 @@ const renderRadarCanvas = (offsetMs, countdownLimit) => {
     setTimeout(() => playSynthesizedTone(880.0, 'sine', 0.25, 0.05), 110);
 
     confetti({ particleCount: 60, spread: 50, origin: { y: 0.4 } });
-    triggerToast(
-      `🎉 Manual Cashout Approved! + KES ${preciseWin.toFixed(2)}`,
-      'success'
-    );
+    triggerToast(`🎉 Manual Cashout Approved! + KES ${preciseWin.toFixed(2)}`, 'success');
   };
 
   const broadcastChatMessage = () => {
     if (!chatInput.trim()) return;
 
     if (balance <= 1000) {
-      triggerToast(
-        '⚠️ Premium Lobby Limitation: Only users possessing a wallet state above KES 1,000 can send a message.',
-        'error'
-      );
+      triggerToast('⚠️ Only users with wallet above KES 1,000 can send messages.', 'error');
       return;
     }
 
@@ -688,7 +656,7 @@ const renderRadarCanvas = (offsetMs, countdownLimit) => {
     const amt = parseInt(inputAmount);
 
     if (isNaN(amt) || amt < 49) {
-      triggerToast('❌ Minimum parameter boundary violation: KES 49 required.', 'error');
+      triggerToast('❌ Minimum deposit is KES 49.', 'error');
       return;
     }
 
@@ -711,16 +679,136 @@ const renderRadarCanvas = (offsetMs, countdownLimit) => {
         setBalance(nextBal);
         commitWalletBalance(nextBal);
         setIsDepositModalOpen(false);
-        triggerToast('✅ Verification sequence acknowledged. STK push deployed.', 'success');
+        triggerToast('✅ STK push deployed.', 'success');
       } else {
-        triggerToast('Gateway reported error: ' + data.message, 'error');
+        triggerToast('Gateway error: ' + data.message, 'error');
       }
     } catch (e) {
-      triggerToast('System context failure: ' + e.message, 'error');
+      triggerToast('System failure: ' + e.message, 'error');
     } finally {
       setLoadingDeposit(false);
     }
   };
+
+  const renderDeckPanel = (name, deck, setter, color) => (
+    <div key={name} style={deckPanelStyle}>
+      <div style={spribeToggleRow}>
+        <button
+          onClick={() => setter((p) => ({ ...p, isAuto: false }))}
+          style={{
+            ...spribeTab,
+            background: !deck.isAuto ? '#2a2d37' : 'transparent',
+            color: !deck.isAuto ? '#fff' : '#64748b',
+          }}
+        >
+          Bet
+        </button>
+
+        <button
+          onClick={() => setter((p) => ({ ...p, isAuto: true }))}
+          style={{
+            ...spribeTab,
+            background: deck.isAuto ? '#2a2d37' : 'transparent',
+            color: deck.isAuto ? '#fff' : '#64748b',
+          }}
+        >
+          Auto
+        </button>
+      </div>
+
+      <div style={wagerControlsRow}>
+        <button
+          onClick={() => setter((p) => ({ ...p, wager: Math.max(1, p.wager - 10) }))}
+          style={roundMiniButton}
+        >
+          −
+        </button>
+
+        <input
+          type="number"
+          value={deck.wager}
+          onChange={(e) => setter((p) => ({ ...p, wager: parseInt(e.target.value) || 0 }))}
+          style={wagerInput}
+        />
+
+        <button
+          onClick={() => setter((p) => ({ ...p, wager: p.wager + 10 }))}
+          style={roundMiniButton}
+        >
+          +
+        </button>
+      </div>
+
+      <div style={quickStakeRow}>
+        {[50, 100, 500, 1000].map((v) => (
+          <button key={v} onClick={() => setter((p) => ({ ...p, wager: v }))} style={quickStakeButton}>
+            {v}
+          </button>
+        ))}
+      </div>
+
+      <div style={autoCashRow}>
+        <span style={{ color: '#94a3b8', fontSize: '11px', fontWeight: '900' }}>Auto Cash Out</span>
+
+        <button
+          onClick={() => setter((p) => ({ ...p, isAutoCash: !p.isAutoCash }))}
+          style={{
+            ...switchTrack,
+            background: deck.isAutoCash ? '#22c55e' : '#1f2937',
+          }}
+        >
+          <span
+            style={{
+              ...switchKnob,
+              transform: deck.isAutoCash ? 'translateX(18px)' : 'translateX(0)',
+            }}
+          />
+        </button>
+      </div>
+
+      <input
+        type="number"
+        step="0.1"
+        disabled={!deck.isAutoCash}
+        value={deck.cashVal}
+        onChange={(e) => setter((p) => ({ ...p, cashVal: e.target.value }))}
+        style={{
+          ...autoCashInput,
+          opacity: deck.isAutoCash ? 1 : 0.4,
+        }}
+      />
+
+      {deck.hasBetCurrent ? (
+        <button onClick={() => handleManualPayoutExecution(name)} style={cashOutButton}>
+          CASH OUT
+          <br />
+          <span style={{ fontSize: '16px' }}>{(deck.wager * multiplier).toFixed(2)} KES</span>
+        </button>
+      ) : (
+        <button
+          onClick={() => placeWagerIntent(name)}
+          style={{
+            ...betButton,
+            background: deck.hasBetNext ? '#475569' : color,
+          }}
+        >
+          {deck.hasBetNext ? (
+            <>
+              CANCEL
+              <br />
+              <span style={{ fontSize: '12px' }}>Queued for next round</span>
+            </>
+          ) : (
+            <>
+              BET
+              <br />
+              <span style={{ fontSize: '16px' }}>{deck.wager} KES</span>
+            </>
+          )}
+        </button>
+      )}
+    </div>
+  );
 
   return (
     <div style={{ background: '#07080e', color: '#f1f5f9', height: '100vh', maxHeight: '100vh', fontFamily: "'Plus Jakarta Sans', sans-serif", display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
@@ -735,20 +823,36 @@ const renderRadarCanvas = (offsetMs, countdownLimit) => {
       <header style={{ background: 'rgba(12,14,24,0.75)', backdropFilter: 'blur(16px)', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 20px', flexShrink: 0, zIndex: 99 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <span style={{ fontSize: '24px', fontWeight: '900', letterSpacing: '-1px', background: 'linear-gradient(to right, #fff, #94a3b8)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>JETPESA</span>
-          <button style={{ background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.3)', color: '#22c55e', fontSize: '10px', fontWeight: '800', padding: '3px 10px', borderRadius: '20px', cursor: 'pointer' }} onClick={() => setIsProvablyModalOpen(true)}>🛡️ PROVABLY FAIR</button>
+
+          <button style={{ background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.3)', color: '#22c55e', fontSize: '10px', fontWeight: '800', padding: '3px 10px', borderRadius: '20px', cursor: 'pointer' }} onClick={() => setIsProvablyModalOpen(true)}>
+            🛡️ PROVABLY FAIR
+          </button>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <button onClick={() => setAudioMuted(!audioMuted)} style={{ background: 'transparent', border: 'none', fontSize: '18px', cursor: 'pointer' }}>
             {audioMuted ? '🔈' : '🔊'}
           </button>
 
-          <button onClick={() => setIsRainActive(!isRainActive)} style={{ background: isRainActive ? '#a855f7' : 'rgba(255,255,255,0.05)', border: 'none', color: '#fff', padding: '5px 12px', borderRadius: '8px', fontSize: '11px', fontWeight: '800', cursor: 'pointer' }}>
+          <button onClick={() => setIsRainActive(!isRainActive)} style={{ background: isRainActive ? '#38bdf8' : 'rgba(255,255,255,0.05)', border: 'none', color: '#fff', padding: '7px 12px', borderRadius: '20px', fontSize: '11px', fontWeight: '900', cursor: 'pointer' }}>
             🌧️ RAIN
           </button>
 
-          <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.08)', padding: '3px 3px 3px 14px', borderRadius: '30px', gap: '10px' }}>
-            <span style={{ color: '#22c55e', fontWeight: '900', fontSize: '14px' }}>{balance.toFixed(2)} KES</span>
+          <button
+            onClick={() => setIsProfileModalOpen(true)}
+            style={{ background: 'rgba(255,255,255,0.06)', border: 'none', color: '#fff', padding: '8px 14px', borderRadius: '20px', fontSize: '12px', fontWeight: '900', cursor: 'pointer' }}
+          >
+            👤 PROFILE
+          </button>
+
+          <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.08)', padding: '3px 3px 3px 12px', borderRadius: '30px', gap: '8px' }}>
+            <button
+              onClick={() => balance > 0 ? setIsWithdrawModalOpen(true) : triggerToast('Wallet is empty. Deposit first.', 'info')}
+              style={{ background: 'transparent', border: 'none', color: '#22c55e', fontWeight: '900', fontSize: '14px', cursor: balance > 0 ? 'pointer' : 'default' }}
+            >
+              {balance.toFixed(2)} KES
+            </button>
+
             <button onClick={() => setIsDepositModalOpen(true)} style={{ background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)', border: 'none', color: '#fff', fontWeight: '900', padding: '8px 20px', borderRadius: '20px', cursor: 'pointer', fontSize: '12px' }}>
               DEPOSIT
             </button>
@@ -767,8 +871,13 @@ const renderRadarCanvas = (offsetMs, countdownLimit) => {
       <div className="cockpitMainLayout" style={{ flex: 1, display: 'grid', padding: '16px', gap: '16px', boxSizing: 'border-box', minHeight: 0, height: 'calc(100% - 130px)' }}>
         <div className="leftPanelLayout" style={{ background: 'rgba(18,20,32,0.6)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '16px', display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0, overflow: 'hidden' }}>
           <div style={{ display: 'flex', background: 'rgba(0,0,0,0.2)', padding: '4px', flexShrink: 0 }}>
-            <button onClick={() => setActiveTab('all')} style={{ flex: 1, padding: '12px', background: activeTab === 'all' ? 'rgba(255,255,255,0.06)' : 'transparent', border: 'none', color: '#fff', fontSize: '11px', fontWeight: '800', borderRadius: '8px', cursor: 'pointer' }}>ALL LIVE ({activePlayersCount})</button>
-            <button onClick={() => setActiveTab('mine')} style={{ flex: 1, padding: '12px', background: activeTab === 'mine' ? 'rgba(255,255,255,0.06)' : 'transparent', border: 'none', color: '#fff', fontSize: '11px', fontWeight: '800', borderRadius: '8px', cursor: 'pointer' }}>MY BETS</button>
+            <button onClick={() => setActiveTab('all')} style={{ flex: 1, padding: '12px', background: activeTab === 'all' ? 'rgba(255,255,255,0.06)' : 'transparent', border: 'none', color: '#fff', fontSize: '11px', fontWeight: '800', borderRadius: '8px', cursor: 'pointer' }}>
+              ALL LIVE ({activePlayersCount})
+            </button>
+
+            <button onClick={() => setActiveTab('mine')} style={{ flex: 1, padding: '12px', background: activeTab === 'mine' ? 'rgba(255,255,255,0.06)' : 'transparent', border: 'none', color: '#fff', fontSize: '11px', fontWeight: '800', borderRadius: '8px', cursor: 'pointer' }}>
+              MY BETS
+            </button>
           </div>
 
           <div style={{ flex: 1, overflowY: 'auto', padding: '10px', minHeight: 0 }}>
@@ -828,32 +937,8 @@ const renderRadarCanvas = (offsetMs, countdownLimit) => {
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', background: 'rgba(18,20,32,0.8)', border: '1px solid rgba(255,255,255,0.08)', padding: '18px', borderRadius: '20px', flexShrink: 0 }}>
-            {[['A', deckA, setDeckA, '#22c55e'], ['B', deckB, setDeckB, '#16a34a']].map(([name, deck, setter, color]) => (
-              <div key={name} style={{ background: 'rgba(0,0,0,0.25)', border: '1px solid rgba(255,255,255,0.04)', padding: '14px', borderRadius: '14px' }}>
-                <div style={{ display: 'flex', gap: '6px', marginBottom: '12px' }}>
-                  <button onClick={() => setter((p) => ({ ...p, isAuto: !p.isAuto }))} style={{ flex: 1, padding: '8px', fontSize: '11px', fontWeight: '900', background: deck.isAuto ? '#e11d48' : 'rgba(255,255,255,0.05)', border: 'none', color: '#fff', borderRadius: '6px', cursor: 'pointer' }}>AUTO BET</button>
-                  <button onClick={() => setter((p) => ({ ...p, isAutoCash: !p.isAutoCash }))} style={{ flex: 1, padding: '8px', fontSize: '11px', fontWeight: '900', background: deck.isAutoCash ? '#22c55e' : 'rgba(255,255,255,0.05)', border: 'none', color: '#fff', borderRadius: '6px', cursor: 'pointer' }}>AUTO CASH</button>
-                </div>
-
-                {deck.isAutoCash && (
-                  <input type="number" step="0.1" value={deck.cashVal} onChange={(e) => setter((p) => ({ ...p, cashVal: e.target.value }))} style={{ width: '92%', padding: '6px 8px', background: '#000', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', fontSize: '12px', borderRadius: '6px', marginBottom: '8px' }} />
-                )}
-
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <input type="number" value={deck.wager} onChange={(e) => setter((p) => ({ ...p, wager: parseInt(e.target.value) || 0 }))} style={{ width: '75px', padding: '12px 4px', background: '#000', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', fontWeight: '900', textAlign: 'center', borderRadius: '8px', fontSize: '16px' }} />
-
-                  {deck.hasBetCurrent ? (
-                    <button onClick={() => handleManualPayoutExecution(name)} style={{ flex: 1, padding: '14px', background: 'linear-gradient(135deg, #d97706 0%, #b45309 100%)', border: 'none', color: '#fff', fontWeight: '900', fontSize: '14px', borderRadius: '8px', cursor: 'pointer' }}>
-                      CASH OUT<br /><span style={{ fontSize: '16px' }}>{(deck.wager * multiplier).toFixed(2)} KES</span>
-                    </button>
-                  ) : (
-                    <button onClick={() => placeWagerIntent(name)} style={{ flex: 1, padding: '14px', background: deck.hasBetNext ? '#475569' : color, border: 'none', color: '#fff', fontWeight: '900', fontSize: '14px', borderRadius: '8px', cursor: 'pointer' }}>
-                      {deck.hasBetNext ? 'CANCEL' : `BET\n${deck.wager} KES`}
-                    </button>
-                  )}
-                </div>
-              </div>
-            ))}
+            {renderDeckPanel('A', deckA, setDeckA, '#22c55e')}
+            {renderDeckPanel('B', deckB, setDeckB, '#16a34a')}
           </div>
         </div>
 
@@ -892,23 +977,73 @@ const renderRadarCanvas = (offsetMs, countdownLimit) => {
       </div>
 
       {isDepositModalOpen && (
-        <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '12px' }}>
-          <div style={{ background: '#0c0d12', border: '1px solid #22c55e', borderRadius: '20px', width: '100%', maxWidth: '350px', padding: '26px', position: 'relative' }}>
-            <button onClick={() => setIsDepositModalOpen(false)} style={{ position: 'absolute', top: '14px', right: '16px', background: 'transparent', border: 'none', color: '#64748b', fontSize: '24px', cursor: 'pointer' }}>×</button>
+        <div style={modalOverlay}>
+          <div style={modalBoxGreen}>
+            <button onClick={() => setIsDepositModalOpen(false)} style={modalClose}>×</button>
             <h3 style={{ margin: '0 0 16px 0', color: '#22c55e', fontWeight: '900' }}>Safaricom M-Pesa Wire</h3>
 
             <div style={{ marginBottom: '14px' }}>
-              <label style={{ fontSize: '11px', color: '#94a3b8', fontWeight: '700' }}>DEPOSIT QUANTITY (MIN 49 KES)</label>
-              <input type="number" value={inputAmount} onChange={(e) => setInputAmount(e.target.value)} style={{ width: '92%', padding: '12px', marginTop: '4px', background: '#141622', border: '1px solid rgba(255,255,255,0.08)', color: '#fff', fontSize: '16px', fontWeight: '900', borderRadius: '8px' }} />
+              <label style={modalLabel}>DEPOSIT QUANTITY (MIN 49 KES)</label>
+              <input type="number" value={inputAmount} onChange={(e) => setInputAmount(e.target.value)} style={modalInput} />
             </div>
 
             <div style={{ marginBottom: '16px' }}>
-              <label style={{ fontSize: '11px', color: '#94a3b8', fontWeight: '700' }}>M-PESA REGISTERED TELEPHONE</label>
-              <input type="text" value={inputPhone} onChange={(e) => setInputPhone(e.target.value)} placeholder="07XXXXXXXX" style={{ width: '92%', padding: '12px', marginTop: '4px', background: '#141622', border: '1px solid rgba(255,255,255,0.08)', color: '#fff', fontSize: '14px', borderRadius: '8px' }} />
+              <label style={modalLabel}>M-PESA REGISTERED TELEPHONE</label>
+              <input type="text" value={inputPhone} onChange={(e) => setInputPhone(e.target.value)} placeholder="07XXXXXXXX" style={modalInput} />
             </div>
 
-            <button onClick={handlePaymentInitiation} disabled={loadingDeposit} style={{ width: '100%', padding: '14px', background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)', border: 'none', color: '#fff', fontWeight: '900', borderRadius: '10px', cursor: 'pointer' }}>
+            <button onClick={handlePaymentInitiation} disabled={loadingDeposit} style={greenButton}>
               {loadingDeposit ? 'SYNCHRONIZING...' : 'AUTHORIZE DEPOSIT'}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {isProfileModalOpen && (
+        <div style={modalOverlay}>
+          <div style={modalBoxBlue}>
+            <button onClick={() => setIsProfileModalOpen(false)} style={modalClose}>×</button>
+            <h3 style={{ margin: '0 0 16px 0', color: '#38bdf8', fontWeight: '900' }}>Profile Settings</h3>
+
+            <div style={{ marginBottom: '14px' }}>
+              <label style={modalLabel}>DISPLAY NAME</label>
+              <input type="text" value={editName} onChange={(e) => setEditName(e.target.value)} placeholder="Your name" style={modalInput} />
+            </div>
+
+            <div style={{ marginBottom: '14px' }}>
+              <label style={modalLabel}>EMAIL</label>
+              <input type="text" value={user?.email || ''} disabled style={{ ...modalInput, opacity: 0.6 }} />
+            </div>
+
+            <div style={{ marginBottom: '16px' }}>
+              <label style={modalLabel}>M-PESA PHONE</label>
+              <input type="text" value={editPhone} onChange={(e) => setEditPhone(e.target.value)} placeholder="07XXXXXXXX" style={modalInput} />
+            </div>
+
+            <button onClick={handleProfileUpdate} style={blueButton}>
+              SAVE PROFILE
+            </button>
+          </div>
+        </div>
+      )}
+
+      {isWithdrawModalOpen && (
+        <div style={modalOverlay}>
+          <div style={modalBoxOrange}>
+            <button onClick={() => setIsWithdrawModalOpen(false)} style={modalClose}>×</button>
+            <h3 style={{ margin: '0 0 16px 0', color: '#f59e0b', fontWeight: '900' }}>Withdraw Funds</h3>
+
+            <p style={{ color: '#94a3b8', fontSize: '13px', marginBottom: '14px' }}>
+              Available Balance: <strong style={{ color: '#22c55e' }}>KES {balance.toFixed(2)}</strong>
+            </p>
+
+            <div style={{ marginBottom: '16px' }}>
+              <label style={modalLabel}>WITHDRAW AMOUNT</label>
+              <input type="number" value={withdrawAmount} onChange={(e) => setWithdrawAmount(e.target.value)} placeholder="Minimum 50" style={modalInput} />
+            </div>
+
+            <button onClick={handleWithdrawExecution} disabled={loadingWithdraw} style={orangeButton}>
+              {loadingWithdraw ? 'PROCESSING...' : 'WITHDRAW TO M-PESA'}
             </button>
           </div>
         </div>
@@ -947,3 +1082,242 @@ const renderRadarCanvas = (offsetMs, countdownLimit) => {
     </div>
   );
 }
+
+const deckPanelStyle = {
+  background: 'rgba(0,0,0,0.28)',
+  border: '1px solid rgba(255,255,255,0.06)',
+  padding: '14px',
+  borderRadius: '16px',
+};
+
+const spribeToggleRow = {
+  display: 'flex',
+  background: '#111827',
+  borderRadius: '999px',
+  padding: '4px',
+  marginBottom: '12px',
+};
+
+const spribeTab = {
+  flex: 1,
+  border: 'none',
+  borderRadius: '999px',
+  padding: '8px',
+  fontSize: '11px',
+  fontWeight: '900',
+  cursor: 'pointer',
+};
+
+const wagerControlsRow = {
+  display: 'grid',
+  gridTemplateColumns: '34px 1fr 34px',
+  gap: '8px',
+  alignItems: 'center',
+  marginBottom: '8px',
+};
+
+const roundMiniButton = {
+  height: '34px',
+  borderRadius: '50%',
+  border: 'none',
+  background: '#1f2937',
+  color: '#fff',
+  fontSize: '18px',
+  fontWeight: '900',
+  cursor: 'pointer',
+};
+
+const wagerInput = {
+  width: '100%',
+  padding: '10px',
+  background: '#030712',
+  border: '1px solid rgba(255,255,255,0.1)',
+  color: '#fff',
+  fontWeight: '900',
+  textAlign: 'center',
+  borderRadius: '999px',
+  fontSize: '16px',
+  boxSizing: 'border-box',
+};
+
+const quickStakeRow = {
+  display: 'grid',
+  gridTemplateColumns: 'repeat(4, 1fr)',
+  gap: '6px',
+  marginBottom: '12px',
+};
+
+const quickStakeButton = {
+  background: '#1f2937',
+  border: 'none',
+  color: '#cbd5e1',
+  borderRadius: '999px',
+  padding: '6px',
+  fontSize: '11px',
+  fontWeight: '900',
+  cursor: 'pointer',
+};
+
+const autoCashRow = {
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  marginBottom: '8px',
+};
+
+const switchTrack = {
+  width: '42px',
+  height: '24px',
+  borderRadius: '999px',
+  border: 'none',
+  padding: '3px',
+  cursor: 'pointer',
+  transition: '0.2s',
+};
+
+const switchKnob = {
+  display: 'block',
+  width: '18px',
+  height: '18px',
+  borderRadius: '50%',
+  background: '#fff',
+  transition: '0.2s',
+};
+
+const autoCashInput = {
+  width: '100%',
+  padding: '9px',
+  background: '#030712',
+  border: '1px solid rgba(255,255,255,0.1)',
+  color: '#fff',
+  borderRadius: '999px',
+  fontSize: '13px',
+  fontWeight: '900',
+  textAlign: 'center',
+  marginBottom: '12px',
+  boxSizing: 'border-box',
+};
+
+const betButton = {
+  width: '100%',
+  padding: '14px',
+  border: 'none',
+  color: '#fff',
+  fontWeight: '950',
+  fontSize: '14px',
+  borderRadius: '14px',
+  cursor: 'pointer',
+  boxShadow: '0 10px 24px rgba(0,0,0,0.35)',
+};
+
+const cashOutButton = {
+  width: '100%',
+  padding: '14px',
+  background: 'linear-gradient(135deg, #f59e0b 0%, #b45309 100%)',
+  border: 'none',
+  color: '#fff',
+  fontWeight: '950',
+  fontSize: '14px',
+  borderRadius: '14px',
+  cursor: 'pointer',
+};
+
+const modalOverlay = {
+  position: 'fixed',
+  top: 0,
+  left: 0,
+  width: '100%',
+  height: '100%',
+  background: 'rgba(0,0,0,0.85)',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  zIndex: 9999,
+  padding: '12px',
+};
+
+const modalBoxBase = {
+  background: '#0c0d12',
+  borderRadius: '20px',
+  width: '100%',
+  maxWidth: '360px',
+  padding: '26px',
+  position: 'relative',
+  boxShadow: '0 24px 60px rgba(0,0,0,0.55)',
+};
+
+const modalBoxGreen = {
+  ...modalBoxBase,
+  border: '1px solid #22c55e',
+};
+
+const modalBoxBlue = {
+  ...modalBoxBase,
+  border: '1px solid #38bdf8',
+};
+
+const modalBoxOrange = {
+  ...modalBoxBase,
+  border: '1px solid #f59e0b',
+};
+
+const modalClose = {
+  position: 'absolute',
+  top: '14px',
+  right: '16px',
+  background: 'transparent',
+  border: 'none',
+  color: '#64748b',
+  fontSize: '24px',
+  cursor: 'pointer',
+};
+
+const modalLabel = {
+  fontSize: '11px',
+  color: '#94a3b8',
+  fontWeight: '700',
+};
+
+const modalInput = {
+  width: '92%',
+  padding: '12px',
+  marginTop: '4px',
+  background: '#141622',
+  border: '1px solid rgba(255,255,255,0.08)',
+  color: '#fff',
+  fontSize: '14px',
+  borderRadius: '8px',
+};
+
+const greenButton = {
+  width: '100%',
+  padding: '14px',
+  background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
+  border: 'none',
+  color: '#fff',
+  fontWeight: '900',
+  borderRadius: '10px',
+  cursor: 'pointer',
+};
+
+const blueButton = {
+  width: '100%',
+  padding: '14px',
+  background: 'linear-gradient(135deg, #38bdf8 0%, #0284c7 100%)',
+  border: 'none',
+  color: '#fff',
+  fontWeight: '900',
+  borderRadius: '10px',
+  cursor: 'pointer',
+};
+
+const orangeButton = {
+  width: '100%',
+  padding: '14px',
+  background: 'linear-gradient(135deg, #f59e0b 0%, #b45309 100%)',
+  border: 'none',
+  color: '#fff',
+  fontWeight: '900',
+  borderRadius: '10px',
+  cursor: 'pointer',
+};
