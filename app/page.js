@@ -1,238 +1,774 @@
 'use client';
+
 import { useState, useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
 export default function JetPesaLandingPage() {
-  const router = useRouter();
-
-  // Simulated Live Demo Engine Matrix
   const [demoMultiplier, setDemoMultiplier] = useState(1.0);
-  const [demoStatus, setDemoStatus] = useState('running'); // running, crashed, loading
+  const [demoStatus, setDemoStatus] = useState('running');
   const [demoProgress, setDemoProgress] = useState(100);
   const [demoBets, setDemoBets] = useState([]);
   const [totalPoolUsers, setTotalPoolUsers] = useState(3452);
-  
+
   const canvasRef = useRef(null);
   const animationId = useRef(null);
 
-  // Background Demo Loop simulating continuous wins
   useEffect(() => {
     let startTime = Date.now();
-    const cycleDuration = 16000; // 16 second round loops
+    const cycleDuration = 16000;
+
+    const generateDemoBets = () => {
+      const avatars = ['🦈', '🦁', '🦅', '🐆', '🦊', '🦏'];
+      const phones = ['071***', '072***', '079***', '070***', '011***'];
+
+      setTotalPoolUsers(Math.floor(Math.random() * 900 + 3200));
+
+      setDemoBets(
+        Array.from({ length: 6 }, (_, i) => ({
+          user:
+            avatars[i % avatars.length] +
+            phones[i % phones.length] +
+            Math.floor(Math.random() * 89 + 10),
+          stake: [200, 500, 1000, 1500, 2500, 5000][i],
+          autoTarget: parseFloat((1.2 + i * 0.25).toFixed(2)),
+          cashedOut: false,
+          winAmount: 0,
+          finalMult: 1.0,
+        }))
+      );
+    };
+
+    const drawDemoRadar = (elapsed, status, multiplier) => {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+
+      const ctx = canvas.getContext('2d');
+      const W = canvas.width;
+      const H = canvas.height;
+
+      ctx.clearRect(0, 0, W, H);
+
+      const bg = ctx.createLinearGradient(0, 0, W, H);
+      bg.addColorStop(0, '#030712');
+      bg.addColorStop(1, '#111827');
+      ctx.fillStyle = bg;
+      ctx.fillRect(0, 0, W, H);
+
+      ctx.strokeStyle = 'rgba(255,255,255,0.035)';
+      ctx.lineWidth = 1;
+
+      for (let i = 0; i < W; i += 42) {
+        ctx.beginPath();
+        ctx.moveTo(i, 0);
+        ctx.lineTo(i, H);
+        ctx.stroke();
+      }
+
+      for (let j = 0; j < H; j += 32) {
+        ctx.beginPath();
+        ctx.moveTo(0, j);
+        ctx.lineTo(W, j);
+        ctx.stroke();
+      }
+
+      if (elapsed >= 3000 && status === 'running') {
+        const airTime = (elapsed - 3000) / 1000;
+        const cx = 45 + (W - 115) * Math.min(airTime / 7, 1);
+        const cy =
+          H -
+          42 -
+          (H - 115) * (Math.min(multiplier - 1, 1.7) / 1.7);
+
+        ctx.beginPath();
+        ctx.moveTo(45, H - 42);
+        ctx.quadraticCurveTo((45 + cx) / 2, H - 24, cx, cy);
+
+        ctx.strokeStyle = 'rgba(225,29,72,0.95)';
+        ctx.lineWidth = 5;
+        ctx.shadowBlur = 24;
+        ctx.shadowColor = '#e11d48';
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+
+        ctx.lineTo(cx, H - 42);
+        ctx.lineTo(45, H - 42);
+        ctx.closePath();
+
+        const fill = ctx.createLinearGradient(40, cy, 40, H - 42);
+        fill.addColorStop(0, 'rgba(225,29,72,0.23)');
+        fill.addColorStop(1, 'transparent');
+        ctx.fillStyle = fill;
+        ctx.fill();
+
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.rotate(-0.08 + Math.sin(airTime * 5) * 0.025);
+
+        ctx.shadowBlur = 20;
+        ctx.shadowColor = 'rgba(255,255,255,0.35)';
+
+        ctx.fillStyle = '#ef4444';
+        ctx.beginPath();
+        ctx.moveTo(34, 0);
+        ctx.quadraticCurveTo(8, -13, -26, -8);
+        ctx.lineTo(-36, 0);
+        ctx.lineTo(-26, 8);
+        ctx.quadraticCurveTo(8, 13, 34, 0);
+        ctx.fill();
+
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.moveTo(8, -7);
+        ctx.quadraticCurveTo(22, -4, 34, 0);
+        ctx.quadraticCurveTo(22, 4, 8, 7);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.fillStyle = '#991b1b';
+        ctx.beginPath();
+        ctx.moveTo(-12, -8);
+        ctx.lineTo(-34, -25);
+        ctx.lineTo(-28, -4);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.fillStyle = '#1e293b';
+        ctx.beginPath();
+        ctx.ellipse(6, -5, 10, 5, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.restore();
+      }
+    };
 
     function runDemoLoop() {
       const elapsed = (Date.now() - startTime) % cycleDuration;
 
-      // Phase 1: Waiting/Loading (3 Seconds)
       if (elapsed < 3000) {
         if (demoStatus !== 'loading') {
           setDemoStatus('loading');
           setDemoMultiplier(1.0);
           generateDemoBets();
         }
+
         setDemoProgress(((3000 - elapsed) / 3000) * 100);
-      } 
-      // Phase 2: Flight Simulation Active (10 Seconds Max)
-      else if (elapsed < 13000) {
-        setDemoStatus('running');
+        drawDemoRadar(elapsed, 'loading', 1.0);
+      } else if (elapsed < 13000) {
         const flightSeconds = (elapsed - 3000) / 1000;
-        const currentMult = parseFloat(Math.pow(Math.E, 0.09 * flightSeconds).toFixed(2));
-        
-        // Predetermined simulated crash point for the homepage demo loop
+        const currentMult = parseFloat(
+          Math.pow(Math.E, 0.09 * flightSeconds).toFixed(2)
+        );
+
         if (currentMult >= 2.45) {
           setDemoStatus('crashed');
           setDemoMultiplier(2.45);
+          drawDemoRadar(elapsed, 'crashed', 2.45);
         } else {
+          setDemoStatus('running');
           setDemoMultiplier(currentMult);
-          // Simulate dynamic live cashouts dropping off as multiplier rises
-          setDemoBets(prev => prev.map(b => {
-            if (!b.cashedOut && Math.random() > 0.92 && currentMult > b.autoTarget) {
-              return { ...b, cashedOut: true, finalMult: currentMult, winAmount: Math.floor(b.stake * currentMult) };
-            }
-            return b;
-          }));
+
+          setDemoBets((prev) =>
+            prev.map((b) => {
+              if (!b.cashedOut && currentMult > b.autoTarget && Math.random() > 0.9) {
+                return {
+                  ...b,
+                  cashedOut: true,
+                  finalMult: currentMult,
+                  winAmount: Math.floor(b.stake * currentMult),
+                };
+              }
+
+              return b;
+            })
+          );
+
+          drawDemoRadar(elapsed, 'running', currentMult);
         }
-      } 
-      // Phase 3: Post Crash View Window (3 Seconds)
-      else {
+      } else {
         setDemoStatus('crashed');
+        drawDemoRadar(elapsed, 'crashed', 2.45);
       }
 
-      drawDemoRadar(elapsed);
       animationId.current = requestAnimationFrame(runDemoLoop);
     }
 
-    function generateDemoBets() {
-      const initialAvatars = ['🦈', '🦁', '🦅', '🐆', '🦊', '🦏'];
-      const prefixes = ['071***', '072***', '079***', '070***', '011***'];
-      setTotalPoolUsers(Math.floor(Math.random() * 800 + 3100));
-
-      setDemoBets(Array.from({ length: 6 }, (_, i) => ({
-        user: initialAvatars[i % initialAvatars.length] + prefixes[i % prefixes.length] + Math.floor(Math.random() * 89 + 10),
-        stake: [200, 500, 1000, 1500, 2500, 5000][i],
-        autoTarget: parseFloat((1.2 + i * 0.2).toFixed(2)),
-        cashedOut: false,
-        winAmount: 0,
-        finalMult: 1.0
-      })));
-    }
-
+    generateDemoBets();
     animationId.current = requestAnimationFrame(runDemoLoop);
+
     return () => cancelAnimationFrame(animationId.current);
   }, [demoStatus]);
 
-  // Vector Canvas drawing engine for the mini landing display
-  const drawDemoRadar = (elapsed) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    const W = canvas.width; const H = canvas.height;
-    ctx.clearRect(0, 0, W, H);
-
-    // Subtle technical grid matrix
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.02)'; ctx.lineWidth = 1;
-    for (let i = 0; i < W; i += 40) { ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, H); ctx.stroke(); }
-    for (let j = 0; j < H; j += 30) { ctx.beginPath(); ctx.moveTo(0, j); ctx.lineTo(W, j); ctx.stroke(); }
-
-    if (elapsed >= 3000 && demoStatus === 'running') {
-      const airTime = (elapsed - 3000) / 1000;
-      let cx = 40 + (W - 100) * Math.min(airTime / 7, 1);
-      let cy = (H - 40) - (H - 100) * (Math.min(demoMultiplier - 1, 1.5) / 1.5);
-
-      // Neon Vector line curve trail
-      ctx.beginPath(); ctx.moveTo(40, H - 40);
-      ctx.quadraticCurveTo((40 + cx) / 2, H - 30, cx, cy);
-      ctx.strokeStyle = '#e11d48'; ctx.lineWidth = 4;
-      ctx.stroke();
-
-      // Jet Glow fill
-      ctx.lineTo(cx, H - 40); ctx.lineTo(40, H - 40); ctx.closePath();
-      const grad = ctx.createLinearGradient(40, cy, 40, H - 40);
-      grad.addColorStop(0, 'rgba(225, 29, 72, 0.15)');
-      grad.addColorStop(1, 'transparent');
-      ctx.fillStyle = grad; ctx.fill();
-
-      // Miniature Geometric Jet representation
-      ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.moveTo(cx + 15, cy); ctx.lineTo(cx - 10, cy - 6); ctx.lineTo(cx - 10, cy + 6); ctx.closePath(); ctx.fill();
-    }
-  };
-
   return (
-    <div style={{ background: '#07080e', color: '#f1f5f9', minHeight: '100vh', fontFamily: "'Plus Jakarta Sans', sans-serif", display: 'flex', flexDirection: 'column' }}>
-      
-      {/* Structural HUD Top Navigation */}
-      <nav style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px 40px', background: 'rgba(12,14,24,0.6)', borderBottom: '1px solid rgba(255,255,255,0.05)', backdropFilter: 'blur(12px)' }}>
-        <div style={{ fontSize: '24px', fontWeight: '900', letterSpacing: '-1px' }}>JETPESA</div>
-        <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
-          <Link href="/auth?tab=login" style={{ color: '#94a3b8', textDecoration: 'none', fontSize: '14px', fontWeight: '700' }}>Login</Link>
-          <Link href="/auth?tab=signup" style={{ background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)', color: '#fff', textDecoration: 'none', padding: '10px 24px', borderRadius: '30px', fontSize: '13px', fontWeight: '800', boxShadow: '0 8px 20px rgba(34,197,94,0.2)' }}>Join Now</Link>
+    <main style={styles.page}>
+      <div style={styles.glowOne} />
+      <div style={styles.glowTwo} />
+
+      <nav style={styles.nav}>
+        <Link href="/" style={styles.brand}>
+          <span style={styles.brandIcon}>✈</span>
+          JETPESA
+        </Link>
+
+        <div style={styles.navActions}>
+          <Link href="/auth?tab=login" style={styles.loginLink}>
+            Login
+          </Link>
+          <Link href="/auth?tab=signup" style={styles.joinButton}>
+            Join Now
+          </Link>
         </div>
       </nav>
 
-      {/* CORE HERO SECTION HOUSING DYNAMIC DEMO ENGINE */}
-      <section style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '40px', maxWidth: '1200px', margin: '60px auto', padding: '0 20px', alignItems: 'center', flex: 1 }}>
-        
-        {/* Copy / Value Proposition Block */}
-        <div>
-          <span style={{ color: '#22c55e', background: 'rgba(34,197,94,0.1)', padding: '6px 14px', borderRadius: '20px', fontSize: '12px', fontWeight: '800', letterSpacing: '0.5px' }}>🚀 AFRICA\'S NO. 1 INSTANT MULTIPLIER CRASH GAME</span>
-          <h1 style={{ fontSize: '3.5rem', fontWeight: '900', lineHeight: '1.1', margin: '20px 0', letterSpacing: '-1.5px' }}>
-            Watch the Jet Fly.<br />Scale Your Balance.<br />Cash Out Before it Crashes.
+      <section style={styles.hero}>
+        <div style={styles.copy}>
+          <div style={styles.badge}>LIVE AVIATOR MULTIPLIER GAME</div>
+
+          <h1 style={styles.title}>
+            Fly higher.
+            <br />
+            Cash out faster.
+            <br />
+            Win before the crash.
           </h1>
-          <p style={{ color: '#94a3b8', fontSize: '16px', lineHeight: '1.6', maxWidth: '480px', marginBottom: '35px' }}>
-            Experience real-time financial tracking algorithms. Place your stakes, track the explosive velocity multiplier arc, and watch profits lock up in seconds. Fast payouts via Safaricom M-Pesa instantly.
+
+          <p style={styles.text}>
+            JetPesa brings a fast Aviator-style crash experience with live
+            rounds, instant wallet funding, and quick M-Pesa based play.
           </p>
-          
-          <div style={{ display: 'flex', gap: '20px' }}>
-            <Link href="/auth?tab=signup" style={{ padding: '16px 40px', background: 'linear-gradient(135deg, #e11d48 0%, #be123c 100%)', color: '#fff', fontWeight: '900', borderRadius: '12px', textDecoration: 'none', fontSize: '15px', boxShadow: '0 10px 25px rgba(225,29,72,0.3)' }}>START EARNING INSTANTLY</Link>
+
+          <div style={styles.ctaRow}>
+            <Link href="/auth?tab=signup" style={styles.primaryCta}>
+              Start Playing
+            </Link>
+
+            <Link href="/auth?tab=login" style={styles.secondaryCta}>
+              Sign In
+            </Link>
           </div>
 
-          {/* Value Highlights Grid */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginTop: '50px', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '30px' }}>
-            <div>
-              <h4 style={{ margin: '0 0 4px 0', fontSize: '18px', color: '#fff' }}>⚡ KES 49 Minimum</h4>
-              <p style={{ margin: 0, color: '#64748b', fontSize: '13px' }}>Start small, test your strategies, risk-free.</p>
+          <div style={styles.stats}>
+            <div style={styles.statCard}>
+              <strong style={styles.statValue}>KES 49</strong>
+              <span style={styles.statLabel}>Minimum entry</span>
             </div>
-            <div>
-              <h4 style={{ margin: '0 0 4px 0', fontSize: '18px', color: '#22c55e' }}>🔒 Instant STK Push</h4>
-              <p style={{ margin: 0, color: '#64748b', fontSize: '13px' }}>Direct automated wallet funding within seconds.</p>
+
+            <div style={styles.statCard}>
+              <strong style={styles.statValue}>M-Pesa</strong>
+              <span style={styles.statLabel}>Fast deposits</span>
+            </div>
+
+            <div style={styles.statCard}>
+              <strong style={styles.statValue}>Live</strong>
+              <span style={styles.statLabel}>Real-time rounds</span>
             </div>
           </div>
         </div>
 
-        {/* Dynamic Interactive Game Dashboard Simulator Box */}
-        <div style={{ background: '#0e111a', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '24px', padding: '20px', boxShadow: '0 30px 60px rgba(0,0,0,0.6)', position: 'relative', overflow: 'hidden' }}>
-          
-          {/* Header HUD Bar simulation */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', borderBottom: '1px solid rgba(255,255,255,0.04)', paddingBottom: '10px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#22c55e' }} />
-              <span style={{ fontSize: '12px', fontWeight: '800', color: '#94a3b8' }}>LIVE NOW: ({totalPoolUsers} pilots online)</span>
+        <div style={styles.demoCard}>
+          <div style={styles.demoTop}>
+            <div>
+              <div style={styles.liveDotRow}>
+                <span style={styles.liveDot} />
+                <span style={styles.liveText}>LIVE ROUND</span>
+              </div>
+              <div style={styles.onlineText}>{totalPoolUsers} pilots online</div>
             </div>
-            <span style={{ fontSize: '11px', background: 'rgba(255,255,255,0.05)', padding: '3px 8px', borderRadius: '4px', fontWeight: '700' }}>FLY THE ROCKET!</span>
+
+            <div style={styles.walletPill}>KES Wallet</div>
           </div>
 
-          {/* Interactive Core Flight Monitor Frame */}
-          <div style={{ height: '24px', background: '#020306', borderRadius: '12px', position: 'relative', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.03)' }}>
-            
+          <div style={styles.canvasWrap}>
             {demoStatus === 'loading' && (
-              <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(4,5,9,0.95)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', zIndex: 5 }}>
-                <div style={{ width: '50%', height: '4px', background: 'rgba(255,255,255,0.05)', borderRadius: '2px', position: 'relative' }}>
-                  <div style={{ height: '100%', background: '#22c55e', width: `${demoProgress}%`, transition: 'width 0.1s linear' }} />
+              <div style={styles.loadingOverlay}>
+                <div style={styles.progressTrack}>
+                  <div
+                    style={{
+                      ...styles.progressFill,
+                      width: `${demoProgress}%`,
+                    }}
+                  />
                 </div>
-                <span style={{ fontSize: '10px', color: '#64748b', fontWeight: '800', marginTop: '6px' }}>NEXT FLIGHT PREPARING...</span>
+                <span style={styles.loadingText}>Preparing next flight...</span>
               </div>
             )}
 
-            <canvas ref={canvasRef} width={480} height={220} style={{ width: '100%', height: '100%', display: 'block' }} />
+            <canvas
+              ref={canvasRef}
+              width={520}
+              height={300}
+              style={styles.canvas}
+            />
 
             {demoStatus !== 'loading' && (
-              <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', textAlign: 'center', pointerEvents: 'none' }}>
+              <div style={styles.multiplierBox}>
                 {demoStatus === 'crashed' ? (
-                  <span style={{ color: '#e11d48', fontSize: '2.5rem', fontWeight: '900' }}>FLEW AWAY @ {demoMultiplier.toFixed(2)}x</span>
+                  <>
+                    <div style={styles.crashedText}>FLEW AWAY</div>
+                    <div style={styles.crashMultiplier}>
+                      @ {demoMultiplier.toFixed(2)}x
+                    </div>
+                  </>
                 ) : (
-                  <span style={{ color: '#fff', fontSize: '4rem', fontWeight: '900', textShadow: '0 0 20px rgba(255,255,255,0.15)' }}>{demoMultiplier.toFixed(2)}x</span>
+                  <div style={styles.multiplierText}>
+                    {demoMultiplier.toFixed(2)}x
+                  </div>
                 )}
               </div>
             )}
           </div>
 
-          {/* Live Dynamic Automated Tracking Bets Ledger */}
-          <div style={{ marginTop: '16px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            <span style={{ fontSize: '11px', fontWeight: '800', color: '#475569', trackingLetter: '0.5px' }}>LIVE ROUND ALLOCATIONS</span>
-            <div style={{ maxHeight: '160px', overflow: 'hidden', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              {demoBets.map((b, idx) => (
-                <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', background: b.cashedOut ? 'rgba(34,197,94,0.06)' : 'rgba(0,0,0,0.2)', borderRadius: '8px', border: b.cashedOut ? '1px solid rgba(34,197,94,0.15)' : '1px solid transparent', fontSize: '12px' }}>
-                  <span style={{ color: '#94a3b8', fontWeight: '700' }}>{b.user}</span>
-                  <span style={{ fontWeight: '800', color: '#fff' }}>{b.stake} KES</span>
-                  {b.cashedOut ? (
-                    <span style={{ color: '#22c55e', fontWeight: '900', background: 'rgba(34,197,94,0.1)', padding: '2px 8px', borderRadius: '4px' }}>
-                      CASH OUT @ {b.finalMult.toFixed(2)}x (+{b.winAmount} KES)
-                    </span>
-                  ) : (
-                    <span style={{ color: demoStatus === 'crashed' ? '#e11d48' : '#475569', fontWeight: '800' }}>
-                      {demoStatus === 'crashed' ? 'Lost' : 'In Flight'}
-                    </span>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
+          <div style={styles.ledgerHeader}>Live Round Allocations</div>
 
+          <div style={styles.ledger}>
+            {demoBets.map((b, idx) => (
+              <div key={idx} style={styles.betRow}>
+                <span style={styles.betUser}>{b.user}</span>
+                <span style={styles.betStake}>{b.stake} KES</span>
+
+                {b.cashedOut ? (
+                  <span style={styles.winPill}>
+                    {b.finalMult.toFixed(2)}x +{b.winAmount}
+                  </span>
+                ) : (
+                  <span
+                    style={{
+                      ...styles.pendingPill,
+                      color: demoStatus === 'crashed' ? '#ef4444' : '#64748b',
+                    }}
+                  >
+                    {demoStatus === 'crashed' ? 'Lost' : 'Flying'}
+                  </span>
+                )}
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
-      {styleAdjustmentBlock}
-    </div>
+      <section style={styles.featureStrip}>
+        <div style={styles.featureItem}>
+          <span>⚡</span>
+          Fast rounds
+        </div>
+        <div style={styles.featureItem}>
+          <span>🔐</span>
+          Secure login
+        </div>
+        <div style={styles.featureItem}>
+          <span>📱</span>
+          Mobile-first play
+        </div>
+        <div style={styles.featureItem}>
+          <span>💸</span>
+          Wallet tracking
+        </div>
+      </section>
+
+      <style>{`
+        @media (max-width: 980px) {
+          .hero-grid {
+            grid-template-columns: 1fr !important;
+          }
+        }
+      `}</style>
+    </main>
   );
 }
 
-const styleAdjustmentBlock = (
-  <style>{`
-    @media (max-width: 992px) {
-      main, section { grid-template-columns: 1fr !important; text-align: center; margin-top: 20px !important; }
-      p { margin: 0 auto 30px auto !important; }
-      div { justify-content: center; }
-    }
-  `}</style>
-);
+const styles = {
+  page: {
+    minHeight: '100vh',
+    background:
+      'radial-gradient(circle at top left, #172554 0%, #07080e 42%, #020617 100%)',
+    color: '#f8fafc',
+    fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
+    position: 'relative',
+    overflow: 'hidden',
+  },
+
+  glowOne: {
+    position: 'absolute',
+    width: 520,
+    height: 520,
+    borderRadius: '999px',
+    background: 'rgba(225,29,72,0.2)',
+    filter: 'blur(100px)',
+    top: -180,
+    right: -160,
+  },
+
+  glowTwo: {
+    position: 'absolute',
+    width: 420,
+    height: 420,
+    borderRadius: '999px',
+    background: 'rgba(34,197,94,0.13)',
+    filter: 'blur(100px)',
+    bottom: -140,
+    left: -120,
+  },
+
+  nav: {
+    position: 'relative',
+    zIndex: 2,
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: '22px clamp(20px, 5vw, 60px)',
+    borderBottom: '1px solid rgba(255,255,255,0.07)',
+    background: 'rgba(2,6,23,0.55)',
+    backdropFilter: 'blur(18px)',
+  },
+
+  brand: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 10,
+    color: '#fff',
+    textDecoration: 'none',
+    fontSize: 24,
+    fontWeight: 950,
+    letterSpacing: '-1px',
+  },
+
+  brandIcon: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 34,
+    height: 34,
+    borderRadius: 12,
+    background: 'linear-gradient(135deg, #ef4444, #991b1b)',
+    boxShadow: '0 12px 28px rgba(239,68,68,0.35)',
+  },
+
+  navActions: {
+    display: 'flex',
+    gap: 14,
+    alignItems: 'center',
+  },
+
+  loginLink: {
+    color: '#cbd5e1',
+    textDecoration: 'none',
+    fontSize: 14,
+    fontWeight: 800,
+  },
+
+  joinButton: {
+    color: '#fff',
+    textDecoration: 'none',
+    background: 'linear-gradient(135deg, #22c55e, #16a34a)',
+    padding: '11px 24px',
+    borderRadius: 999,
+    fontSize: 13,
+    fontWeight: 950,
+    boxShadow: '0 12px 30px rgba(34,197,94,0.25)',
+  },
+
+  hero: {
+    position: 'relative',
+    zIndex: 2,
+    maxWidth: 1240,
+    margin: '0 auto',
+    padding: '70px 20px 30px',
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr',
+    gap: 46,
+    alignItems: 'center',
+  },
+
+  copy: {
+    maxWidth: 580,
+  },
+
+  badge: {
+    display: 'inline-flex',
+    color: '#22c55e',
+    background: 'rgba(34,197,94,0.1)',
+    border: '1px solid rgba(34,197,94,0.22)',
+    padding: '7px 14px',
+    borderRadius: 999,
+    fontSize: 12,
+    fontWeight: 950,
+    letterSpacing: '0.8px',
+    marginBottom: 20,
+  },
+
+  title: {
+    fontSize: 'clamp(42px, 6vw, 76px)',
+    lineHeight: 0.95,
+    letterSpacing: '-3px',
+    margin: '0 0 22px',
+    fontWeight: 1000,
+  },
+
+  text: {
+    color: '#94a3b8',
+    fontSize: 17,
+    lineHeight: 1.7,
+    margin: '0 0 34px',
+    maxWidth: 510,
+  },
+
+  ctaRow: {
+    display: 'flex',
+    gap: 14,
+    flexWrap: 'wrap',
+    marginBottom: 34,
+  },
+
+  primaryCta: {
+    textDecoration: 'none',
+    color: '#fff',
+    background: 'linear-gradient(135deg, #e11d48, #be123c)',
+    padding: '16px 34px',
+    borderRadius: 14,
+    fontSize: 15,
+    fontWeight: 950,
+    boxShadow: '0 18px 40px rgba(225,29,72,0.32)',
+  },
+
+  secondaryCta: {
+    textDecoration: 'none',
+    color: '#e2e8f0',
+    background: 'rgba(255,255,255,0.06)',
+    border: '1px solid rgba(255,255,255,0.1)',
+    padding: '16px 28px',
+    borderRadius: 14,
+    fontSize: 15,
+    fontWeight: 900,
+  },
+
+  stats: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+    gap: 12,
+  },
+
+  statCard: {
+    background: 'rgba(15,23,42,0.7)',
+    border: '1px solid rgba(255,255,255,0.08)',
+    borderRadius: 16,
+    padding: 16,
+  },
+
+  statValue: {
+    display: 'block',
+    fontSize: 18,
+    marginBottom: 4,
+  },
+
+  statLabel: {
+    color: '#64748b',
+    fontSize: 12,
+    fontWeight: 800,
+  },
+
+  demoCard: {
+    background: 'rgba(15,23,42,0.78)',
+    border: '1px solid rgba(255,255,255,0.1)',
+    borderRadius: 28,
+    padding: 20,
+    boxShadow: '0 34px 90px rgba(0,0,0,0.55)',
+    backdropFilter: 'blur(18px)',
+  },
+
+  demoTop: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 14,
+  },
+
+  liveDotRow: {
+    display: 'flex',
+    gap: 8,
+    alignItems: 'center',
+  },
+
+  liveDot: {
+    width: 9,
+    height: 9,
+    borderRadius: '50%',
+    background: '#22c55e',
+    boxShadow: '0 0 16px #22c55e',
+  },
+
+  liveText: {
+    color: '#e2e8f0',
+    fontSize: 12,
+    fontWeight: 950,
+  },
+
+  onlineText: {
+    color: '#64748b',
+    fontSize: 12,
+    fontWeight: 800,
+    marginTop: 4,
+  },
+
+  walletPill: {
+    background: 'rgba(34,197,94,0.1)',
+    border: '1px solid rgba(34,197,94,0.22)',
+    color: '#22c55e',
+    borderRadius: 999,
+    padding: '7px 12px',
+    fontSize: 12,
+    fontWeight: 950,
+  },
+
+  canvasWrap: {
+    height: 320,
+    background: '#020617',
+    borderRadius: 22,
+    overflow: 'hidden',
+    border: '1px solid rgba(255,255,255,0.07)',
+    position: 'relative',
+  },
+
+  canvas: {
+    width: '100%',
+    height: '100%',
+    display: 'block',
+  },
+
+  loadingOverlay: {
+    position: 'absolute',
+    inset: 0,
+    zIndex: 5,
+    background: 'rgba(2,6,23,0.86)',
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  progressTrack: {
+    width: '58%',
+    height: 7,
+    background: 'rgba(255,255,255,0.07)',
+    borderRadius: 999,
+    overflow: 'hidden',
+  },
+
+  progressFill: {
+    height: '100%',
+    background: 'linear-gradient(90deg, #22c55e, #86efac)',
+    borderRadius: 999,
+  },
+
+  loadingText: {
+    color: '#94a3b8',
+    fontSize: 12,
+    fontWeight: 900,
+    marginTop: 12,
+  },
+
+  multiplierBox: {
+    position: 'absolute',
+    inset: 0,
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'center',
+    alignItems: 'center',
+    pointerEvents: 'none',
+  },
+
+  multiplierText: {
+    fontSize: 'clamp(54px, 8vw, 86px)',
+    fontWeight: 1000,
+    letterSpacing: '-3px',
+    textShadow: '0 0 30px rgba(255,255,255,0.22)',
+  },
+
+  crashedText: {
+    color: '#ef4444',
+    fontSize: 38,
+    fontWeight: 1000,
+  },
+
+  crashMultiplier: {
+    color: '#94a3b8',
+    fontSize: 16,
+    fontWeight: 900,
+    marginTop: 4,
+  },
+
+  ledgerHeader: {
+    color: '#64748b',
+    fontSize: 11,
+    fontWeight: 950,
+    letterSpacing: '0.8px',
+    textTransform: 'uppercase',
+    margin: '16px 0 8px',
+  },
+
+  ledger: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 7,
+  },
+
+  betRow: {
+    display: 'grid',
+    gridTemplateColumns: '1fr auto auto',
+    gap: 10,
+    alignItems: 'center',
+    background: 'rgba(2,6,23,0.55)',
+    border: '1px solid rgba(255,255,255,0.06)',
+    borderRadius: 12,
+    padding: '10px 12px',
+    fontSize: 12,
+  },
+
+  betUser: {
+    color: '#cbd5e1',
+    fontWeight: 800,
+  },
+
+  betStake: {
+    color: '#fff',
+    fontWeight: 950,
+  },
+
+  winPill: {
+    color: '#22c55e',
+    background: 'rgba(34,197,94,0.1)',
+    border: '1px solid rgba(34,197,94,0.16)',
+    borderRadius: 999,
+    padding: '4px 8px',
+    fontSize: 11,
+    fontWeight: 950,
+  },
+
+  pendingPill: {
+    fontSize: 11,
+    fontWeight: 950,
+  },
+
+  featureStrip: {
+    position: 'relative',
+    zIndex: 2,
+    maxWidth: 1100,
+    margin: '20px auto 44px',
+    padding: '0 20px',
+    display: 'grid',
+    gridTemplateColumns: 'repeat(4, minmax(0, 1fr))',
+    gap: 12,
+  },
+
+  featureItem: {
+    background: 'rgba(15,23,42,0.72)',
+    border: '1px solid rgba(255,255,255,0.08)',
+    borderRadius: 16,
+    padding: '16px',
+    color: '#cbd5e1',
+    fontSize: 14,
+    fontWeight: 900,
+    display: 'flex',
+    gap: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+};
