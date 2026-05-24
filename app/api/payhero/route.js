@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { adminDb } from '@/lib/firebaseAdmin';
+import { adminDb, FieldValue } from '../../../lib/firebaseAdmin';
 
 async function getDarajaToken() {
   const key = process.env.MPESA_CONSUMER_KEY;
