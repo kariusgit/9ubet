@@ -36,7 +36,7 @@ The platform features:
 Clone the repository:
 
 ```bash
-git clone https://github.com/yourusername/jetpesa.git
+git clone https://github.com/tookarius/jetpesa.git
 cd jetpesa
 ```
 
@@ -156,12 +156,10 @@ This prevents fake deposits and premature wallet funding.
 Recommended deployment:
 
 - Vercel
-
-Deploy:
-
-```bash
-vercel
-```
+- Koyeb
+- Replit
+- Render
+- VPS
 
 ---
 
@@ -217,4 +215,4 @@ MIT License
 
 # Author
 
-JetPesa Platform
+TK.
