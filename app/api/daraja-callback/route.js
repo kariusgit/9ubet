@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { adminDb, FieldValue } from '@/lib/firebaseAdmin';
+import { adminDb, FieldValue } from '../../../lib/firebaseAdmin';
 
 export async function POST(request) {
   const body = await request.json();
