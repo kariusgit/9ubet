@@ -7,6 +7,10 @@ import { onAuthStateChanged } from 'firebase/auth';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import confetti from 'canvas-confetti';
 
+const MIN_WAGER = 10;
+const HISTORY_STORAGE_KEY = 'jetpesa_real_previous_rounds';
+
+
 export default function UltimateJetPesaCockpit() {
   const router = useRouter();
 
@@ -36,7 +40,7 @@ export default function UltimateJetPesaCockpit() {
   const [loadingWithdraw, setLoadingWithdraw] = useState(false);
 
   const [deckA, setDeckA] = useState({
-    wager: 10,
+    wager: MIN_WAGER,
     isAuto: false,
     isAutoCash: false,
     cashVal: 2.0,
@@ -56,9 +60,16 @@ export default function UltimateJetPesaCockpit() {
   const [multiplier, setMultiplier] = useState(1.0);
   const [gameStatus, setGameStatus] = useState('idle');
   const [countdownProgress, setCountdownProgress] = useState(100);
-  const [historyTape, setHistoryTape] = useState([
-    1.47, 12.33, 1.19, 3.05, 1.52, 18.61, 1.89, 1.08, 2.2,
-  ]);
+  const [historyTape, setHistoryTape] = useState(() => {
+    if (typeof window === 'undefined') return [];
+
+    try {
+      const saved = JSON.parse(localStorage.getItem(HISTORY_STORAGE_KEY) || '[]');
+      return Array.isArray(saved) ? saved.map(Number).filter(Boolean).slice(0, 14) : [];
+    } catch {
+      return [];
+    }
+  });
 
   const [activePlayersCount, setActivePlayersCount] = useState(3412);
   const [liveBetsFeed, setLiveBetsFeed] = useState([]);
@@ -79,6 +90,9 @@ export default function UltimateJetPesaCockpit() {
   const audioCtxRef = useRef(null);
   const planeImageRef = useRef(null);
   const lastCycleRef = useRef(null);
+  const recordedCrashCycleRef = useRef(null);
+  const betNonceRef = useRef(1);
+
   const currentRoundRef = useRef({
     nonce: 1,
     crashPoint: 2.0,
@@ -87,6 +101,8 @@ export default function UltimateJetPesaCockpit() {
     clientSeed: '',
     algorithm: '',
     verifyInput: '',
+    serverSeed: '',
+    houseEdge: 0.01,
   });
 
   useEffect(() => {
@@ -184,10 +200,7 @@ export default function UltimateJetPesaCockpit() {
     const interval = setInterval(() => {
       count += 1;
 
-      setLiveBetsFeed((prev) => {
-        const next = [makeRandomBet(), ...prev].slice(0, 28);
-        return next;
-      });
+      setLiveBetsFeed((prev) => [makeRandomBet(), ...prev].slice(0, 28));
 
       if (count >= 25) clearInterval(interval);
     }, 120);
@@ -227,6 +240,77 @@ export default function UltimateJetPesaCockpit() {
     );
   };
 
+  const sha256Hex = async (input) => {
+    const bytes = new TextEncoder().encode(input);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', bytes);
+    return [...new Uint8Array(hashBuffer)].map((b) => b.toString(16).padStart(2, '0')).join('');
+  };
+
+  const hmacSha256Hex = async (key, message) => {
+    const cryptoKey = await crypto.subtle.importKey(
+      'raw',
+      new TextEncoder().encode(key),
+      { name: 'HMAC', hash: 'SHA-256' },
+      false,
+      ['sign']
+    );
+
+    const signature = await crypto.subtle.sign('HMAC', cryptoKey, new TextEncoder().encode(message));
+    return [...new Uint8Array(signature)].map((b) => b.toString(16).padStart(2, '0')).join('');
+  };
+
+  const deriveCrashPointFromHash = (hash, houseEdge = 0.01) => {
+    const h = parseInt(hash.slice(0, 13), 16);
+    const e = Math.pow(2, 52);
+
+    if (h % 33 === 0) return 1.0;
+
+    const raw = (100 * e - h) / (e - h);
+    const edged = raw * (1 - houseEdge);
+    return Math.max(1, Math.floor(edged) / 100);
+  };
+
+  const generateLocalProvablyRound = async (nonce) => {
+    const randomBytes = new Uint8Array(32);
+    crypto.getRandomValues(randomBytes);
+
+    const serverSeed = [...randomBytes].map((b) => b.toString(16).padStart(2, '0')).join('');
+    const clientSeed = `${user?.uid || 'guest'}:${nonce}:jetpesa`;
+    const verifyInput = `${clientSeed}:${nonce}`;
+    const roundHash = await hmacSha256Hex(serverSeed, verifyInput);
+    const serverSeedHash = await sha256Hex(serverSeed);
+    const crashPoint = deriveCrashPointFromHash(roundHash, 0.01);
+
+    return {
+      nonce,
+      crashPoint,
+      serverSeedHash,
+      serverSeed,
+      roundHash,
+      clientSeed,
+      verifyInput,
+      houseEdge: 0.01,
+      algorithm: 'HMAC_SHA256(serverSeed, clientSeed:nonce), SHA256 serverSeed commitment',
+    };
+  };
+
+  const persistCrashToHistory = (crashPoint, cycleIndex) => {
+    if (recordedCrashCycleRef.current === cycleIndex) return;
+
+    recordedCrashCycleRef.current = cycleIndex;
+    const cleanCrash = Number(Number(crashPoint).toFixed(2));
+
+    setHistoryTape((prev) => {
+      const next = [cleanCrash, ...prev].slice(0, 14);
+
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(next));
+      }
+
+      return next;
+    });
+  };
+
   const fetchProvablyRound = async (nonce, openModal = false) => {
     try {
       if (openModal) setProvablyLoading(true);
@@ -249,7 +333,8 @@ export default function UltimateJetPesaCockpit() {
         clientSeed: data.clientSeed,
         algorithm: data.algorithm,
         verifyInput: data.verifyInput,
-        houseEdge: data.houseEdge,
+        serverSeed: data.serverSeed || '',
+        houseEdge: Number(data.houseEdge ?? 0.01),
       };
 
       setProvablyData(currentRoundRef.current);
@@ -260,8 +345,17 @@ export default function UltimateJetPesaCockpit() {
 
       return currentRoundRef.current;
     } catch (e) {
-      triggerToast(`❌ ${e.message}`, 'error');
-      return currentRoundRef.current;
+      const fallbackRound = await generateLocalProvablyRound(nonce);
+
+      currentRoundRef.current = fallbackRound;
+      setProvablyData(fallbackRound);
+
+      if (openModal) {
+        setIsProvablyModalOpen(true);
+      }
+
+      triggerToast(`⚠️ Server fair API unavailable. Using local cryptographic fallback.`, 'info');
+      return fallbackRound;
     } finally {
       if (openModal) setProvablyLoading(false);
     }
@@ -399,7 +493,7 @@ export default function UltimateJetPesaCockpit() {
           setGameStatus('crashed');
           setMultiplier(crashPoint);
           markLiveBetsCrashed();
-          setHistoryTape((prev) => [crashPoint, ...prev].slice(0, 14));
+          persistCrashToHistory(crashPoint, cycleIndex);
           setDeckA((p) => ({ ...p, hasBetCurrent: false }));
           setDeckB((p) => ({ ...p, hasBetCurrent: false }));
         } else {
@@ -430,6 +524,7 @@ export default function UltimateJetPesaCockpit() {
         setGameStatus('crashed');
         setMultiplier(crashPoint);
         markLiveBetsCrashed();
+        persistCrashToHistory(crashPoint, cycleIndex);
         setDeckA((p) => ({ ...p, hasBetCurrent: false }));
         setDeckB((p) => ({ ...p, hasBetCurrent: false }));
       }
@@ -684,8 +779,9 @@ export default function UltimateJetPesaCockpit() {
     }
 
     const isA = targetDeck === 'A';
-    const currentWagerAmount = isA ? deckA.wager : deckB.wager;
-    if (currentWagerAmount < 10) {
+    const currentWagerAmount = Math.max(MIN_WAGER, Number(isA ? deckA.wager : deckB.wager) || MIN_WAGER);
+    const userBetNonce = betNonceRef.current++;
+    if (currentWagerAmount < MIN_WAGER) {
     triggerToast('❌ Minimum wager is KES 10.', 'error');
     return;
       }
@@ -897,7 +993,7 @@ export default function UltimateJetPesaCockpit() {
   );
 
   const renderDeckPanel = (name, deck, setter, color) => (
-    <div key={name} style={deckPanelStyle}>
+    <div key={name} className="deckPanel" style={deckPanelStyle}>
       <div style={spribeToggleRow}>
         <button
           onClick={() => setter((p) => ({ ...p, isAuto: false }))}
@@ -923,20 +1019,22 @@ export default function UltimateJetPesaCockpit() {
       </div>
 
       <div style={wagerControlsRow}>
-        <button onClick={() => setter((p) => ({ ...p, wager: Math.max(10, p.wager - 10) }))} style={roundMiniButton}>−</button>
+        <button onClick={() => setter((p) => ({ ...p, wager: Math.max(MIN_WAGER, p.wager - MIN_WAGER) }))} style={roundMiniButton}>−</button>
 
         <input
           type="number"
+          min={MIN_WAGER}
+          step={MIN_WAGER}
           value={deck.wager}
-          onChange={(e) =>   setter((p) => ({     ...p,     wager: Math.max(10, parseInt(e.target.value) || 10),   })) }
+          onChange={(e) =>   setter((p) => ({     ...p,     wager: Math.max(MIN_WAGER, parseInt(e.target.value, 10) || MIN_WAGER),   })) }
           style={wagerInput}
         />
 
-        <button onClick={() => setter((p) => ({ ...p, wager: p.wager + 10 }))} style={roundMiniButton}>+</button>
+        <button onClick={() => setter((p) => ({ ...p, wager: p.wager + MIN_WAGER }))} style={roundMiniButton}>+</button>
       </div>
 
       <div style={quickStakeRow}>
-        {[50, 100, 500, 1000].map((v) => (
+        {[10, 50, 100, 500].map((v) => (
           <button key={v} onClick={() => setter((p) => ({ ...p, wager: v }))} style={quickStakeButton}>
             {v}
           </button>
@@ -975,7 +1073,7 @@ export default function UltimateJetPesaCockpit() {
       />
 
       {deck.hasBetCurrent ? (
-        <button onClick={() => handleManualPayoutExecution(name)} style={cashOutButton}>
+        <button onClick={() => handleManualPayoutExecution(name)} className="cashOutButton" style={cashOutButton}>
           CASH OUT
           <br />
           <span style={{ fontSize: '16px' }}>{(deck.wager * multiplier).toFixed(2)} KES</span>
@@ -983,6 +1081,7 @@ export default function UltimateJetPesaCockpit() {
       ) : (
         <button
           onClick={() => placeWagerIntent(name)}
+          className="betActionButton"
           style={{
             ...betButton,
             background: deck.hasBetNext ? '#475569' : color,
@@ -1050,12 +1149,16 @@ export default function UltimateJetPesaCockpit() {
         </div>
       </header>
 
-      <div style={{ display: 'flex', gap: '8px', background: '#040509', padding: '10px 20px', overflowX: 'auto', borderBottom: '1px solid rgba(255,255,255,0.04)', flexShrink: 0 }}>
-        {historyTape.map((h, i) => (
-          <div key={i} style={{ background: h > 2 ? 'linear-gradient(135deg, #a855f7 0%, #6b21a8 100%)' : 'rgba(255,255,255,0.05)', color: h > 2 ? '#fff' : '#94a3b8', padding: '4px 14px', borderRadius: '6px', fontSize: '11px', fontWeight: '900', flexShrink: 0, border: '1px solid rgba(255,255,255,0.05)' }}>
-            {h.toFixed(2)}x
-          </div>
-        ))}
+      <div className="historyTape3D" style={{ display: 'flex', gap: '9px', background: 'radial-gradient(circle at top, rgba(30,41,59,0.72), #040509 70%)', padding: '10px 20px', overflowX: 'auto', borderBottom: '1px solid rgba(255,255,255,0.06)', flexShrink: 0, perspective: '700px' }}>
+        {historyTape.length === 0 ? (
+          <div style={{ color: '#64748b', fontSize: '11px', fontWeight: '900', padding: '5px 2px' }}>Previous rounds will appear after the first completed flight.</div>
+        ) : (
+          historyTape.map((h, i) => (
+            <div key={`${h}-${i}`} style={{ ...historyChip3D, ...(h >= 10 ? historyChipUltra : h >= 2 ? historyChipHigh : historyChipLow), transform: `rotateX(14deg) translateZ(${Math.max(0, 12 - i)}px)` }}>
+              {Number(h).toFixed(2)}x
+            </div>
+          ))
+        )}
       </div>
 
       <div className="cockpitMainLayout" style={{ flex: 1, display: 'grid', padding: '16px', gap: '16px', boxSizing: 'border-box', minHeight: 0, height: 'calc(100% - 130px)' }}>
@@ -1260,6 +1363,7 @@ export default function UltimateJetPesaCockpit() {
                 <HashLine label="Round Hash" value={provablyData?.roundHash || currentRoundRef.current.roundHash} />
                 <HashLine label="Client Seed" value={provablyData?.clientSeed || currentRoundRef.current.clientSeed} />
                 <HashLine label="Verify Input" value={provablyData?.verifyInput || currentRoundRef.current.verifyInput} />
+                <HashLine label="Revealed Server Seed" value={provablyData?.serverSeed || currentRoundRef.current.serverSeed || 'Available from server after round close'} />
                 <HashLine label="Algorithm" value={provablyData?.algorithm || currentRoundRef.current.algorithm || 'HMAC_SHA256'} />
 
                 <button onClick={() => fetchProvablyRound(currentRoundRef.current.nonce, true)} style={purpleButton}>
@@ -1316,15 +1420,28 @@ export default function UltimateJetPesaCockpit() {
           }
 
           .centerPanelLayout > div:first-child {
-            min-height: 345px !important;
+            min-height: 260px !important;
+            flex: 1 1 auto !important;
           }
 
           .betControlsGrid {
             grid-template-columns: 1fr 1fr !important;
-            max-height: none !important;
+            max-height: 255px !important;
             overflow: visible !important;
-            padding: 8px !important;
-            gap: 8px !important;
+            padding: 7px !important;
+            gap: 7px !important;
+            flex-shrink: 0 !important;
+          }
+
+          .deckPanel {
+            padding: 7px !important;
+            border-radius: 12px !important;
+          }
+
+          .betActionButton,
+          .cashOutButton {
+            padding: 9px 5px !important;
+            min-height: 56px !important;
           }
 
           header {
@@ -1355,14 +1472,25 @@ export default function UltimateJetPesaCockpit() {
           }
 
           .centerPanelLayout > div:first-child {
-            min-height: 330px !important;
+            min-height: 225px !important;
             border-radius: 16px !important;
           }
 
           .betControlsGrid {
             grid-template-columns: 1fr 1fr !important;
-            gap: 6px !important;
+            gap: 5px !important;
             border-radius: 14px !important;
+            max-height: 245px !important;
+          }
+
+          .deckPanel input {
+            padding-top: 6px !important;
+            padding-bottom: 6px !important;
+            font-size: 12px !important;
+          }
+
+          .deckPanel button {
+            font-size: 10px !important;
           }
 
           .mobileUtilityFooterBar {
@@ -1380,7 +1508,12 @@ export default function UltimateJetPesaCockpit() {
 
         @media (max-width: 420px) {
           .centerPanelLayout > div:first-child {
-            min-height: 305px !important;
+            min-height: 200px !important;
+          }
+
+          .betControlsGrid {
+            max-height: 235px !important;
+            padding: 5px !important;
           }
 
           h1 {
@@ -1404,6 +1537,34 @@ function HashLine({ label, value }) {
     </div>
   );
 }
+
+
+const historyChip3D = {
+  padding: '5px 15px',
+  borderRadius: '10px',
+  fontSize: '11px',
+  fontWeight: '950',
+  flexShrink: 0,
+  letterSpacing: '0.2px',
+  border: '1px solid rgba(255,255,255,0.12)',
+  boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.22), 0 9px 16px rgba(0,0,0,0.42)',
+  textShadow: '0 1px 2px rgba(0,0,0,0.5)',
+};
+
+const historyChipLow = {
+  background: 'linear-gradient(145deg, rgba(51,65,85,0.98), rgba(15,23,42,0.98))',
+  color: '#cbd5e1',
+};
+
+const historyChipHigh = {
+  background: 'linear-gradient(145deg, #c084fc 0%, #7e22ce 48%, #3b0764 100%)',
+  color: '#fff',
+};
+
+const historyChipUltra = {
+  background: 'linear-gradient(145deg, #fde68a 0%, #f59e0b 36%, #7c2d12 100%)',
+  color: '#fff7ed',
+};
 
 const liveTableHead = {
   display: 'grid',
@@ -1513,6 +1674,8 @@ const deckPanelStyle = {
   border: '1px solid rgba(255,255,255,0.06)',
   padding: '10px',
   borderRadius: '14px',
+  minWidth: 0,
+  boxSizing: 'border-box',
 };
 
 const spribeToggleRow = {
