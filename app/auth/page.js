@@ -1,22 +1,25 @@
 'use client';
+
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { auth, db } from '../../firebaseConfig';
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
-import { doc, setDoc, collection, query, where, getDocs } from 'firebase/firestore';
+import {
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+} from 'firebase/auth';
+import { doc, setDoc, getDoc } from 'firebase/firestore';
 
 function AuthForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  
-  const [activeTab, setActiveTab] = useState('login'); 
-  const [loginIdentifier, setLoginIdentifier] = useState(''); // Can be Email OR Phone
+
+  const [activeTab, setActiveTab] = useState('login');
+  const [loginIdentifier, setLoginIdentifier] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [phone, setPhone] = useState('');
-  
+
   const [errorMsg, setErrorMsg] = useState('');
-  const [successMsg, setSuccessMsg] = useState('');
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -26,141 +29,394 @@ function AuthForm() {
     }
   }, [searchParams]);
 
-  // Helper to cleanly match phone records to authentication emails
+  const cleanPhone = (value) => value.trim().replace(/\s+/g, '');
+
   const resolveEmailFromPhone = async (phoneNum) => {
-    const usersRef = collection(db, 'users');
-    const q = query(usersRef, where('mpesaPhone', '==', phoneNum.trim()));
-    const querySnapshot = await getDocs(q);
-    
-    if (querySnapshot.empty) {
-      throw new Error('No account found with the provided phone number.');
+    const snap = await getDoc(doc(db, 'phoneLookup', cleanPhone(phoneNum)));
+
+    if (!snap.exists()) {
+      throw new Error('No account found with that phone number.');
     }
-    
-    let resolvedEmail = '';
-    querySnapshot.forEach((doc) => {
-      resolvedEmail = doc.data().email;
-    });
-    return resolvedEmail;
+
+    return snap.data().email;
+  };
+
+  const validatePhone = (value) => {
+    const cleaned = cleanPhone(value);
+    return (
+      cleaned.length === 10 &&
+      (cleaned.startsWith('07') || cleaned.startsWith('01'))
+    );
   };
 
   const handleAuthenticationExecution = async (e) => {
     e.preventDefault();
     setErrorMsg('');
-    setSuccessMsg('');
     setLoading(true);
 
     try {
       if (activeTab === 'login') {
         let finalEmail = loginIdentifier.trim();
 
-        // If the user typed a phone number instead of an email address
         if (!finalEmail.includes('@')) {
           finalEmail = await resolveEmailFromPhone(finalEmail);
         }
 
         await signInWithEmailAndPassword(auth, finalEmail, password);
-        router.push('/dashboard');
-
-      } else {
-        // Strict phone validation for Safaricom credentials
-        if ((!phone.startsWith('07') && !phone.startsWith('01')) || phone.length !== 10) {
-          throw new Error('Please enter a valid phone number (e.g. 0712***/011***).');
-        }
-
-        const userCredential = await createUserWithEmailAndPassword(auth, email.trim(), password);
-        
-        await setDoc(doc(db, "users", userCredential.user.uid), {
-          uid: userCredential.user.uid,
-          email: email.trim(),
-          mpesaPhone: phone.trim(),
-          walletBalance: 0.0,
-          createdAt: new Date().toISOString()
-        });
-        
-        setSuccessMsg('🚀 Account Created Successfully! Welcome to JetPesa. Preparing your cockpit...');
-        
-        // 3-second delay to display the welcome state before forcing route switch
-        setTimeout(() => {
-          router.push('/dashboard');
-        }, 3000);
+        router.replace('/dashboard');
+        return;
       }
+
+      if (!validatePhone(phone)) {
+        throw new Error('Enter a valid phone number, e.g. 0712345678 or 0112345678.');
+      }
+
+      const cleanEmail = email.trim().toLowerCase();
+      const cleanMpesaPhone = cleanPhone(phone);
+
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        cleanEmail,
+        password
+      );
+
+      const uid = userCredential.user.uid;
+
+      await Promise.all([
+        setDoc(doc(db, 'users', uid), {
+          uid,
+          email: cleanEmail,
+          mpesaPhone: cleanMpesaPhone,
+          walletBalance: 0.0,
+          createdAt: new Date().toISOString(),
+        }),
+
+        setDoc(doc(db, 'phoneLookup', cleanMpesaPhone), {
+          uid,
+          email: cleanEmail,
+        }),
+      ]);
+
+      router.replace('/dashboard');
     } catch (err) {
-      setErrorMsg(err.message.replace("Firebase:", ""));
-      setLoading(false); // Only unset loading on error; success handles redirect away
+      setErrorMsg(err.message.replace('Firebase:', '').trim());
+      setLoading(false);
     }
   };
 
   return (
-    <div style={{ background: '#0e111a', border: '1px solid rgba(255,255,255,0.06)', width: '100%', maxWidth: '400px', borderRadius: '24px', padding: '30px', boxShadow: '0 20px 50px rgba(0,0,0,0.5)' }}>
-      
-      <div style={{ textAlign: 'center', marginBottom: '25px' }}>
-        <h2 style={{ fontSize: '28px', fontWeight: '900', margin: '0 0 6px 0', letterSpacing: '-1px' }}>JETPESA</h2>
-        <p style={{ color: '#64748b', fontSize: '13px', margin: 0 }}>Secure High-Stakes Gateway</p>
+    <div style={styles.card}>
+      <div style={styles.logoWrap}>
+        <div style={styles.planeBadge}>✈</div>
+        <h1 style={styles.logo}>JETPESA</h1>
+        <p style={styles.subtitle}>Fast flights. Instant cashouts.</p>
       </div>
 
-      {/* Tab Controls */}
-      <div style={{ display: 'flex', background: 'rgba(0,0,0,0.3)', padding: '4px', borderRadius: '10px', marginBottom: '24px' }}>
-        <button type="button" disabled={loading} onClick={() => { setActiveTab('login'); setErrorMsg(''); setSuccessMsg(''); }} style={{ flex: 1, padding: '10px', background: activeTab === 'login' ? 'rgba(255,255,255,0.06)' : 'transparent', border: 'none', color: '#fff', fontSize: '13px', fontWeight: '800', borderRadius: '8px', cursor: 'pointer', opacity: loading ? 0.5 : 1 }}>Login</button>
-        <button type="button" disabled={loading} onClick={() => { setActiveTab('signup'); setErrorMsg(''); setSuccessMsg(''); }} style={{ flex: 1, padding: '10px', background: activeTab === 'signup' ? 'rgba(255,255,255,0.06)' : 'transparent', border: 'none', color: '#fff', fontSize: '13px', fontWeight: '800', borderRadius: '8px', cursor: 'pointer', opacity: loading ? 0.5 : 1 }}>Register</button>
+      <div style={styles.tabs}>
+        <button
+          type="button"
+          disabled={loading}
+          onClick={() => {
+            setActiveTab('login');
+            setErrorMsg('');
+          }}
+          style={{
+            ...styles.tabButton,
+            ...(activeTab === 'login' ? styles.activeTab : {}),
+          }}
+        >
+          Sign In
+        </button>
+
+        <button
+          type="button"
+          disabled={loading}
+          onClick={() => {
+            setActiveTab('signup');
+            setErrorMsg('');
+          }}
+          style={{
+            ...styles.tabButton,
+            ...(activeTab === 'signup' ? styles.activeTab : {}),
+          }}
+        >
+          Sign Up
+        </button>
       </div>
 
-      {/* Notification Messaging Alerts */}
-      {errorMsg && (
-        <div style={{ background: 'rgba(220,38,38,0.1)', border: '1px solid rgba(220,38,38,0.2)', color: '#ef4444', padding: '12px', borderRadius: '8px', fontSize: '12px', fontWeight: '700', marginBottom: '16px', textAlign: 'center' }}>
-          {errorMsg}
-        </div>
-      )}
+      {errorMsg && <div style={styles.errorBox}>{errorMsg}</div>}
 
-      {successMsg && (
-        <div style={{ background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.2)', color: '#22c55e', padding: '12px', borderRadius: '8px', fontSize: '12px', fontWeight: '700', marginBottom: '16px', textAlign: 'center' }}>
-          {successMsg}
-        </div>
-      )}
-
-      <form onSubmit={handleAuthenticationExecution} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-        
+      <form onSubmit={handleAuthenticationExecution} style={styles.form}>
         {activeTab === 'login' ? (
-          <div>
-            <label style={{ fontSize: '11px', color: '#94a3b8', fontWeight: '700', display: 'block', marginBottom: '4px' }}>EMAIL OR PHONE NUMBER</label>
-            <input type="text" required disabled={loading} placeholder="Email or 07XXXXXXXX" value={loginIdentifier} onChange={e => setLoginIdentifier(e.target.value)} style={{ width: '93%', padding: '12px', background: '#020306', border: '1px solid rgba(255,255,255,0.08)', color: '#fff', borderRadius: '8px', fontSize: '14px' }} />
-          </div>
+          <Field label="EMAIL OR PHONE">
+            <input
+              type="text"
+              required
+              disabled={loading}
+              placeholder="Email or 07XXXXXXXX"
+              value={loginIdentifier}
+              onChange={(e) => setLoginIdentifier(e.target.value)}
+              style={styles.input}
+            />
+          </Field>
         ) : (
           <>
-            <div>
-              <label style={{ fontSize: '11px', color: '#94a3b8', fontWeight: '700', display: 'block', marginBottom: '4px' }}>EMAIL ADDRESS</label>
-              <input type="email" required disabled={loading} value={email} onChange={e => setEmail(e.target.value)} style={{ width: '93%', padding: '12px', background: '#020306', border: '1px solid rgba(255,255,255,0.08)', color: '#fff', borderRadius: '8px', fontSize: '14px' }} />
-            </div>
+            <Field label="EMAIL ADDRESS">
+              <input
+                type="email"
+                required
+                disabled={loading}
+                placeholder="you@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                style={styles.input}
+              />
+            </Field>
 
-            <div>
-              <label style={{ fontSize: '11px', color: '#94a3b8', fontWeight: '700', display: 'block', marginBottom: '4px' }}>M-PESA NUMBER</label>
-              <input type="text" required disabled={loading} value={phone} onChange={e => setPhone(e.target.value)} placeholder="07***/01***" style={{ width: '93%', padding: '12px', background: '#020306', border: '1px solid rgba(255,255,255,0.08)', color: '#fff', borderRadius: '8px', fontSize: '14px' }} />
-            </div>
+            <Field label="M-PESA NUMBER">
+              <input
+                type="tel"
+                required
+                disabled={loading}
+                placeholder="0712345678"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                style={styles.input}
+              />
+            </Field>
           </>
         )}
 
-        <div>
-          <label style={{ fontSize: '11px', color: '#94a3b8', fontWeight: '700', display: 'block', marginBottom: '4px' }}>ACCOUNT SECURE PASSWORD</label>
-          <input type="password" required disabled={loading} value={password} onChange={e => setPassword(e.target.value)} style={{ width: '93%', padding: '12px', background: '#020306', border: '1px solid rgba(255,255,255,0.08)', color: '#fff', borderRadius: '8px', fontSize: '14px' }} />
-        </div>
+        <Field label="PASSWORD">
+          <input
+            type="password"
+            required
+            disabled={loading}
+            placeholder="Enter password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            style={styles.input}
+          />
+        </Field>
 
-        <button type="submit" disabled={loading} style={{ width: '100%', padding: '14px', marginTop: '10px', background: activeTab === 'login' ? 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)' : 'linear-gradient(135deg, #e11d48 0%, #be123c 100%)', border: 'none', color: '#fff', fontWeight: '900', borderRadius: '10px', cursor: loading ? 'not-allowed' : 'pointer', fontSize: '14px' }}>
-          {loading ? 'PROCESSING SECURE UPLINK...' : activeTab === 'login' ? 'SECURE LOGIN' : 'CREATE ACCOUNT'}
+        <button
+          type="submit"
+          disabled={loading}
+          style={{
+            ...styles.submitButton,
+            background:
+              activeTab === 'login'
+                ? 'linear-gradient(135deg, #22c55e, #16a34a)'
+                : 'linear-gradient(135deg, #ef4444, #be123c)',
+            opacity: loading ? 0.65 : 1,
+            cursor: loading ? 'not-allowed' : 'pointer',
+          }}
+        >
+          {loading
+            ? 'PLEASE WAIT...'
+            : activeTab === 'login'
+              ? 'SIGN IN'
+              : 'CREATE ACCOUNT'}
         </button>
       </form>
+
+      <p style={styles.footerText}>
+        Secure wallet access for JetPesa Aviator.
+      </p>
+    </div>
+  );
+}
+
+function Field({ label, children }) {
+  return (
+    <div>
+      <label style={styles.label}>{label}</label>
+      {children}
     </div>
   );
 }
 
 export default function AuthenticatonPortal() {
   return (
-    <div style={{ background: '#07080e', color: '#f1f5f9', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Plus Jakarta Sans', sans-serif", padding: '20px' }}>
-      <Suspense fallback={
-        <div style={{ color: '#64748b', fontSize: '14px', fontWeight: '700' }}>
-          Loading Secure Interface...
-        </div>
-      }>
+    <div style={styles.page}>
+      <div style={styles.skyGlow} />
+      <div style={styles.runwayLine} />
+      <Suspense fallback={<div style={styles.loading}>Loading...</div>}>
         <AuthForm />
       </Suspense>
     </div>
   );
 }
+
+const styles = {
+  page: {
+    minHeight: '100vh',
+    background:
+      'radial-gradient(circle at top, #1e293b 0%, #07080e 42%, #020617 100%)',
+    color: '#f8fafc',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
+    padding: '20px',
+    position: 'relative',
+    overflow: 'hidden',
+  },
+
+  skyGlow: {
+    position: 'absolute',
+    width: '520px',
+    height: '520px',
+    borderRadius: '999px',
+    background: 'rgba(225, 29, 72, 0.18)',
+    filter: 'blur(90px)',
+    top: '-160px',
+    right: '-140px',
+  },
+
+  runwayLine: {
+    position: 'absolute',
+    width: '120%',
+    height: '2px',
+    background:
+      'linear-gradient(to right, transparent, rgba(255,255,255,0.22), transparent)',
+    transform: 'rotate(-18deg)',
+    bottom: '18%',
+  },
+
+  card: {
+    width: '100%',
+    maxWidth: '430px',
+    background: 'rgba(15, 23, 42, 0.82)',
+    border: '1px solid rgba(255,255,255,0.1)',
+    borderRadius: '28px',
+    padding: '32px',
+    boxShadow: '0 30px 80px rgba(0,0,0,0.55)',
+    backdropFilter: 'blur(18px)',
+    position: 'relative',
+    zIndex: 2,
+  },
+
+  logoWrap: {
+    textAlign: 'center',
+    marginBottom: '26px',
+  },
+
+  planeBadge: {
+    width: '58px',
+    height: '58px',
+    borderRadius: '18px',
+    margin: '0 auto 14px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontSize: '28px',
+    background: 'linear-gradient(135deg, #ef4444, #7f1d1d)',
+    boxShadow: '0 14px 40px rgba(239,68,68,0.35)',
+  },
+
+  logo: {
+    margin: 0,
+    fontSize: '34px',
+    fontWeight: 950,
+    letterSpacing: '-1.5px',
+  },
+
+  subtitle: {
+    margin: '6px 0 0',
+    color: '#94a3b8',
+    fontSize: '13px',
+    fontWeight: 700,
+  },
+
+  tabs: {
+    display: 'flex',
+    gap: '6px',
+    background: 'rgba(0,0,0,0.32)',
+    padding: '5px',
+    borderRadius: '14px',
+    marginBottom: '22px',
+  },
+
+  tabButton: {
+    flex: 1,
+    border: 'none',
+    background: 'transparent',
+    color: '#94a3b8',
+    padding: '12px',
+    borderRadius: '11px',
+    fontSize: '13px',
+    fontWeight: 900,
+  },
+
+  activeTab: {
+    background: 'rgba(255,255,255,0.1)',
+    color: '#fff',
+    boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.06)',
+  },
+
+  form: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '16px',
+  },
+
+  label: {
+    display: 'block',
+    marginBottom: '6px',
+    color: '#94a3b8',
+    fontSize: '11px',
+    fontWeight: 900,
+    letterSpacing: '0.7px',
+  },
+
+  input: {
+    width: '100%',
+    boxSizing: 'border-box',
+    padding: '14px 15px',
+    background: 'rgba(2,6,23,0.8)',
+    border: '1px solid rgba(255,255,255,0.09)',
+    color: '#fff',
+    borderRadius: '13px',
+    fontSize: '14px',
+    outline: 'none',
+  },
+
+  submitButton: {
+    width: '100%',
+    marginTop: '8px',
+    padding: '15px',
+    border: 'none',
+    color: '#fff',
+    fontWeight: 950,
+    borderRadius: '14px',
+    fontSize: '14px',
+    boxShadow: '0 16px 36px rgba(0,0,0,0.35)',
+  },
+
+  errorBox: {
+    background: 'rgba(239,68,68,0.11)',
+    border: '1px solid rgba(239,68,68,0.35)',
+    color: '#fca5a5',
+    padding: '12px',
+    borderRadius: '12px',
+    fontSize: '12px',
+    fontWeight: 800,
+    marginBottom: '16px',
+    textAlign: 'center',
+  },
+
+  footerText: {
+    margin: '18px 0 0',
+    textAlign: 'center',
+    color: '#64748b',
+    fontSize: '12px',
+    fontWeight: 700,
+  },
+
+  loading: {
+    color: '#94a3b8',
+    fontSize: '14px',
+    fontWeight: 800,
+  },
+};
