@@ -1,5 +1,4 @@
 import { ThemeProvider } from './ThemeProvider';
-import type { Metadata, Viewport } from 'next';
 import { Plus_Jakarta_Sans } from 'next/font/google';
 
 const plusJakartaSans = Plus_Jakarta_Sans({
@@ -9,8 +8,8 @@ const plusJakartaSans = Plus_Jakarta_Sans({
   weight: ['400', '500', '600', '700', '800', '900'],
 });
 
-export const metadata: Metadata = {
-  metadataBase: new URL('https://jetpesa.com'),
+export const metadata = {
+  metadataBase: new URL('https://jetpesa.briceka.com'),
   title: {
     default: 'JetPesa | Fly High & Cash Out Instantly',
     template: '%s | JetPesa',
@@ -26,115 +25,41 @@ export const metadata: Metadata = {
     'multiplier game',
     'instant payout',
     'mobile betting',
-    'real-time gaming',
-    'KES betting',
   ],
-  authors: [{ name: 'JetPesa Team' }],
-  creator: 'JetPesa',
-  publisher: 'JetPesa',
-  formatDetection: {
-    telephone: false,
-  },
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: 'black-translucent',
-    title: 'JetPesa',
-  },
-  category: 'games',
   openGraph: {
     type: 'website',
     locale: 'en_KE',
-    url: 'https://jetpesa.com',
+    url: 'https://jetpesa.briceka.com',
     siteName: 'JetPesa',
     title: 'JetPesa | Fly High & Cash Out Instantly',
-    description:
-      'Experience real-time multiplier crash gaming with instant M-Pesa payouts.',
-    images: [
-      {
-        url: '/og-image.jpg',
-        width: 1200,
-        height: 630,
-        alt: 'JetPesa - Premium Aviator-Style Betting Platform',
-      },
-    ],
+    description: 'Experience real-time multiplier crash gaming with instant M-Pesa payouts.',
   },
   twitter: {
     card: 'summary_large_image',
     title: 'JetPesa | Fly High & Cash Out Instantly',
-    description:
-      'Experience real-time multiplier crash gaming with instant M-Pesa payouts.',
-    images: ['/og-image.jpg'],
-    creator: '@jetpesa',
-  },
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: {
-      index: true,
-      follow: true,
-      'max-video-preview': -1,
-      'max-image-preview': 'large',
-      'max-snippet': -1,
-    },
+    description: 'Experience real-time multiplier crash gaming with instant M-Pesa payouts.',
   },
   icons: {
-    icon: [
-      { url: '/favicon.ico' },
-      { url: '/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
-      { url: '/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
-    ],
-    apple: [
-      { url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
-    ],
-    other: [
-      {
-        rel: 'mask-icon',
-        url: '/safari-pinned-tab.svg',
-        color: '#22c55e',
-      },
-    ],
-  },
-  manifest: '/site.webmanifest',
-  verification: {
-    google: 'your-google-verification-code',
-  },
-  other: {
-    'msapplication-TileColor': '#020617',
-    'msapplication-config': '/browserconfig.xml',
+    icon: '/favicon.ico',
   },
 };
 
-export const viewport: Viewport = {
+export const viewport = {
   themeColor: [
     { media: '(prefers-color-scheme: light)', color: '#ffffff' },
     { media: '(prefers-color-scheme: dark)', color: '#020617' },
   ],
   width: 'device-width',
   initialScale: 1,
-  maximumScale: 5,
-  userScalable: true,
-  viewportFit: 'cover',
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }) {
   return (
-    <html
-      lang="en"
-      className={plusJakartaSans.variable}
-      suppressHydrationWarning
-    >
+    <html lang="en" className={plusJakartaSans.variable} suppressHydrationWarning>
       <head>
         <meta name="format-detection" content="telephone=no" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link
-          rel="preconnect"
-          href="https://fonts.gstatic.com"
-          crossOrigin="anonymous"
-        />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       </head>
       <body
         className={plusJakartaSans.className}
