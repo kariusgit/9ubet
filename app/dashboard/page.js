@@ -11,7 +11,7 @@ const MIN_WAGER = 10;
 const HISTORY_STORAGE_KEY = 'jetpesa_real_previous_rounds';
 
 /* -------------------------------------------------------------------------- */
-/*  Icon System — Professional, scalable SVG replacements for all emojis      */
+/*  Icon System — Professional, scalable SVG replacements                     */
 /* -------------------------------------------------------------------------- */
 function Icon({ name, size = 18, className = '' }) {
   const props = {
@@ -54,10 +54,6 @@ function Icon({ name, size = 18, className = '' }) {
       return <svg {...props}><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" /></svg>;
     case 'alert-triangle':
       return <svg {...props}><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg>;
-    case 'hourglass':
-      return <svg {...props}><path d="M5 22h14" /><path d="M5 2h14" /><path d="M17 22v-4.172a2 2 0 0 0-.586-1.414L12 12l-4.414 4.414A2 2 0 0 0 7 17.828V22" /><path d="M7 2v4.172a2 2 0 0 0 .586 1.414L12 12l4.414-4.414A2 2 0 0 0 17 6.172V2" /></svg>;
-    case 'party-popper':
-      return <svg {...props}><path d="M5.8 11.3 2 22l10.7-3.79" /><path d="M4 3h.01" /><path d="M22 8h.01" /><path d="M15 2h.01" /><path d="M22 20h.01" /><path d="M22 2l-2.24.75a2.9 2.9 0 0 0-1.96 3.12v0c.1.86-.57 1.63-1.45 1.63h-.38c-.86 0-1.6.6-1.76 1.44L14 10" /><path d="m22 13-.82-.33c-.86-.34-1.82.2-1.98 1.11v0c-.11.62-.66 1.07-1.29 1.07H17" /><path d="M11 2v.01" /><path d="M11 22v.01" /><path d="M2 11h.01" /><path d="M22 11h.01" /><path d="M2 2h.01" /><path d="M2 22h.01" /></svg>;
     case 'wallet':
       return <svg {...props}><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4" /><path d="M3 5v14a2 2 0 0 0 2 2h16v-5" /><path d="M18 12a2 2 0 0 0 0 4h4v-4Z" /></svg>;
     case 'refresh-cw':
@@ -1042,7 +1038,10 @@ export default function UltimateJetPesaCockpit() {
       {/* Main Layout */}
       <div className="jp-layout">
         {/* Left Panel */}
-        <div className="jp-panel jp-left-panel">
+        <div 
+          className="jp-panel jp-left-panel" 
+          data-active={mobileActivePanel === 'bets'}
+        >
           <div className="jp-tab-bar">
             <button onClick={() => setActiveTab('all')} className={`jp-tab ${activeTab === 'all' ? 'jp-active' : ''}`}>
               LIVE ({activePlayersCount})
@@ -1080,7 +1079,10 @@ export default function UltimateJetPesaCockpit() {
         </div>
 
         {/* Center Panel */}
-        <div className="jp-center-panel">
+        <div 
+          className="jp-center-panel" 
+          data-active={mobileActivePanel === 'game'}
+        >
           <div className="jp-canvas-container">
             {gameStatus === 'idle' && (
               <div className="jp-idle-overlay">
@@ -1116,7 +1118,10 @@ export default function UltimateJetPesaCockpit() {
         </div>
 
         {/* Right Panel */}
-        <div className="jp-panel jp-right-panel">
+        <div 
+          className="jp-panel jp-right-panel" 
+          data-active={mobileActivePanel === 'chat'}
+        >
           <div className="jp-chat-header">
             <div className="jp-chat-dot" />
             <span>Lobby Lounge Chat Room</span>
@@ -1131,7 +1136,7 @@ export default function UltimateJetPesaCockpit() {
                       <UserAvatar seed={c.seed} size={20} />
                       <span className="jp-chat-user">{c.user}</span>
                     </div>
-                )}
+                  )}
                   <span className="jp-chat-msg">{c.msg}</span>
                   <span className="jp-chat-time">{c.time}</span>
                 </div>
@@ -2068,7 +2073,9 @@ export default function UltimateJetPesaCockpit() {
           .jp-center-panel { display: none !important; }
           .jp-right-panel { display: none !important; }
           
-          .jp-left-panel[data-active="true"], .jp-center-panel[data-active="true"], .jp-right-panel[data-active="true"] {
+          .jp-left-panel[data-active="true"], 
+          .jp-center-panel[data-active="true"], 
+          .jp-right-panel[data-active="true"] {
             display: flex !important;
             height: 100% !important;
           }
