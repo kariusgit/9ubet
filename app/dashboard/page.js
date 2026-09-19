@@ -1016,7 +1016,7 @@ export default function UltimateJetPesaCockpit() {
             <button className="jp-deposit-btn" onClick={() => setIsDepositModalOpen(true)}>
               DEPOSIT
             </button>
-          </div8>
+          </div>
         </div>
       </header>
 
