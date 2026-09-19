@@ -11,9 +11,9 @@ const MIN_WAGER = 10;
 const HISTORY_STORAGE_KEY = 'jetpesa_real_previous_rounds';
 
 /* -------------------------------------------------------------------------- */
-/*  Icon System — Professional, scalable SVG replacements                     */
+/*  Icon System                                                               */
 /* -------------------------------------------------------------------------- */
-function Icon({ name, size = 18, className = '' }) {
+function Icon({ name, size = 18, className = '', style = {} }) {
   const props = {
     width: size,
     height: size,
@@ -24,6 +24,7 @@ function Icon({ name, size = 18, className = '' }) {
     strokeLinecap: 'round',
     strokeLinejoin: 'round',
     className,
+    style,
     'aria-hidden': true,
   };
 
@@ -72,7 +73,7 @@ function Icon({ name, size = 18, className = '' }) {
 }
 
 /* -------------------------------------------------------------------------- */
-/*  User Avatar — Generates a consistent, colored avatar from a string seed   */
+/*  User Avatar                                                               */
 /* -------------------------------------------------------------------------- */
 function UserAvatar({ seed, size = 28 }) {
   const colors = ['#ef4444', '#f59e0b', '#22c55e', '#3b82f6', '#8b5cf6', '#ec4899', '#14b8a6'];
@@ -94,7 +95,7 @@ function UserAvatar({ seed, size = 28 }) {
         flexShrink: 0,
       }}
     >
-      <Icon name="user" size={size * 0.55} />
+      <Icon name="user" size={Math.round(size * 0.55)} />
     </div>
   );
 }
@@ -167,8 +168,8 @@ export default function UltimateJetPesaCockpit() {
   const [chatLogs, setChatLogs] = useState([
     { user: 'Shark071***45', seed: 'shark', msg: 'Admin, background rain drop claim active?', time: '08:02' },
     { user: 'Lion072***89', seed: 'lion', msg: 'Leo tunakula rocket safi sana hapa JetPesa!', time: '08:04' },
-    { user: 'Falcon079***12', seed: 'falcon', msg: 'Nĩngwenda gũkĩria 10x rũũgĩ rũfĩfĩ rwa Deck B gaka!', time: '08:04' },
-    { user: 'Cheetah011***90', seed: 'cheetah', msg: 'Asego mar plane ni e ma duong’! Multiplier obiro thuth!', time: '08:05' },
+    { user: 'Falcon079***12', seed: 'falcon', msg: 'Ningwenda gukiria 10x rugii rufifi rwa Deck B gaka!', time: '08:04' },
+    { user: 'Cheetah011***90', seed: 'cheetah', msg: 'Asego mar plane ni e ma duong! Multiplier obiro thuth!', time: '08:05' },
   ]);
 
   const [provablyData, setProvablyData] = useState(null);
@@ -245,21 +246,18 @@ export default function UltimateJetPesaCockpit() {
       }
       const ctx = audioCtxRef.current;
       if (ctx.state === 'suspended') ctx.resume();
-
       const osc = ctx.createOscillator();
       const gainNode = ctx.createGain();
-
       osc.type = type;
       osc.frequency.value = freq;
       gainNode.gain.setValueAtTime(volume, ctx.currentTime);
       gainNode.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + duration);
-
       osc.connect(gainNode);
       gainNode.connect(ctx.destination);
       osc.start();
       osc.stop(ctx.currentTime + duration);
     } catch (e) {
-      console.log(e);
+      // silent
     }
   }, [audioMuted]);
 
@@ -280,7 +278,6 @@ export default function UltimateJetPesaCockpit() {
   const startFreshLiveBetsFeed = useCallback(() => {
     setLiveBetsFeed([]);
     setActivePlayersCount(Math.floor(Math.random() * 1500 + 3000));
-
     let count = 0;
     const interval = setInterval(() => {
       count += 1;
@@ -343,16 +340,9 @@ export default function UltimateJetPesaCockpit() {
     const roundHash = await hmacSha256Hex(serverSeed, verifyInput);
     const serverSeedHash = await sha256Hex(serverSeed);
     const crashPoint = deriveCrashPointFromHash(roundHash, 0.01);
-
     return {
-      nonce,
-      crashPoint,
-      serverSeedHash,
-      serverSeed,
-      roundHash,
-      clientSeed,
-      verifyInput,
-      houseEdge: 0.01,
+      nonce, crashPoint, serverSeedHash, serverSeed, roundHash,
+      clientSeed, verifyInput, houseEdge: 0.01,
       algorithm: 'HMAC_SHA256(serverSeed, clientSeed:nonce), SHA256 serverSeed commitment',
     };
   };
@@ -361,7 +351,6 @@ export default function UltimateJetPesaCockpit() {
     if (recordedCrashCycleRef.current === cycleIndex) return;
     recordedCrashCycleRef.current = cycleIndex;
     const cleanCrash = Number(Number(crashPoint).toFixed(2));
-
     setHistoryTape((prev) => {
       const next = [cleanCrash, ...prev].slice(0, 14);
       if (typeof window !== 'undefined') {
@@ -376,18 +365,12 @@ export default function UltimateJetPesaCockpit() {
       if (openModal) setProvablyLoading(true);
       const res = await fetch(`/api/game/provably?nonce=${nonce}`, { cache: 'no-store' });
       const data = await res.json();
-
       if (!res.ok || !data.success) throw new Error(data.message || 'Could not load provably fair round.');
-
       currentRoundRef.current = {
-        nonce: data.nonce,
-        crashPoint: Number(data.crashPoint || 1),
-        serverSeedHash: data.serverSeedHash,
-        roundHash: data.roundHash,
-        clientSeed: data.clientSeed,
-        algorithm: data.algorithm,
-        verifyInput: data.verifyInput,
-        serverSeed: data.serverSeed || '',
+        nonce: data.nonce, crashPoint: Number(data.crashPoint || 1),
+        serverSeedHash: data.serverSeedHash, roundHash: data.roundHash,
+        clientSeed: data.clientSeed, algorithm: data.algorithm,
+        verifyInput: data.verifyInput, serverSeed: data.serverSeed || '',
         houseEdge: Number(data.houseEdge ?? 0.01),
       };
       setProvablyData(currentRoundRef.current);
@@ -416,12 +399,8 @@ export default function UltimateJetPesaCockpit() {
       setPhoneProfile(savedPhone);
       setEditPhone(savedPhone);
     }
-
     const unsubscribe = onAuthStateChanged(auth, async (curr) => {
-      if (!curr) {
-        router.push('/');
-        return;
-      }
+      if (!curr) { router.push('/'); return; }
       setUser(curr);
       const userDoc = await getDoc(doc(db, 'users', curr.uid));
       if (userDoc.exists()) {
@@ -436,7 +415,6 @@ export default function UltimateJetPesaCockpit() {
         }
       }
     });
-
     fetchProvablyRound(1);
     startFreshLiveBetsFeed();
     return () => unsubscribe();
@@ -449,27 +427,18 @@ export default function UltimateJetPesaCockpit() {
   useEffect(() => {
     const chatPool = [
       { user: 'Fox072***14', seed: 'fox', msg: 'Weh, plane irefuka maze, cash out haraka!' },
-      { user: 'Rhino079***88', seed: 'rhino', msg: 'Mũgĩthĩ ũũ no rũgendo rũranya gũgĩkũra na igũrũ.' },
+      { user: 'Rhino079***88', seed: 'rhino', msg: 'Mugithii uu no rugendo ruranya gugikura na iguru.' },
       { user: 'Jet011***23', seed: 'jet', msg: 'Anya tero mwandu nyaka polo! Retain control omera.' },
       { user: 'Pilot070***66', seed: 'pilot', msg: 'Free bets admin please.....' },
       { user: 'Mamba072***99', seed: 'mamba', msg: '50k innit! hii ni ingine mwechecheeee' },
       { user: 'Sky010***45', seed: 'sky', msg: 'Wakuu mmenikula ata school fees, watu wanichangie please' },
       { user: 'Turbo075***04', seed: 'turbo', msg: 'Nimeweka 500 stake hapa, twende sasa kabla iland.' },
     ];
-
     const intervalChat = setInterval(() => {
       const picked = chatPool[Math.floor(Math.random() * chatPool.length)];
-      setChatLogs((p) => [
-        ...p,
-        {
-          ...picked,
-          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        },
-      ]);
+      setChatLogs((p) => [...p, { ...picked, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }]);
     }, 8000);
-
     return () => clearInterval(intervalChat);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -483,9 +452,8 @@ export default function UltimateJetPesaCockpit() {
 
       if (lastCycleRef.current !== cycleIndex) {
         lastCycleRef.current = cycleIndex;
-        const nextNonce = cycleIndex + 1;
         startFreshLiveBetsFeed();
-        fetchProvablyRound(nextNonce);
+        fetchProvablyRound(cycleIndex + 1);
       }
 
       const crashPoint = currentRoundRef.current.crashPoint || 2;
@@ -498,7 +466,6 @@ export default function UltimateJetPesaCockpit() {
         }
         setCountdownProgress(((countdownInterval - offsetMs) / countdownInterval) * 100);
         if (offsetMs % 1000 < 20) playSynthesizedTone(320, 'sine', 0.03, 0.02);
-
         setDeckA((prev) => {
           if (prev.hasBetNext && !prev.hasBetCurrent) return { ...prev, hasBetCurrent: true, hasBetNext: prev.isAuto };
           return prev;
@@ -511,7 +478,6 @@ export default function UltimateJetPesaCockpit() {
         setGameStatus('running');
         const activeSeconds = (offsetMs - countdownInterval) / 1000;
         const computedMultiplier = parseFloat(Math.pow(Math.E, 0.078 * activeSeconds).toFixed(2));
-
         if (computedMultiplier >= crashPoint) {
           setGameStatus('crashed');
           setMultiplier(crashPoint);
@@ -523,7 +489,6 @@ export default function UltimateJetPesaCockpit() {
           setMultiplier(computedMultiplier);
           updateLiveBetStatuses(computedMultiplier);
           if (offsetMs % 300 < 20) playSynthesizedTone(200 + computedMultiplier * 15, 'sine', 0.015, 0.012);
-
           setDeckA((p) => {
             if (p.hasBetCurrent && p.isAutoCash && computedMultiplier >= parseFloat(p.cashVal)) {
               triggerPayoutSequence('A', computedMultiplier, p);
@@ -555,16 +520,19 @@ export default function UltimateJetPesaCockpit() {
     animationId.current = requestAnimationFrame(runDistributedClockLoop);
     return () => cancelAnimationFrame(animationId.current);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [deckA, deckB, gameStatus, balance, audioMuted, isRainActive, startFreshLiveBetsFeed, fetchProvablyRound, playSynthesizedTone, updateLiveBetStatuses, markLiveBetsCrashed, persistCrashToHistory]);
+  }, [deckA, deckB, gameStatus, balance, audioMuted, isRainActive]);
 
+  /* ---------------------------------------------------------------------- */
+  /*  TRULY RESPONSIVE CANVAS — reads actual container dimensions            */
+  /* ---------------------------------------------------------------------- */
   const drawRain = (ctx, W, H, secondsInAir) => {
     if (!isRainActive) return;
     ctx.save();
     ctx.strokeStyle = 'rgba(125, 211, 252, 0.34)';
-    ctx.lineWidth = W < 520 ? 1 : 1.4;
+    ctx.lineWidth = W < 500 ? 1 : 1.4;
     ctx.shadowBlur = 8;
     ctx.shadowColor = 'rgba(56,189,248,0.45)';
-    const drops = W < 520 ? 48 : 85;
+    const drops = W < 500 ? 40 : 80;
     for (let i = 0; i < drops; i++) {
       const x = ((i * 71 + secondsInAir * 360) % (W + 120)) - 80;
       const y = ((i * 47 + secondsInAir * 620) % (H + 140)) - 80;
@@ -579,30 +547,32 @@ export default function UltimateJetPesaCockpit() {
   const renderRadarCanvas = (offsetMs, countdownLimit) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
+    const parent = canvas.parentElement;
+    if (!parent) return;
 
     const dpr = window.devicePixelRatio || 1;
-    const baseW = 900;
-    const baseH = 460;
-    
-    if (canvas.width !== baseW * dpr || canvas.height !== baseH * dpr) {
-      canvas.width = baseW * dpr;
-      canvas.height = baseH * dpr;
+    const W = parent.clientWidth;
+    const H = parent.clientHeight;
+    if (W === 0 || H === 0) return;
+
+    if (canvas.width !== Math.round(W * dpr) || canvas.height !== Math.round(H * dpr)) {
+      canvas.width = Math.round(W * dpr);
+      canvas.height = Math.round(H * dpr);
     }
 
     const ctx = canvas.getContext('2d');
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-
-    const W = baseW;
-    const H = baseH;
-
     ctx.clearRect(0, 0, W, H);
+
+    // Grid
     ctx.strokeStyle = 'rgba(255,255,255,0.025)';
     ctx.lineWidth = 1;
-
-    for (let i = 0; i < W; i += W < 520 ? 40 : 50) {
+    const gridX = W < 500 ? 36 : 50;
+    const gridY = W < 500 ? 30 : 40;
+    for (let i = 0; i < W; i += gridX) {
       ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, H); ctx.stroke();
     }
-    for (let j = 0; j < H; j += W < 520 ? 34 : 40) {
+    for (let j = 0; j < H; j += gridY) {
       ctx.beginPath(); ctx.moveTo(0, j); ctx.lineTo(W, j); ctx.stroke();
     }
 
@@ -615,11 +585,12 @@ export default function UltimateJetPesaCockpit() {
       const multiplierLift = Math.min((multiplier - 1) / 2.8, 1);
       const liftFactor = Math.max(smoothProgress * 0.9, multiplierLift);
 
-      const startX = W < 520 ? 42 : 50;
-      const baseY = H - (W < 520 ? 54 : 48);
-      const maxLift = H - (W < 520 ? 135 : 118);
+      const pad = Math.max(30, W * 0.06);
+      const startX = pad;
+      const baseY = H - pad;
+      const maxLift = H - pad * 2.5;
 
-      const cx = startX + (W - (W < 520 ? 120 : 135)) * Math.min(Math.pow(flightProgress, 0.82), 1);
+      const cx = startX + (W - pad * 2.5) * Math.min(Math.pow(flightProgress, 0.82), 1);
       const cy = baseY - maxLift * Math.min(liftFactor, 1);
 
       const controlX = startX + (cx - startX) * 0.48;
@@ -629,7 +600,7 @@ export default function UltimateJetPesaCockpit() {
       ctx.moveTo(startX, baseY);
       ctx.quadraticCurveTo(controlX, controlY, cx, cy);
       ctx.strokeStyle = 'rgba(225,29,72,0.98)';
-      ctx.lineWidth = W < 520 ? 5 : 6;
+      ctx.lineWidth = W < 500 ? 4 : 6;
       ctx.shadowBlur = 28;
       ctx.shadowColor = '#e11d48';
       ctx.stroke();
@@ -646,35 +617,49 @@ export default function UltimateJetPesaCockpit() {
       ctx.fillStyle = underGradient;
       ctx.fill();
 
+      // Plane scales with canvas width
+      const planeScale = Math.max(0.45, Math.min(W / 700, 1));
+      const planeW = 136 * planeScale;
+      const planeH = 64 * planeScale;
       const planeAngle = -0.32 + Math.min(liftFactor * 0.38, 0.26) + Math.sin(secondsInAir * 5) * 0.018;
-      const planeW = W < 520 ? 156 : 136;
-      const planeH = W < 520 ? 74 : 64;
 
+      // Shadow
       ctx.save();
-      ctx.translate(cx + 8, cy + 13);
+      ctx.translate(cx + 8 * planeScale, cy + 13 * planeScale);
       ctx.rotate(planeAngle);
-      ctx.globalAlpha = 0.24;
-      ctx.filter = 'blur(11px)';
+      ctx.globalAlpha = 0.2;
+      ctx.filter = `blur(${Math.round(11 * planeScale)}px)`;
       if (planeImageRef.current) ctx.drawImage(planeImageRef.current, -planeW / 2, -planeH / 2, planeW, planeH);
       ctx.restore();
 
+      // Main plane
       ctx.save();
       ctx.translate(cx, cy);
       ctx.rotate(planeAngle);
-      ctx.shadowBlur = 24;
+      ctx.shadowBlur = 24 * planeScale;
       ctx.shadowColor = 'rgba(255,255,255,0.32)';
       if (planeImageRef.current) ctx.drawImage(planeImageRef.current, -planeW / 2, -planeH / 2, planeW, planeH);
       ctx.restore();
 
-      for (let i = 0; i < 5; i++) {
+      // Exhaust particles
+      const particleCount = W < 400 ? 3 : 5;
+      for (let i = 0; i < particleCount; i++) {
         ctx.beginPath();
-        ctx.arc(cx - 36 - i * 11, cy + Math.sin(secondsInAir * 9 + i) * 4, 2.2 + i * 0.35, 0, Math.PI * 2);
+        ctx.arc(
+          cx - (36 + i * 11) * planeScale,
+          cy + Math.sin(secondsInAir * 9 + i) * 4 * planeScale,
+          (2.2 + i * 0.35) * planeScale,
+          0, Math.PI * 2
+        );
         ctx.fillStyle = i % 2 === 0 ? 'rgba(255,255,255,0.48)' : 'rgba(239,68,68,0.42)';
         ctx.fill();
       }
     }
   };
 
+  /* ---------------------------------------------------------------------- */
+  /*  Wallet & Profile Logic                                                 */
+  /* ---------------------------------------------------------------------- */
   const commitWalletBalance = async (balTarget) => {
     if (!user) return;
     await updateDoc(doc(db, 'users', user.uid), { walletBalance: parseFloat(balTarget.toFixed(2)) });
@@ -725,7 +710,7 @@ export default function UltimateJetPesaCockpit() {
     setTimeout(() => playSynthesizedTone(659.25, 'sine', 0.15, 0.05), 100);
     setTimeout(() => playSynthesizedTone(783.99, 'sine', 0.3, 0.06), 200);
     confetti({ particleCount: 90, spread: 65, origin: { y: 0.35 } });
-    triggerToast(`Deck ${deckName} Auto Cashout hit @ ${multVal}x! Received KES ${rawWin.toFixed(2)}`, 'success');
+    triggerToast(`Deck ${deckName} Auto Cashout @ ${multVal}x! +KES ${rawWin.toFixed(2)}`, 'success');
   };
 
   const placeWagerIntent = (targetDeck) => {
@@ -735,7 +720,6 @@ export default function UltimateJetPesaCockpit() {
     betNonceRef.current++;
     if (currentWagerAmount < MIN_WAGER) { triggerToast('Minimum wager is KES 10.', 'error'); return; }
     if (balance < currentWagerAmount) { triggerToast('Selected stake exceeds your available balance.', 'error'); return; }
-
     if (gameStatus === 'running') {
       if (isA) setDeckA((p) => ({ ...p, hasBetNext: !p.hasBetNext }));
       else setDeckB((p) => ({ ...p, hasBetNext: !p.hasBetNext }));
@@ -778,7 +762,6 @@ export default function UltimateJetPesaCockpit() {
     if (isNaN(amt) || amt < 49) { triggerToast('Minimum deposit is KES 49.', 'error'); return; }
     if ((!cleanPhone.startsWith('07') && !cleanPhone.startsWith('01')) || cleanPhone.length !== 10) { triggerToast('Enter a valid M-Pesa phone number.', 'error'); return; }
     if (!user?.uid) { triggerToast('Login session expired. Please sign in again.', 'error'); return; }
-
     setLoadingDeposit(true);
     try {
       const res = await fetch('/api/payhero', {
@@ -788,10 +771,8 @@ export default function UltimateJetPesaCockpit() {
       });
       const data = await res.json();
       if (!res.ok || !data.success) throw new Error(data.message || 'Payment initiation failed.');
-
       if (rememberPhone) localStorage.setItem('jetpesa_saved_phone', cleanPhone);
       triggerToast(data.message || 'STK push sent. Complete payment on your phone.', 'info');
-
       let attempts = 0;
       const maxAttempts = 36;
       const poll = setInterval(async () => {
@@ -831,6 +812,9 @@ export default function UltimateJetPesaCockpit() {
     }
   };
 
+  /* ---------------------------------------------------------------------- */
+  /*  Render Helpers                                                         */
+  /* ---------------------------------------------------------------------- */
   const renderLiveBets = () => (
     <div className="jp-panel-scroll">
       <div className="jp-live-table-head">
@@ -847,8 +831,8 @@ export default function UltimateJetPesaCockpit() {
       ) : (
         liveBetsFeed.map((b) => (
           <div key={b.id} className="jp-live-row">
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
-              <UserAvatar seed={b.seed} size={28} />
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
+              <UserAvatar seed={b.seed} size={26} />
               <div style={{ minWidth: 0 }}>
                 <span className="jp-live-user">{b.username}</span>
                 <span className="jp-live-sub">Round #{currentRoundRef.current.nonce}</span>
@@ -873,93 +857,46 @@ export default function UltimateJetPesaCockpit() {
   const renderDeckPanel = (name, deck, setter, color) => (
     <div key={name} className="jp-deck-panel">
       <div className="jp-spribe-toggle">
-        <button
-          onClick={() => setter((p) => ({ ...p, isAuto: false }))}
-          className={`jp-spribe-tab ${!deck.isAuto ? 'jp-active' : ''}`}
-        >
-          Bet
-        </button>
-        <button
-          onClick={() => setter((p) => ({ ...p, isAuto: true }))}
-          className={`jp-spribe-tab ${deck.isAuto ? 'jp-active' : ''}`}
-        >
-          Auto
-        </button>
+        <button onClick={() => setter((p) => ({ ...p, isAuto: false }))} className={`jp-spribe-tab ${!deck.isAuto ? 'jp-active' : ''}`}>Bet</button>
+        <button onClick={() => setter((p) => ({ ...p, isAuto: true }))} className={`jp-spribe-tab ${deck.isAuto ? 'jp-active' : ''}`}>Auto</button>
       </div>
-
       <div className="jp-wager-controls">
-        <button onClick={() => setter((p) => ({ ...p, wager: Math.max(MIN_WAGER, p.wager - MIN_WAGER) }))} className="jp-round-btn">
-          <Icon name="minus" size={16} />
-        </button>
-        <input
-          type="number"
-          min={MIN_WAGER}
-          step={MIN_WAGER}
-          value={deck.wager}
-          onChange={(e) => setter((p) => ({ ...p, wager: Math.max(MIN_WAGER, parseInt(e.target.value, 10) || MIN_WAGER) }))}
-          className="jp-wager-input"
-        />
-        <button onClick={() => setter((p) => ({ ...p, wager: p.wager + MIN_WAGER }))} className="jp-round-btn">
-          <Icon name="plus" size={16} />
-        </button>
+        <button onClick={() => setter((p) => ({ ...p, wager: Math.max(MIN_WAGER, p.wager - MIN_WAGER) }))} className="jp-round-btn"><Icon name="minus" size={14} /></button>
+        <input type="number" min={MIN_WAGER} step={MIN_WAGER} value={deck.wager} onChange={(e) => setter((p) => ({ ...p, wager: Math.max(MIN_WAGER, parseInt(e.target.value, 10) || MIN_WAGER) }))} className="jp-wager-input" />
+        <button onClick={() => setter((p) => ({ ...p, wager: p.wager + MIN_WAGER }))} className="jp-round-btn"><Icon name="plus" size={14} /></button>
       </div>
-
       <div className="jp-quick-stake">
         {[10, 50, 100, 500].map((v) => (
-          <button key={v} onClick={() => setter((p) => ({ ...p, wager: v }))} className="jp-quick-btn">
-            {v}
-          </button>
+          <button key={v} onClick={() => setter((p) => ({ ...p, wager: v }))} className="jp-quick-btn">{v}</button>
         ))}
       </div>
-
       <div className="jp-auto-cash-row">
         <span className="jp-auto-cash-label">Auto Cash Out</span>
-        <button
-          onClick={() => setter((p) => ({ ...p, isAutoCash: !p.isAutoCash }))}
-          className="jp-switch-track"
-          style={{ background: deck.isAutoCash ? '#22c55e' : '#1f2937' }}
-        >
+        <button onClick={() => setter((p) => ({ ...p, isAutoCash: !p.isAutoCash }))} className="jp-switch-track" style={{ background: deck.isAutoCash ? '#22c55e' : '#1f2937' }}>
           <span className="jp-switch-knob" style={{ transform: deck.isAutoCash ? 'translateX(18px)' : 'translateX(0)' }} />
         </button>
       </div>
-
-      <input
-        type="number"
-        step="0.1"
-        disabled={!deck.isAutoCash}
-        value={deck.cashVal}
-        onChange={(e) => setter((p) => ({ ...p, cashVal: e.target.value }))}
-        className="jp-auto-cash-input"
-        style={{ opacity: deck.isAutoCash ? 1 : 0.4 }}
-      />
-
+      <input type="number" step="0.1" disabled={!deck.isAutoCash} value={deck.cashVal} onChange={(e) => setter((p) => ({ ...p, cashVal: e.target.value }))} className="jp-auto-cash-input" style={{ opacity: deck.isAutoCash ? 1 : 0.4 }} />
       {deck.hasBetCurrent ? (
         <button onClick={() => handleManualPayoutExecution(name)} className="jp-cashout-button">
           CASH OUT
-          <span style={{ fontSize: '16px', marginTop: '2px' }}>{(deck.wager * multiplier).toFixed(2)} KES</span>
+          <span className="jp-btn-sub">{(deck.wager * multiplier).toFixed(2)} KES</span>
         </button>
       ) : (
-        <button
-          onClick={() => placeWagerIntent(name)}
-          className={`jp-bet-button ${deck.hasBetNext ? 'queued' : ''}`}
-          style={{ background: deck.hasBetNext ? '#475569' : color }}
-        >
+        <button onClick={() => placeWagerIntent(name)} className={`jp-bet-button ${deck.hasBetNext ? 'queued' : ''}`} style={{ background: deck.hasBetNext ? '#475569' : color }}>
           {deck.hasBetNext ? (
-            <>
-              CANCEL
-              <span style={{ fontSize: '12px', marginTop: '2px' }}>Queued</span>
-            </>
+            <>CANCEL<span className="jp-btn-sub-sm">Queued</span></>
           ) : (
-            <>
-              BET
-              <span style={{ fontSize: '16px', marginTop: '2px' }}>{deck.wager} KES</span>
-            </>
+            <>BET<span className="jp-btn-sub">{deck.wager} KES</span></>
           )}
         </button>
       )}
     </div>
   );
 
+  /* ---------------------------------------------------------------------- */
+  /*  JSX                                                                    */
+  /* ---------------------------------------------------------------------- */
   return (
     <div className="jp-cockpit">
       {/* Toasts */}
@@ -969,7 +906,7 @@ export default function UltimateJetPesaCockpit() {
           const toastColor = t.type === 'error' ? '#ef4444' : t.type === 'success' ? '#22c55e' : '#3b82f6';
           return (
             <div key={t.id} className="jp-toast" style={{ borderLeft: `4px solid ${toastColor}` }}>
-              <Icon name={toastIcon} size={18} style={{ color: toastColor, flexShrink: 0 }} />
+              <Icon name={toastIcon} size={16} style={{ color: toastColor, flexShrink: 0 }} />
               <span>{t.msg}</span>
             </div>
           );
@@ -978,40 +915,31 @@ export default function UltimateJetPesaCockpit() {
 
       {/* Header */}
       <header className="jp-header">
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <div className="jp-header-left">
           <span className="jp-brand-text">JET<span className="jp-brand-accent">PESA</span></span>
           <button className="jp-fair-btn" onClick={openProvablyModal}>
-            <Icon name="shield-check" size={14} />
-            FAIR #{currentRoundRef.current.nonce}
+            <Icon name="shield-check" size={13} />
+            <span className="jp-fair-label">FAIR #{currentRoundRef.current.nonce}</span>
           </button>
         </div>
-
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <div className="jp-header-right">
           <button className="jp-icon-btn" onClick={() => setAudioMuted(!audioMuted)} aria-label="Toggle audio">
             <Icon name={audioMuted ? 'volume-x' : 'volume-2'} size={18} />
           </button>
-          <button
-            className={`jp-rain-btn ${isRainActive ? 'jp-active' : ''}`}
-            onClick={() => setIsRainActive(!isRainActive)}
-          >
-            <Icon name="cloud-rain" size={14} />
-            RAIN
+          <button className={`jp-rain-btn ${isRainActive ? 'jp-active' : ''}`} onClick={() => setIsRainActive(!isRainActive)}>
+            <Icon name="cloud-rain" size={13} />
+            <span className="jp-rain-label">RAIN</span>
           </button>
           <button className="jp-profile-btn" onClick={() => setIsProfileModalOpen(true)}>
-            <Icon name="user" size={14} />
-            PROFILE
+            <Icon name="user" size={13} />
+            <span className="jp-profile-label">PROFILE</span>
           </button>
           <div className="jp-wallet-pill">
-            <button
-              className="jp-wallet-balance"
-              onClick={() => balance > 0 ? setIsWithdrawModalOpen(true) : triggerToast('Wallet is empty. Deposit first.', 'info')}
-            >
-              <Icon name="wallet" size={16} />
-              {balance.toFixed(2)} KES
+            <button className="jp-wallet-balance" onClick={() => balance > 0 ? setIsWithdrawModalOpen(true) : triggerToast('Wallet is empty. Deposit first.', 'info')}>
+              <Icon name="wallet" size={15} />
+              <span className="jp-wallet-amount">{balance.toFixed(2)} KES</span>
             </button>
-            <button className="jp-deposit-btn" onClick={() => setIsDepositModalOpen(true)}>
-              DEPOSIT
-            </button>
+            <button className="jp-deposit-btn" onClick={() => setIsDepositModalOpen(true)}>DEPOSIT</button>
           </div>
         </div>
       </header>
@@ -1024,11 +952,7 @@ export default function UltimateJetPesaCockpit() {
           </div>
         ) : (
           historyTape.map((h, i) => (
-            <div
-              key={`${h}-${i}`}
-              className={`jp-history-chip ${h >= 10 ? 'jp-history-ultra' : h >= 2 ? 'jp-history-high' : 'jp-history-low'}`}
-              style={{ transform: `rotateX(14deg) translateZ(${Math.max(0, 12 - i)}px)` }}
-            >
+            <div key={`${h}-${i}`} className={`jp-history-chip ${h >= 10 ? 'jp-history-ultra' : h >= 2 ? 'jp-history-high' : 'jp-history-low'}`} style={{ transform: `rotateX(14deg) translateZ(${Math.max(0, 12 - i)}px)` }}>
               {Number(h).toFixed(2)}x
             </div>
           ))
@@ -1037,40 +961,20 @@ export default function UltimateJetPesaCockpit() {
 
       {/* Main Layout */}
       <div className="jp-layout">
-        {/* Left Panel */}
-        <div 
-          className="jp-panel jp-left-panel" 
-          data-active={mobileActivePanel === 'bets'}
-        >
+        <div className="jp-panel jp-left-panel" data-active={mobileActivePanel === 'bets'}>
           <div className="jp-tab-bar">
-            <button onClick={() => setActiveTab('all')} className={`jp-tab ${activeTab === 'all' ? 'jp-active' : ''}`}>
-              LIVE ({activePlayersCount})
-            </button>
-            <button onClick={() => setActiveTab('mine')} className={`jp-tab ${activeTab === 'mine' ? 'jp-active' : ''}`}>
-              MY BETS
-            </button>
+            <button onClick={() => setActiveTab('all')} className={`jp-tab ${activeTab === 'all' ? 'jp-active' : ''}`}>LIVE ({activePlayersCount})</button>
+            <button onClick={() => setActiveTab('mine')} className={`jp-tab ${activeTab === 'mine' ? 'jp-active' : ''}`}>MY BETS</button>
           </div>
-
-          {activeTab === 'all' ? (
-            renderLiveBets()
-          ) : (
+          {activeTab === 'all' ? renderLiveBets() : (
             <div className="jp-panel-scroll">
               {myBetsHistory.length === 0 ? (
-                <div className="jp-empty-state">
-                  <Icon name="bar-chart-3" size={32} />
-                  <strong>No local round wagers recorded.</strong>
-                </div>
+                <div className="jp-empty-state"><Icon name="bar-chart-3" size={32} /><strong>No local round wagers recorded.</strong></div>
               ) : (
                 myBetsHistory.map((m, i) => (
                   <div key={i} className="jp-bet-history-row">
-                    <div>
-                      <span className="jp-bet-history-round">ROUND #{m.roundId}</span>
-                      <span className="jp-bet-history-stake">{m.stake} KES</span>
-                    </div>
-                    <div style={{ textAlign: 'right' }}>
-                      <span className="jp-bet-history-mult">{m.multiplier.toFixed(2)}x</span>
-                      <span className="jp-bet-history-yield">+{m.yieldAmount.toFixed(1)}</span>
-                    </div>
+                    <div><span className="jp-bet-history-round">ROUND #{m.roundId}</span><span className="jp-bet-history-stake">{m.stake} KES</span></div>
+                    <div style={{ textAlign: 'right' }}><span className="jp-bet-history-mult">{m.multiplier.toFixed(2)}x</span><span className="jp-bet-history-yield">+{m.yieldAmount.toFixed(1)}</span></div>
                   </div>
                 ))
               )}
@@ -1078,18 +982,12 @@ export default function UltimateJetPesaCockpit() {
           )}
         </div>
 
-        {/* Center Panel */}
-        <div 
-          className="jp-center-panel" 
-          data-active={mobileActivePanel === 'game'}
-        >
+        <div className="jp-center-panel" data-active={mobileActivePanel === 'game'}>
           <div className="jp-canvas-container">
             {gameStatus === 'idle' && (
               <div className="jp-idle-overlay">
-                <div className="jp-progress-track">
-                  <div className="jp-progress-fill" style={{ width: `${countdownProgress}%` }} />
-                </div>
-                <span className="jp-idle-text">WAITING FOR NEXT FLIGHT ROUND...</span>
+                <div className="jp-progress-track"><div className="jp-progress-fill" style={{ width: `${countdownProgress}%` }} /></div>
+                <span className="jp-idle-text">WAITING FOR NEXT FLIGHT...</span>
                 <span className="jp-idle-sub">New wagers loading...</span>
               </div>
             )}
@@ -1098,10 +996,7 @@ export default function UltimateJetPesaCockpit() {
               <div className="jp-multiplier-overlay">
                 {gameStatus === 'crashed' ? (
                   <div>
-                    <h1 className="jp-crashed-title">
-                      <Icon name="x-circle" size={36} className="jp-crash-icon" />
-                      FLEW AWAY
-                    </h1>
+                    <h1 className="jp-crashed-title"><Icon name="x-circle" size={32} className="jp-crash-icon" />FLEW AWAY</h1>
                     <span className="jp-crashed-sub">Ended @ {multiplier.toFixed(2)}x</span>
                   </div>
                 ) : (
@@ -1110,30 +1005,22 @@ export default function UltimateJetPesaCockpit() {
               </div>
             )}
           </div>
-
           <div className="jp-deck-grid">
             {renderDeckPanel('A', deckA, setDeckA, '#22c55e')}
             {renderDeckPanel('B', deckB, setDeckB, '#16a34a')}
           </div>
         </div>
 
-        {/* Right Panel */}
-        <div 
-          className="jp-panel jp-right-panel" 
-          data-active={mobileActivePanel === 'chat'}
-        >
-          <div className="jp-chat-header">
-            <div className="jp-chat-dot" />
-            <span>Lobby Lounge Chat Room</span>
-          </div>
+        <div className="jp-panel jp-right-panel" data-active={mobileActivePanel === 'chat'}>
+          <div className="jp-chat-header"><div className="jp-chat-dot" /><span>Lobby Chat</span></div>
           <div className="jp-chat-scroll">
             {chatLogs.map((c, i) => {
               const isMe = c.user === 'You';
               return (
                 <div key={i} className={`jp-chat-bubble ${isMe ? 'jp-chat-me' : ''}`}>
                   {!isMe && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                      <UserAvatar seed={c.seed} size={20} />
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '3px' }}>
+                      <UserAvatar seed={c.seed} size={18} />
                       <span className="jp-chat-user">{c.user}</span>
                     </div>
                   )}
@@ -1145,131 +1032,80 @@ export default function UltimateJetPesaCockpit() {
             <div ref={chatEndRef} />
           </div>
           <div className="jp-chat-input-row">
-            <input
-              type="text"
-              placeholder={balance > 1000 ? 'Type chat message...' : 'Requires KES 1001+ balance'}
-              disabled={balance <= 1000}
-              value={chatInput}
-              onChange={(e) => setChatInput(e.target.value)}
-              onKeyDown={(e) => { if (e.key === 'Enter') broadcastChatMessage(); }}
-              className="jp-chat-input"
-            />
-            <button onClick={broadcastChatMessage} className="jp-chat-send" aria-label="Send message">
-              <Icon name="send" size={16} />
-            </button>
+            <input type="text" placeholder={balance > 1000 ? 'Type a message...' : 'Requires KES 1001+'} disabled={balance <= 1000} value={chatInput} onChange={(e) => setChatInput(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') broadcastChatMessage(); }} className="jp-chat-input" />
+            <button onClick={broadcastChatMessage} className="jp-chat-send" aria-label="Send message"><Icon name="send" size={15} /></button>
           </div>
         </div>
       </div>
 
       {/* Mobile Footer */}
       <div className="jp-mobile-footer">
-        <button onClick={() => setMobileActivePanel('bets')} className={`jp-mobile-tab ${mobileActivePanel === 'bets' ? 'jp-active' : ''}`}>
-          <Icon name="bar-chart-3" size={18} />
-          LIVE
-        </button>
-        <button onClick={() => setMobileActivePanel('game')} className={`jp-mobile-tab ${mobileActivePanel === 'game' ? 'jp-active' : ''}`}>
-          <Icon name="rocket" size={18} />
-          GAME
-        </button>
-        <button onClick={() => setMobileActivePanel('chat')} className={`jp-mobile-tab ${mobileActivePanel === 'chat' ? 'jp-active' : ''}`}>
-          <Icon name="message-square" size={18} />
-          CHAT
-        </button>
+        <button onClick={() => setMobileActivePanel('bets')} className={`jp-mobile-tab ${mobileActivePanel === 'bets' ? 'jp-active' : ''}`}><Icon name="bar-chart-3" size={18} />LIVE</button>
+        <button onClick={() => setMobileActivePanel('game')} className={`jp-mobile-tab ${mobileActivePanel === 'game' ? 'jp-active' : ''}`}><Icon name="rocket" size={18} />GAME</button>
+        <button onClick={() => setMobileActivePanel('chat')} className={`jp-mobile-tab ${mobileActivePanel === 'chat' ? 'jp-active' : ''}`}><Icon name="message-square" size={18} />CHAT</button>
       </div>
 
-      {/* Modals */}
+      {/* Deposit Modal */}
       {isDepositModalOpen && (
         <div className="jp-modal-overlay" onClick={() => setIsDepositModalOpen(false)}>
           <div className="jp-modal-box jp-modal-green" onClick={(e) => e.stopPropagation()}>
             <button className="jp-modal-close" onClick={() => setIsDepositModalOpen(false)}><Icon name="x" size={20} /></button>
             <h3 className="jp-modal-title" style={{ color: '#22c55e' }}>Safaricom M-Pesa Wire</h3>
-            <div className="jp-modal-field">
-              <label className="jp-modal-label">DEPOSIT QUANTITY (MIN 49 KES)</label>
-              <input type="number" value={inputAmount} onChange={(e) => setInputAmount(e.target.value)} className="jp-modal-input" />
-            </div>
-            <div className="jp-modal-field">
-              <label className="jp-modal-label">M-PESA REGISTERED TELEPHONE</label>
-              <input type="text" value={inputPhone} onChange={(e) => setInputPhone(e.target.value)} placeholder="07XXXXXXXX" className="jp-modal-input" />
-            </div>
-            <button onClick={handlePaymentInitiation} disabled={loadingDeposit} className="jp-modal-btn jp-btn-green">
-              {loadingDeposit ? 'SYNCHRONIZING...' : 'AUTHORIZE DEPOSIT'}
-            </button>
+            <div className="jp-modal-field"><label className="jp-modal-label">DEPOSIT QUANTITY (MIN 49 KES)</label><input type="number" value={inputAmount} onChange={(e) => setInputAmount(e.target.value)} className="jp-modal-input" /></div>
+            <div className="jp-modal-field"><label className="jp-modal-label">M-PESA REGISTERED TELEPHONE</label><input type="text" value={inputPhone} onChange={(e) => setInputPhone(e.target.value)} placeholder="07XXXXXXXX" className="jp-modal-input" /></div>
+            <button onClick={handlePaymentInitiation} disabled={loadingDeposit} className="jp-modal-btn jp-btn-green">{loadingDeposit ? 'SYNCHRONIZING...' : 'AUTHORIZE DEPOSIT'}</button>
           </div>
         </div>
       )}
 
+      {/* Profile Modal */}
       {isProfileModalOpen && (
         <div className="jp-modal-overlay" onClick={() => setIsProfileModalOpen(false)}>
           <div className="jp-modal-box jp-modal-blue" onClick={(e) => e.stopPropagation()}>
             <button className="jp-modal-close" onClick={() => setIsProfileModalOpen(false)}><Icon name="x" size={20} /></button>
             <h3 className="jp-modal-title" style={{ color: '#38bdf8' }}>Profile Settings</h3>
-            <div className="jp-modal-field">
-              <label className="jp-modal-label">DISPLAY NAME</label>
-              <input type="text" value={editName} onChange={(e) => setEditName(e.target.value)} placeholder="Your name" className="jp-modal-input" />
-            </div>
-            <div className="jp-modal-field">
-              <label className="jp-modal-label">EMAIL</label>
-              <input type="text" value={user?.email || ''} disabled className="jp-modal-input jp-disabled" />
-            </div>
-            <div className="jp-modal-field">
-              <label className="jp-modal-label">M-PESA PHONE</label>
-              <input type="text" value={editPhone} onChange={(e) => setEditPhone(e.target.value)} placeholder="07XXXXXXXX" className="jp-modal-input" />
-            </div>
+            <div className="jp-modal-field"><label className="jp-modal-label">DISPLAY NAME</label><input type="text" value={editName} onChange={(e) => setEditName(e.target.value)} placeholder="Your name" className="jp-modal-input" /></div>
+            <div className="jp-modal-field"><label className="jp-modal-label">EMAIL</label><input type="text" value={user?.email || ''} disabled className="jp-modal-input jp-disabled" /></div>
+            <div className="jp-modal-field"><label className="jp-modal-label">M-PESA PHONE</label><input type="text" value={editPhone} onChange={(e) => setEditPhone(e.target.value)} placeholder="07XXXXXXXX" className="jp-modal-input" /></div>
             <button onClick={handleProfileUpdate} className="jp-modal-btn jp-btn-blue">SAVE PROFILE</button>
           </div>
         </div>
       )}
 
+      {/* Withdraw Modal */}
       {isWithdrawModalOpen && (
         <div className="jp-modal-overlay" onClick={() => setIsWithdrawModalOpen(false)}>
           <div className="jp-modal-box jp-modal-orange" onClick={(e) => e.stopPropagation()}>
             <button className="jp-modal-close" onClick={() => setIsWithdrawModalOpen(false)}><Icon name="x" size={20} /></button>
             <h3 className="jp-modal-title" style={{ color: '#f59e0b' }}>Withdraw Funds</h3>
-            <p className="jp-modal-balance">
-              Available Balance: <strong style={{ color: '#22c55e' }}>KES {balance.toFixed(2)}</strong>
-            </p>
-            <div className="jp-modal-field">
-              <label className="jp-modal-label">WITHDRAW AMOUNT</label>
-              <input type="number" value={withdrawAmount} onChange={(e) => setWithdrawAmount(e.target.value)} placeholder="Minimum 50" className="jp-modal-input" />
-            </div>
-            <button onClick={handleWithdrawExecution} disabled={loadingWithdraw} className="jp-modal-btn jp-btn-orange">
-              {loadingWithdraw ? 'PROCESSING...' : 'WITHDRAW TO M-PESA'}
-            </button>
+            <p className="jp-modal-balance">Available: <strong style={{ color: '#22c55e' }}>KES {balance.toFixed(2)}</strong></p>
+            <div className="jp-modal-field"><label className="jp-modal-label">WITHDRAW AMOUNT</label><input type="number" value={withdrawAmount} onChange={(e) => setWithdrawAmount(e.target.value)} placeholder="Minimum 50" className="jp-modal-input" /></div>
+            <button onClick={handleWithdrawExecution} disabled={loadingWithdraw} className="jp-modal-btn jp-btn-orange">{loadingWithdraw ? 'PROCESSING...' : 'WITHDRAW TO M-PESA'}</button>
           </div>
         </div>
       )}
 
+      {/* Provably Fair Modal */}
       {isProvablyModalOpen && (
         <div className="jp-modal-overlay" onClick={() => setIsProvablyModalOpen(false)}>
           <div className="jp-modal-box jp-modal-purple" onClick={(e) => e.stopPropagation()}>
             <button className="jp-modal-close" onClick={() => setIsProvablyModalOpen(false)}><Icon name="x" size={20} /></button>
             <h3 className="jp-modal-title" style={{ color: '#a855f7' }}>Provably Fair Round</h3>
             {provablyLoading ? (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#94a3b8', fontSize: '13px' }}>
-                <Icon name="refresh-cw" size={16} className="jp-spin" />
-                Loading hash details...
-              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#94a3b8', fontSize: '13px' }}><Icon name="refresh-cw" size={16} className="jp-spin" />Loading hash details...</div>
             ) : (
               <>
                 <div className="jp-fair-summary">
-                  <div className="jp-fair-mini">
-                    <span>Round</span>
-                    <strong>#{provablyData?.nonce || currentRoundRef.current.nonce}</strong>
-                  </div>
-                  <div className="jp-fair-mini">
-                    <span>Crash</span>
-                    <strong>{Number(provablyData?.crashPoint || currentRoundRef.current.crashPoint).toFixed(2)}x</strong>
-                  </div>
+                  <div className="jp-fair-mini"><span>Round</span><strong>#{provablyData?.nonce || currentRoundRef.current.nonce}</strong></div>
+                  <div className="jp-fair-mini"><span>Crash</span><strong>{Number(provablyData?.crashPoint || currentRoundRef.current.crashPoint).toFixed(2)}x</strong></div>
                 </div>
                 <HashLine label="Server Seed Hash" value={provablyData?.serverSeedHash || currentRoundRef.current.serverSeedHash} />
                 <HashLine label="Round Hash" value={provablyData?.roundHash || currentRoundRef.current.roundHash} />
                 <HashLine label="Client Seed" value={provablyData?.clientSeed || currentRoundRef.current.clientSeed} />
                 <HashLine label="Verify Input" value={provablyData?.verifyInput || currentRoundRef.current.verifyInput} />
-                <HashLine label="Revealed Server Seed" value={provablyData?.serverSeed || currentRoundRef.current.serverSeed || 'Available from server after round close'} />
+                <HashLine label="Revealed Server Seed" value={provablyData?.serverSeed || currentRoundRef.current.serverSeed || 'Available after round close'} />
                 <HashLine label="Algorithm" value={provablyData?.algorithm || currentRoundRef.current.algorithm || 'HMAC_SHA256'} />
-                <button onClick={() => fetchProvablyRound(currentRoundRef.current.nonce, true)} className="jp-modal-btn jp-btn-purple">
-                  REFRESH HASH DETAILS
-                </button>
+                <button onClick={() => fetchProvablyRound(currentRoundRef.current.nonce, true)} className="jp-modal-btn jp-btn-purple">REFRESH HASH DETAILS</button>
               </>
             )}
           </div>
@@ -1277,10 +1113,12 @@ export default function UltimateJetPesaCockpit() {
       )}
 
       <style>{`
+        /* === BASE === */
         .jp-cockpit {
           background: #020617;
           color: #f8fafc;
           min-height: 100vh;
+          min-height: 100dvh;
           height: 100dvh;
           font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
           display: flex;
@@ -1288,62 +1126,81 @@ export default function UltimateJetPesaCockpit() {
           overflow: hidden;
         }
 
-        /* Toasts */
+        /* === TOASTS === */
         .jp-toast-container {
           position: fixed;
-          top: 85px;
+          top: calc(70px + env(safe-area-inset-top, 0px));
           left: 50%;
           transform: translateX(-50%);
           z-index: 99999;
           display: flex;
           flex-direction: column;
           gap: 8px;
-          width: 90%;
-          max-width: 440px;
+          width: 92%;
+          max-width: 420px;
           pointer-events: none;
         }
         .jp-toast {
-          background: rgba(15, 23, 42, 0.95);
+          background: rgba(15, 23, 42, 0.96);
           color: #fff;
-          padding: 12px 16px;
+          padding: 11px 14px;
           border-radius: 12px;
-          box-shadow: 0 16px 32px rgba(0,0,0,0.6);
-          font-weight: 800;
-          font-size: 13px;
+          box-shadow: 0 12px 28px rgba(0,0,0,0.6);
+          font-weight: 750;
+          font-size: 12.5px;
           display: flex;
           align-items: center;
           gap: 10px;
-          border: 1px solid rgba(255,255,255,0.1);
-          backdrop-filter: blur(10px);
+          border: 1px solid rgba(255,255,255,0.08);
+          backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
           pointer-events: auto;
           animation: jpSlideDown 0.3s ease-out;
         }
         @keyframes jpSlideDown {
-          from { opacity: 0; transform: translateY(-20px); }
+          from { opacity: 0; transform: translateY(-16px); }
           to { opacity: 1; transform: translateY(0); }
         }
 
-        /* Header */
+        /* === HEADER === */
         .jp-header {
-          background: rgba(15, 23, 42, 0.85);
+          background: rgba(15, 23, 42, 0.88);
           backdrop-filter: blur(16px);
           -webkit-backdrop-filter: blur(16px);
-          border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+          border-bottom: 1px solid rgba(255,255,255,0.06);
           display: flex;
           justify-content: space-between;
           align-items: center;
-          padding: 12px 20px;
+          padding: 10px 16px;
+          padding-top: calc(10px + env(safe-area-inset-top, 0px));
+          padding-left: calc(16px + env(safe-area-inset-left, 0px));
+          padding-right: calc(16px + env(safe-area-inset-right, 0px));
           flex-shrink: 0;
           z-index: 50;
+          gap: 8px;
+        }
+        .jp-header-left {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          flex-shrink: 0;
+        }
+        .jp-header-right {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          flex-wrap: wrap;
+          justify-content: flex-end;
         }
         .jp-brand-text {
-          font-size: 22px;
+          font-size: 20px;
           font-weight: 900;
           letter-spacing: -1px;
           background: linear-gradient(to right, #fff, #94a3b8);
           -webkit-background-clip: text;
           background-clip: text;
           color: transparent;
+          white-space: nowrap;
         }
         .jp-brand-accent {
           background: linear-gradient(135deg, #22c55e, #86efac);
@@ -1352,28 +1209,26 @@ export default function UltimateJetPesaCockpit() {
           color: transparent;
         }
         .jp-fair-btn {
-          background: rgba(34, 197, 94, 0.1);
-          border: 1px solid rgba(34, 197, 94, 0.3);
+          background: rgba(34,197,94,0.1);
+          border: 1px solid rgba(34,197,94,0.3);
           color: #22c55e;
-          font-size: 11px;
+          font-size: 10px;
           font-weight: 800;
-          padding: 4px 10px;
+          padding: 4px 8px;
           border-radius: 20px;
           cursor: pointer;
           display: flex;
           align-items: center;
-          gap: 6px;
-          transition: all 0.2s ease;
+          gap: 4px;
+          white-space: nowrap;
         }
-        .jp-fair-btn:hover { background: rgba(34, 197, 94, 0.2); }
         .jp-icon-btn {
           background: transparent;
           border: none;
           color: #94a3b8;
           cursor: pointer;
-          padding: 8px;
+          padding: 6px;
           border-radius: 8px;
-          transition: all 0.2s ease;
           display: flex;
           align-items: center;
           justify-content: center;
@@ -1383,114 +1238,109 @@ export default function UltimateJetPesaCockpit() {
           background: rgba(255,255,255,0.05);
           border: 1px solid rgba(255,255,255,0.08);
           color: #94a3b8;
-          padding: 7px 12px;
+          padding: 5px 10px;
           border-radius: 20px;
-          font-size: 11px;
+          font-size: 10px;
           font-weight: 900;
           cursor: pointer;
           display: flex;
           align-items: center;
-          gap: 6px;
-          transition: all 0.2s ease;
+          gap: 4px;
+          white-space: nowrap;
         }
         .jp-rain-btn.jp-active { background: #38bdf8; color: #0f172a; border-color: #38bdf8; }
         .jp-profile-btn {
           background: rgba(255,255,255,0.06);
           border: 1px solid rgba(255,255,255,0.08);
           color: #fff;
-          padding: 8px 14px;
+          padding: 5px 10px;
           border-radius: 20px;
-          font-size: 12px;
+          font-size: 10px;
           font-weight: 900;
           cursor: pointer;
           display: flex;
           align-items: center;
-          gap: 6px;
-          transition: all 0.2s ease;
+          gap: 4px;
+          white-space: nowrap;
         }
-        .jp-profile-btn:hover { background: rgba(255,255,255,0.1); }
         .jp-wallet-pill {
           display: flex;
           align-items: center;
           background: rgba(0,0,0,0.4);
           border: 1px solid rgba(255,255,255,0.08);
-          padding: 3px 3px 3px 12px;
+          padding: 2px 2px 2px 10px;
           border-radius: 30px;
-          gap: 4px;
+          gap: 2px;
+          flex-shrink: 0;
         }
         .jp-wallet-balance {
           background: transparent;
           border: none;
           color: #22c55e;
           font-weight: 900;
-          font-size: 14px;
+          font-size: 13px;
           cursor: pointer;
           display: flex;
           align-items: center;
-          gap: 6px;
-          padding: 6px 10px;
+          gap: 5px;
+          padding: 5px 8px;
           border-radius: 20px;
-          transition: background 0.2s;
+          white-space: nowrap;
         }
         .jp-wallet-balance:hover { background: rgba(34,197,94,0.1); }
         .jp-deposit-btn {
-          background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+          background: linear-gradient(135deg, #22c55e, #16a34a);
           border: none;
           color: #fff;
           font-weight: 900;
-          padding: 8px 18px;
+          padding: 7px 14px;
           border-radius: 20px;
           cursor: pointer;
-          font-size: 12px;
-          transition: transform 0.2s, box-shadow 0.2s;
+          font-size: 11px;
+          white-space: nowrap;
         }
-        .jp-deposit-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(34,197,94,0.3); }
 
-        /* History Tape */
+        /* === HISTORY TAPE === */
         .jp-history-tape {
           display: flex;
-          gap: 8px;
-          background: radial-gradient(circle at top, rgba(30, 41, 59, 0.72), #020617 70%);
-          padding: 10px 20px;
+          gap: 7px;
+          background: radial-gradient(circle at top, rgba(30,41,59,0.72), #020617 70%);
+          padding: 8px 16px;
           overflow-x: auto;
-          border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+          border-bottom: 1px solid rgba(255,255,255,0.06);
           flex-shrink: 0;
           perspective: 700px;
         }
-        .jp-history-tape::-webkit-scrollbar { height: 4px; }
+        .jp-history-tape::-webkit-scrollbar { height: 3px; }
         .jp-history-tape::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 999px; }
         .jp-history-chip {
-          padding: 6px 14px;
+          padding: 5px 12px;
           border-radius: 10px;
-          font-size: 12px;
+          font-size: 11px;
           font-weight: 950;
           flex-shrink: 0;
-          letter-spacing: 0.2px;
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22), 0 9px 16px rgba(0, 0, 0, 0.42);
-          text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
-          transition: transform 0.2s ease;
+          border: 1px solid rgba(255,255,255,0.12);
+          box-shadow: inset 0 1px 0 rgba(255,255,255,0.2), 0 6px 12px rgba(0,0,0,0.4);
         }
-        .jp-history-chip:hover { transform: translateY(-2px) rotateX(0deg) !important; }
-        .jp-history-low { background: linear-gradient(145deg, rgba(51, 65, 85, 0.98), rgba(15, 23, 42, 0.98)); color: #cbd5e1; }
-        .jp-history-high { background: linear-gradient(145deg, #c084fc 0%, #7e22ce 48%, #3b0764 100%); color: #fff; }
-        .jp-history-ultra { background: linear-gradient(145deg, #fde68a 0%, #f59e0b 36%, #7c2d12 100%); color: #fff7ed; }
+        .jp-history-low { background: linear-gradient(145deg, rgba(51,65,85,0.98), rgba(15,23,42,0.98)); color: #cbd5e1; }
+        .jp-history-high { background: linear-gradient(145deg, #c084fc, #7e22ce 48%, #3b0764); color: #fff; }
+        .jp-history-ultra { background: linear-gradient(145deg, #fde68a, #f59e0b 36%, #7c2d12); color: #fff7ed; }
 
-        /* Layout */
+        /* === LAYOUT === */
         .jp-layout {
           flex: 1;
           display: grid;
-          grid-template-columns: 310px minmax(0, 1fr) 310px;
-          padding: 16px;
-          gap: 16px;
+          grid-template-columns: 300px minmax(0, 1fr) 300px;
+          padding: 12px;
+          gap: 12px;
           box-sizing: border-box;
           min-height: 0;
-          height: calc(100% - 130px);
+          overflow: hidden;
         }
         .jp-panel {
-          background: rgba(15, 23, 42, 0.6);
-          border: 1px solid rgba(255, 255, 255, 0.05);
-          border-radius: 16px;
+          background: rgba(15,23,42,0.6);
+          border: 1px solid rgba(255,255,255,0.05);
+          border-radius: 14px;
           display: flex;
           flex-direction: column;
           height: 100%;
@@ -1500,610 +1350,233 @@ export default function UltimateJetPesaCockpit() {
         .jp-panel-scroll {
           flex: 1;
           overflow-y: auto;
-          padding: 10px;
+          padding: 8px;
           min-height: 0;
         }
-        .jp-panel-scroll::-webkit-scrollbar { width: 6px; }
+        .jp-panel-scroll::-webkit-scrollbar { width: 5px; }
         .jp-panel-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 999px; }
 
-        /* Tabs */
-        .jp-tab-bar {
-          display: flex;
-          background: rgba(0,0,0,0.2);
-          padding: 4px;
-          flex-shrink: 0;
-        }
+        /* === TABS === */
+        .jp-tab-bar { display: flex; background: rgba(0,0,0,0.2); padding: 3px; flex-shrink: 0; }
         .jp-tab {
-          flex: 1;
-          padding: 12px;
-          background: transparent;
-          border: none;
-          color: #94a3b8;
-          font-size: 11px;
-          font-weight: 800;
-          border-radius: 8px;
-          cursor: pointer;
-          transition: all 0.2s ease;
+          flex: 1; padding: 10px; background: transparent; border: none;
+          color: #94a3b8; font-size: 10px; font-weight: 800; border-radius: 8px; cursor: pointer;
         }
-        .jp-tab.jp-active {
-          background: rgba(255,255,255,0.06);
-          color: #fff;
-        }
+        .jp-tab.jp-active { background: rgba(255,255,255,0.06); color: #fff; }
 
-        /* Live Bets */
+        /* === LIVE BETS === */
         .jp-live-table-head {
-          display: grid;
-          grid-template-columns: 1fr 72px 72px;
-          gap: 8px;
-          color: #64748b;
-          font-size: 10px;
-          font-weight: 900;
-          text-transform: uppercase;
-          padding: 4px 8px 8px;
+          display: grid; grid-template-columns: 1fr 64px 64px; gap: 6px;
+          color: #64748b; font-size: 9px; font-weight: 900; text-transform: uppercase; padding: 4px 6px 6px;
         }
         .jp-live-row {
-          display: grid;
-          grid-template-columns: 1fr 72px 72px;
-          gap: 8px;
-          align-items: center;
-          padding: 9px 10px;
-          background: linear-gradient(135deg, rgba(15, 23, 42, 0.85), rgba(2, 6, 23, 0.78));
-          border: 1px solid rgba(255, 255, 255, 0.055);
-          border-radius: 12px;
-          font-size: 12px;
-          margin-bottom: 7px;
-          transition: border-color 0.2s ease, background 0.2s ease;
+          display: grid; grid-template-columns: 1fr 64px 64px; gap: 6px; align-items: center;
+          padding: 7px 8px; background: rgba(15,23,42,0.85); border: 1px solid rgba(255,255,255,0.05);
+          border-radius: 10px; font-size: 11px; margin-bottom: 5px;
         }
-        .jp-live-row:hover { border-color: rgba(255,255,255,0.12); background: rgba(15, 23, 42, 0.95); }
-        .jp-live-user {
-          display: block;
-          color: #e2e8f0;
-          font-weight: 900;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-        .jp-live-sub {
-          display: block;
-          color: #475569;
-          font-size: 9px;
-          font-weight: 800;
-          margin-top: 2px;
-        }
-        .jp-live-stake {
-          color: #fff;
-          font-weight: 900;
-          text-align: right;
-        }
-        .jp-badge {
-          border-radius: 999px;
-          padding: 4px 8px;
-          font-size: 11px;
-          font-weight: 950;
-          text-align: center;
-        }
-        .jp-badge-win { color: #22c55e; background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.22); }
-        .jp-badge-lost { color: #ef4444; background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.22); }
-        .jp-badge-flying { color: #38bdf8; background: rgba(56,189,248,0.1); border: 1px solid rgba(56,189,248,0.22); }
-        .jp-badge-queue { color: #94a3b8; background: rgba(148,163,184,0.1); border: 1px solid rgba(148,163,184,0.16); }
-        .jp-empty-state {
-          height: 70%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          flex-direction: column;
-          color: #64748b;
-          font-size: 12px;
-          gap: 8px;
-          text-align: center;
-        }
+        .jp-live-user { display: block; color: #e2e8f0; font-weight: 900; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 11px; }
+        .jp-live-sub { display: block; color: #475569; font-size: 8px; font-weight: 800; margin-top: 1px; }
+        .jp-live-stake { color: #fff; font-weight: 900; text-align: right; font-size: 11px; }
+        .jp-badge { border-radius: 999px; padding: 3px 6px; font-size: 10px; font-weight: 950; text-align: center; }
+        .jp-badge-win { color: #22c55e; background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.2); }
+        .jp-badge-lost { color: #ef4444; background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.2); }
+        .jp-badge-flying { color: #38bdf8; background: rgba(56,189,248,0.1); border: 1px solid rgba(56,189,248,0.2); }
+        .jp-badge-queue { color: #94a3b8; background: rgba(148,163,184,0.1); border: 1px solid rgba(148,163,184,0.15); }
+        .jp-empty-state { height: 70%; display: flex; align-items: center; justify-content: center; flex-direction: column; color: #64748b; font-size: 12px; gap: 6px; text-align: center; }
 
-        /* Bet History */
-        .jp-bet-history-row {
-          display: flex;
-          justify-content: space-between;
-          padding: 10px;
-          background: rgba(0,0,0,0.15);
-          border-radius: 8px;
-          margin-bottom: 6px;
-          font-size: 12px;
-          border: 1px solid rgba(255,255,255,0.02);
-        }
-        .jp-bet-history-round { color: #64748b; display: block; font-size: 10px; }
+        /* === BET HISTORY === */
+        .jp-bet-history-row { display: flex; justify-content: space-between; padding: 8px; background: rgba(0,0,0,0.15); border-radius: 8px; margin-bottom: 5px; font-size: 11px; border: 1px solid rgba(255,255,255,0.02); }
+        .jp-bet-history-round { color: #64748b; display: block; font-size: 9px; }
         .jp-bet-history-stake { font-weight: 800; }
         .jp-bet-history-mult { color: #22c55e; font-weight: 900; display: block; }
-        .jp-bet-history-yield { color: #94a3b8; font-size: 11px; }
+        .jp-bet-history-yield { color: #94a3b8; font-size: 10px; }
 
-        /* Center Panel */
-        .jp-center-panel {
-          display: flex;
-          flex-direction: column;
-          gap: 12px;
-          height: 100%;
-          min-height: 0;
-        }
+        /* === CENTER PANEL === */
+        .jp-center-panel { display: flex; flex-direction: column; gap: 10px; height: 100%; min-height: 0; }
         .jp-canvas-container {
-          flex: 1;
-          background: #020306;
-          border-radius: 20px;
-          border: 1px solid rgba(255, 255, 255, 0.05);
-          position: relative;
-          overflow: hidden;
-          min-height: 0;
-          box-shadow: inset 0 0 40px rgba(0,0,0,0.9);
+          flex: 1; background: #020306; border-radius: 16px;
+          border: 1px solid rgba(255,255,255,0.05); position: relative;
+          overflow: hidden; min-height: 0; box-shadow: inset 0 0 40px rgba(0,0,0,0.9);
         }
         .jp-idle-overlay {
-          position: absolute;
-          top: 0; left: 0; width: 100%; height: 100%;
-          background: rgba(4, 5, 9, 0.94);
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          z-index: 10;
+          position: absolute; inset: 0; background: rgba(4,5,9,0.94);
+          display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 10;
         }
-        .jp-progress-track {
-          width: 70%;
-          max-width: 300px;
-          background: rgba(255,255,255,0.03);
-          padding: 5px;
-          border-radius: 12px;
-          border: 1px solid rgba(34,197,94,0.2);
-        }
-        .jp-progress-fill {
-          height: 8px;
-          background: linear-gradient(to right, #22c55e, #4ade80);
-          border-radius: 8px;
-          transition: width 0.1s linear;
-          box-shadow: 0 0 12px rgba(34,197,94,0.5);
-        }
-        .jp-idle-text { color: #fff; font-size: 13px; font-weight: 900; margin-top: 14px; letter-spacing: 1px; }
-        .jp-idle-sub { color: #475569; font-size: 11px; font-weight: 700; margin-top: 4px; }
-        .jp-multiplier-overlay {
-          position: absolute;
-          top: 45%; left: 50%;
-          transform: translate(-50%, -50%);
-          text-align: center;
-          pointer-events: none;
-        }
-        .jp-multiplier-text {
-          font-size: clamp(48px, 8vw, 96px);
-          font-weight: 900;
-          color: #fff;
-          margin: 0;
-          letter-spacing: -2px;
-          text-shadow: 0 0 30px rgba(255,255,255,0.2);
-        }
-        .jp-crashed-title {
-          color: #e11d48;
-          font-size: clamp(32px, 5vw, 56px);
-          font-weight: 900;
-          margin: 0;
-          letter-spacing: -1px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 12px;
-        }
-        .jp-crash-icon {
-          padding: 8px;
-          background: rgba(239,68,68,0.14);
-          border: 1px solid rgba(239,68,68,0.3);
-          border-radius: 12px;
-        }
-        .jp-crashed-sub { color: #475569; font-size: 14px; font-weight: 800; }
+        .jp-progress-track { width: 70%; max-width: 280px; background: rgba(255,255,255,0.03); padding: 4px; border-radius: 10px; border: 1px solid rgba(34,197,94,0.2); }
+        .jp-progress-fill { height: 6px; background: linear-gradient(to right, #22c55e, #4ade80); border-radius: 6px; transition: width 0.1s linear; box-shadow: 0 0 10px rgba(34,197,94,0.5); }
+        .jp-idle-text { color: #fff; font-size: 12px; font-weight: 900; margin-top: 12px; letter-spacing: 0.5px; text-align: center; padding: 0 16px; }
+        .jp-idle-sub { color: #475569; font-size: 10px; font-weight: 700; margin-top: 3px; }
+        .jp-multiplier-overlay { position: absolute; top: 42%; left: 50%; transform: translate(-50%, -50%); text-align: center; pointer-events: none; }
+        .jp-multiplier-text { font-size: clamp(36px, 8vw, 96px); font-weight: 900; color: #fff; margin: 0; letter-spacing: -2px; text-shadow: 0 0 30px rgba(255,255,255,0.2); }
+        .jp-crashed-title { color: #e11d48; font-size: clamp(24px, 5vw, 52px); font-weight: 900; margin: 0; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .jp-crash-icon { padding: 6px; background: rgba(239,68,68,0.14); border: 1px solid rgba(239,68,68,0.3); border-radius: 10px; }
+        .jp-crashed-sub { color: #475569; font-size: 13px; font-weight: 800; }
 
-        /* Deck Panel */
-        .jp-deck-grid {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 12px;
-          background: rgba(15, 23, 42, 0.8);
-          border: 1px solid rgba(255, 255, 255, 0.08);
-          padding: 12px;
-          border-radius: 20px;
-          flex-shrink: 0;
-        }
-        .jp-deck-panel {
-          background: rgba(0,0,0,0.28);
-          border: 1px solid rgba(255,255,255,0.06);
-          padding: 12px;
-          border-radius: 14px;
-          display: flex;
-          flex-direction: column;
-          gap: 10px;
-          transition: border-color 0.2s ease;
-        }
-        .jp-deck-panel:hover { border-color: rgba(255,255,255,0.12); }
-        .jp-spribe-toggle {
-          display: flex;
-          background: #111827;
-          border-radius: 999px;
-          padding: 3px;
-        }
-        .jp-spribe-tab {
-          flex: 1;
-          border: none;
-          border-radius: 999px;
-          padding: 7px;
-          font-size: 11px;
-          font-weight: 900;
-          cursor: pointer;
-          color: #64748b;
-          background: transparent;
-          transition: all 0.2s ease;
-        }
+        /* === DECK PANEL === */
+        .jp-deck-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; background: rgba(15,23,42,0.8); border: 1px solid rgba(255,255,255,0.08); padding: 10px; border-radius: 16px; flex-shrink: 0; }
+        .jp-deck-panel { background: rgba(0,0,0,0.28); border: 1px solid rgba(255,255,255,0.06); padding: 10px; border-radius: 12px; display: flex; flex-direction: column; gap: 8px; }
+        .jp-spribe-toggle { display: flex; background: #111827; border-radius: 999px; padding: 2px; }
+        .jp-spribe-tab { flex: 1; border: none; border-radius: 999px; padding: 6px; font-size: 10px; font-weight: 900; cursor: pointer; color: #64748b; background: transparent; }
         .jp-spribe-tab.jp-active { background: #1e293b; color: #fff; }
-        .jp-wager-controls {
-          display: grid;
-          grid-template-columns: 30px 1fr 30px;
-          gap: 6px;
-          align-items: center;
-        }
-        .jp-round-btn {
-          height: 32px;
-          border-radius: 50%;
-          border: none;
-          background: #1f2937;
-          color: #fff;
-          cursor: pointer;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          transition: background 0.2s;
-        }
-        .jp-round-btn:hover { background: #334155; }
-        .jp-wager-input {
-          width: 100%;
-          padding: 8px;
-          background: #0f172a;
-          border: 1px solid rgba(255,255,255,0.1);
-          color: #fff;
-          font-weight: 900;
-          text-align: center;
-          border-radius: 999px;
-          font-size: 15px;
-          box-sizing: border-box;
-          transition: border-color 0.2s;
-        }
+        .jp-wager-controls { display: grid; grid-template-columns: 28px 1fr 28px; gap: 4px; align-items: center; }
+        .jp-round-btn { height: 28px; border-radius: 50%; border: none; background: #1f2937; color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .jp-wager-input { width: 100%; padding: 6px; background: #0f172a; border: 1px solid rgba(255,255,255,0.1); color: #fff; font-weight: 900; text-align: center; border-radius: 999px; font-size: 14px; box-sizing: border-box; }
         .jp-wager-input:focus { outline: none; border-color: #22c55e; }
-        .jp-quick-stake {
-          display: grid;
-          grid-template-columns: repeat(4, 1fr);
-          gap: 4px;
-        }
-        .jp-quick-btn {
-          background: #1f2937;
-          border: none;
-          color: #cbd5e1;
-          border-radius: 999px;
-          padding: 5px 2px;
-          font-size: 11px;
-          font-weight: 900;
-          cursor: pointer;
-          transition: all 0.2s;
-        }
-        .jp-quick-btn:hover { background: #334155; color: #fff; }
-        .jp-auto-cash-row {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-        }
-        .jp-auto-cash-label { color: #94a3b8; font-size: 11px; font-weight: 900; }
-        .jp-switch-track {
-          width: 40px;
-          height: 22px;
-          border-radius: 999px;
-          border: none;
-          padding: 2px;
-          cursor: pointer;
-          transition: background 0.2s;
-        }
-        .jp-switch-knob {
-          display: block;
-          width: 18px;
-          height: 18px;
-          border-radius: 50%;
-          background: #fff;
-          transition: transform 0.2s;
-        }
-        .jp-auto-cash-input {
-          width: 100%;
-          padding: 8px;
-          background: #0f172a;
-          border: 1px solid rgba(255,255,255,0.1);
-          color: #fff;
-          border-radius: 999px;
-          font-size: 12px;
-          font-weight: 900;
-          text-align: center;
-          box-sizing: border-box;
-        }
+        .jp-quick-stake { display: grid; grid-template-columns: repeat(4, 1fr); gap: 3px; }
+        .jp-quick-btn { background: #1f2937; border: none; color: #cbd5e1; border-radius: 999px; padding: 4px 2px; font-size: 10px; font-weight: 900; cursor: pointer; }
+        .jp-auto-cash-row { display: flex; align-items: center; justify-content: space-between; }
+        .jp-auto-cash-label { color: #94a3b8; font-size: 10px; font-weight: 900; }
+        .jp-switch-track { width: 36px; height: 20px; border-radius: 999px; border: none; padding: 1px; cursor: pointer; }
+        .jp-switch-knob { display: block; width: 18px; height: 18px; border-radius: 50%; background: #fff; transition: transform 0.2s; }
+        .jp-auto-cash-input { width: 100%; padding: 6px; background: #0f172a; border: 1px solid rgba(255,255,255,0.1); color: #fff; border-radius: 999px; font-size: 11px; font-weight: 900; text-align: center; box-sizing: border-box; }
         .jp-bet-button, .jp-cashout-button {
-          width: 100%;
-          padding: 12px;
-          border: none;
-          color: #fff;
-          font-weight: 950;
-          font-size: 14px;
-          border-radius: 12px;
-          cursor: pointer;
-          transition: transform 0.1s ease, box-shadow 0.2s ease, filter 0.2s ease;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          line-height: 1.2;
+          width: 100%; padding: 10px; border: none; color: #fff; font-weight: 950; font-size: 13px;
+          border-radius: 10px; cursor: pointer; display: flex; flex-direction: column;
+          align-items: center; justify-content: center; line-height: 1.2;
         }
         .jp-bet-button { box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
-        .jp-bet-button:hover { transform: translateY(-1px); filter: brightness(1.1); }
-        .jp-bet-button:active { transform: translateY(1px); }
-        .jp-cashout-button {
-          background: linear-gradient(135deg, #f59e0b 0%, #b45309 100%);
-          box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
-        }
-        .jp-cashout-button:hover { transform: translateY(-1px); filter: brightness(1.1); }
+        .jp-cashout-button { background: linear-gradient(135deg, #f59e0b, #b45309); box-shadow: 0 4px 12px rgba(245,158,11,0.3); }
+        .jp-btn-sub { font-size: 14px; margin-top: 1px; }
+        .jp-btn-sub-sm { font-size: 11px; margin-top: 1px; }
 
-        /* Right Panel / Chat */
-        .jp-right-panel { background: #0b141a; box-shadow: 0 12px 24px rgba(0,0,0,0.4); }
-        .jp-chat-header {
-          background: #202c33;
-          padding: 14px 16px;
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          flex-shrink: 0;
-          font-weight: 800;
-          font-size: 14px;
-          color: #e9edef;
-        }
-        .jp-chat-dot { width: 10px; height: 10px; border-radius: 50%; background: #00a884; }
-        .jp-chat-scroll {
-          flex: 1;
-          padding: 16px;
-          overflow-y: auto;
-          display: flex;
-          flex-direction: column;
-          gap: 10px;
-          background: #0b141a;
-          min-height: 0;
-        }
-        .jp-chat-scroll::-webkit-scrollbar { width: 4px; }
+        /* === CHAT === */
+        .jp-right-panel { background: #0b141a; box-shadow: 0 8px 20px rgba(0,0,0,0.4); }
+        .jp-chat-header { background: #202c33; padding: 12px 14px; display: flex; align-items: center; gap: 8px; flex-shrink: 0; font-weight: 800; font-size: 13px; color: #e9edef; }
+        .jp-chat-dot { width: 8px; height: 8px; border-radius: 50%; background: #00a884; }
+        .jp-chat-scroll { flex: 1; padding: 12px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; background: #0b141a; min-height: 0; }
+        .jp-chat-scroll::-webkit-scrollbar { width: 3px; }
         .jp-chat-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 999px; }
-        .jp-chat-bubble {
-          max-width: 85%;
-          padding: 8px 12px;
-          border-radius: 10px;
-          position: relative;
-          box-shadow: 0 1px 2px rgba(0,0,0,0.3);
-          flex-shrink: 0;
-        }
+        .jp-chat-bubble { max-width: 88%; padding: 7px 10px; border-radius: 10px; box-shadow: 0 1px 2px rgba(0,0,0,0.3); flex-shrink: 0; }
         .jp-chat-bubble:not(.jp-chat-me) { background: #202c33; align-self: flex-start; }
         .jp-chat-bubble.jp-chat-me { background: #005c4b; align-self: flex-end; }
-        .jp-chat-user { color: #30d6b5; font-weight: 800; font-size: 11px; }
-        .jp-chat-msg { color: #e9edef; font-size: 12.5px; line-height: 1.4; word-break: break-word; display: block; }
-        .jp-chat-time { display: block; text-transform: uppercase; text-align: right; font-size: 9px; color: rgba(255,255,255,0.4); margin-top: 4px; }
-        .jp-chat-input-row {
-          padding: 10px 14px;
-          background: #202c33;
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          flex-shrink: 0;
-        }
-        .jp-chat-input {
-          flex: 1;
-          padding: 10px 14px;
-          background: #2a3942;
-          border: none;
-          color: #fff;
-          border-radius: 8px;
-          font-size: 13px;
-        }
+        .jp-chat-user { color: #30d6b5; font-weight: 800; font-size: 10px; }
+        .jp-chat-msg { color: #e9edef; font-size: 12px; line-height: 1.4; word-break: break-word; display: block; }
+        .jp-chat-time { display: block; text-align: right; font-size: 8px; color: rgba(255,255,255,0.35); margin-top: 3px; }
+        .jp-chat-input-row { padding: 8px 10px; background: #202c33; display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+        .jp-chat-input { flex: 1; padding: 9px 12px; background: #2a3942; border: none; color: #fff; border-radius: 8px; font-size: 12px; min-width: 0; }
         .jp-chat-input:focus { outline: 1px solid #00a884; }
         .jp-chat-input:disabled { opacity: 0.5; cursor: not-allowed; }
-        .jp-chat-send {
-          background: #00a884;
-          border: none;
-          width: 38px;
-          height: 38px;
-          border-radius: 50%;
-          color: #fff;
-          cursor: pointer;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          transition: background 0.2s;
-        }
-        .jp-chat-send:hover { background: #008f70; }
+        .jp-chat-send { background: #00a884; border: none; width: 34px; height: 34px; border-radius: 50%; color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 
-        /* Mobile Footer */
+        /* === MOBILE FOOTER === */
         .jp-mobile-footer {
-          background: #0c0d12;
-          border-top: 1px solid rgba(255,255,255,0.06);
-          display: none;
-          justify-content: space-around;
-          padding: 12px 0;
-          position: sticky;
-          bottom: 0;
-          z-index: 999;
-          flex-shrink: 0;
+          background: #0c0d12; border-top: 1px solid rgba(255,255,255,0.06);
+          display: none; justify-content: space-around; padding: 8px 0;
+          padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px));
+          position: sticky; bottom: 0; z-index: 999; flex-shrink: 0;
         }
         .jp-mobile-tab {
-          background: transparent;
-          border: none;
-          color: #64748b;
-          font-size: 11px;
-          font-weight: 800;
-          cursor: pointer;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 4px;
-          padding: 4px 12px;
-          border-radius: 8px;
-          transition: all 0.2s;
+          background: transparent; border: none; color: #64748b; font-size: 10px; font-weight: 800;
+          cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 3px;
+          padding: 4px 10px; border-radius: 8px;
         }
         .jp-mobile-tab.jp-active { color: #22c55e; }
 
-        /* Modals */
+        /* === MODALS === */
         .jp-modal-overlay {
-          position: fixed;
-          top: 0; left: 0; width: 100%; height: 100%;
-          background: rgba(2, 6, 23, 0.85);
-          backdrop-filter: blur(8px);
-          -webkit-backdrop-filter: blur(8px);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          z-index: 9999;
-          padding: 16px;
-          animation: jpFadeIn 0.2s ease-out;
+          position: fixed; inset: 0; background: rgba(2,6,23,0.88);
+          backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+          display: flex; align-items: center; justify-content: center;
+          z-index: 9999; padding: 16px; animation: jpFadeIn 0.2s ease-out;
         }
         @keyframes jpFadeIn { from { opacity: 0; } to { opacity: 1; } }
         .jp-modal-box {
-          background: #0f172a;
-          border-radius: 20px;
-          width: 100%;
-          max-width: 400px;
-          padding: 28px;
-          position: relative;
-          box-shadow: 0 24px 60px rgba(0,0,0,0.6);
-          border: 1px solid rgba(255,255,255,0.08);
-          animation: jpSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+          background: #0f172a; border-radius: 18px; width: 100%; max-width: 400px;
+          padding: 24px; position: relative; box-shadow: 0 24px 60px rgba(0,0,0,0.6);
+          border: 1px solid rgba(255,255,255,0.08); animation: jpSlideUp 0.3s cubic-bezier(0.16,1,0.3,1);
+          max-height: 90vh; overflow-y: auto;
         }
-        @keyframes jpSlideUp { from { opacity: 0; transform: translateY(20px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        @keyframes jpSlideUp { from { opacity: 0; transform: translateY(16px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
         .jp-modal-green { border-color: #22c55e; }
         .jp-modal-blue { border-color: #38bdf8; }
         .jp-modal-orange { border-color: #f59e0b; }
-        .jp-modal-purple { border-color: #a855f7; max-width: 520px; }
-        .jp-modal-close {
-          position: absolute;
-          top: 14px; right: 16px;
-          background: transparent;
-          border: none;
-          color: #64748b;
-          cursor: pointer;
-          padding: 4px;
-          border-radius: 6px;
-          transition: all 0.2s;
-        }
+        .jp-modal-purple { border-color: #a855f7; max-width: 500px; }
+        .jp-modal-close { position: absolute; top: 12px; right: 14px; background: transparent; border: none; color: #64748b; cursor: pointer; padding: 4px; border-radius: 6px; }
         .jp-modal-close:hover { color: #fff; background: rgba(255,255,255,0.1); }
-        .jp-modal-title { margin: 0 0 16px 0; font-weight: 900; font-size: 18px; }
-        .jp-modal-field { margin-bottom: 16px; }
-        .jp-modal-label { display: block; font-size: 11px; color: #94a3b8; font-weight: 800; margin-bottom: 6px; }
-        .jp-modal-input {
-          width: 100%;
-          padding: 12px;
-          background: #020617;
-          border: 1px solid rgba(255,255,255,0.08);
-          color: #fff;
-          font-size: 14px;
-          border-radius: 10px;
-          box-sizing: border-box;
-        }
+        .jp-modal-title { margin: 0 0 14px; font-weight: 900; font-size: 17px; }
+        .jp-modal-field { margin-bottom: 14px; }
+        .jp-modal-label { display: block; font-size: 10px; color: #94a3b8; font-weight: 800; margin-bottom: 5px; }
+        .jp-modal-input { width: 100%; padding: 11px; background: #020617; border: 1px solid rgba(255,255,255,0.08); color: #fff; font-size: 14px; border-radius: 10px; box-sizing: border-box; }
         .jp-modal-input:focus { outline: none; border-color: #3b82f6; }
         .jp-modal-input.jp-disabled { opacity: 0.6; cursor: not-allowed; }
-        .jp-modal-balance { color: #94a3b8; font-size: 13px; margin-bottom: 14px; }
-        .jp-modal-btn {
-          width: 100%;
-          padding: 14px;
-          border: none;
-          color: #fff;
-          font-weight: 900;
-          border-radius: 10px;
-          cursor: pointer;
-          transition: filter 0.2s, transform 0.1s;
-        }
-        .jp-modal-btn:hover { filter: brightness(1.1); }
-        .jp-modal-btn:active { transform: translateY(1px); }
+        .jp-modal-balance { color: #94a3b8; font-size: 12px; margin-bottom: 12px; }
+        .jp-modal-btn { width: 100%; padding: 13px; border: none; color: #fff; font-weight: 900; border-radius: 10px; cursor: pointer; }
         .jp-modal-btn:disabled { opacity: 0.6; cursor: not-allowed; }
-        .jp-btn-green { background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%); }
-        .jp-btn-blue { background: linear-gradient(135deg, #38bdf8 0%, #0284c7 100%); }
-        .jp-btn-orange { background: linear-gradient(135deg, #f59e0b 0%, #b45309 100%); }
-        .jp-btn-purple { background: linear-gradient(135deg, #a855f7 0%, #6b21a8 100%); margin-top: 6px; }
-
-        /* Provably Fair */
-        .jp-fair-summary {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 10px;
-          margin: 14px 0;
-        }
-        .jp-fair-mini {
-          background: rgba(168,85,247,0.1);
-          border: 1px solid rgba(168,85,247,0.22);
-          border-radius: 12px;
-          padding: 12px;
-          display: flex;
-          flex-direction: column;
-          gap: 4px;
-          color: #c4b5fd;
-          font-size: 11px;
-          font-weight: 900;
-        }
-        .jp-hash-line { margin-bottom: 12px; }
-        .jp-hash-box {
-          background: #020617;
-          border: 1px solid rgba(255,255,255,0.08);
-          color: #e2e8f0;
-          padding: 10px;
-          border-radius: 10px;
-          font-size: 11px;
-          line-height: 1.45;
-          word-break: break-all;
-          font-family: 'JetBrains Mono', monospace;
-        }
+        .jp-btn-green { background: linear-gradient(135deg, #22c55e, #16a34a); }
+        .jp-btn-blue { background: linear-gradient(135deg, #38bdf8, #0284c7); }
+        .jp-btn-orange { background: linear-gradient(135deg, #f59e0b, #b45309); }
+        .jp-btn-purple { background: linear-gradient(135deg, #a855f7, #6b21a8); margin-top: 6px; }
+        .jp-fair-summary { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 12px 0; }
+        .jp-fair-mini { background: rgba(168,85,247,0.1); border: 1px solid rgba(168,85,247,0.22); border-radius: 10px; padding: 10px; display: flex; flex-direction: column; gap: 3px; color: #c4b5fd; font-size: 10px; font-weight: 900; }
+        .jp-hash-line { margin-bottom: 10px; }
+        .jp-hash-box { background: #020617; border: 1px solid rgba(255,255,255,0.08); color: #e2e8f0; padding: 8px; border-radius: 8px; font-size: 10px; line-height: 1.4; word-break: break-all; font-family: monospace; }
         .jp-spin { animation: jpSpin 1s linear infinite; }
         @keyframes jpSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
-        /* Responsive */
+        /* === RESPONSIVE: MEDIUM DESKTOP === */
         @media (max-width: 1180px) {
-          .jp-layout { grid-template-columns: 260px minmax(0, 1fr) 260px !important; gap: 10px !important; padding: 10px !important; }
+          .jp-layout { grid-template-columns: 250px minmax(0,1fr) 250px !important; gap: 10px !important; padding: 10px !important; }
         }
+
+        /* === RESPONSIVE: TABLET === */
         @media (max-width: 992px) {
           .jp-layout {
             grid-template-columns: 1fr !important;
-            height: calc(100dvh - 138px) !important;
-            padding: 8px !important;
-            padding-bottom: 62px !important;
+            padding: 6px !important;
+            padding-bottom: 56px !important;
+            overflow: hidden !important;
           }
           .jp-mobile-footer { display: flex !important; }
-          .jp-left-panel { display: none !important; }
-          .jp-center-panel { display: none !important; }
-          .jp-right-panel { display: none !important; }
-          
-          .jp-left-panel[data-active="true"], 
-          .jp-center-panel[data-active="true"], 
+          .jp-left-panel, .jp-center-panel, .jp-right-panel { display: none !important; }
+          .jp-left-panel[data-active="true"],
+          .jp-center-panel[data-active="true"],
           .jp-right-panel[data-active="true"] {
             display: flex !important;
             height: 100% !important;
           }
-          
-          .jp-canvas-container { min-height: 260px !important; flex: 1 1 auto !important; }
-          .jp-deck-grid { grid-template-columns: 1fr 1fr !important; max-height: 255px !important; overflow: visible !important; padding: 7px !important; gap: 7px !important; flex-shrink: 0 !important; }
-          .jp-deck-panel { padding: 7px !important; border-radius: 12px !important; }
-          .jp-bet-button, .jp-cashout-button { padding: 9px 5px !important; min-height: 56px !important; font-size: 12px !important; }
-          .jp-header { padding: 8px 10px !important; gap: 6px !important; flex-wrap: wrap; }
-          .jp-header > div { flex-wrap: wrap; gap: 7px !important; }
-          .jp-brand-text { font-size: 19px !important; }
+          .jp-canvas-container { min-height: 220px !important; flex: 1 1 auto !important; }
+          .jp-deck-grid { max-height: 240px !important; padding: 6px !important; gap: 6px !important; }
+          .jp-deck-panel { padding: 6px !important; gap: 6px !important; }
+          .jp-bet-button, .jp-cashout-button { padding: 8px 4px !important; min-height: 52px !important; font-size: 12px !important; }
+          .jp-header { flex-wrap: wrap; padding: 8px 10px !important; }
+          .jp-brand-text { font-size: 18px !important; }
         }
+
+        /* === RESPONSIVE: MOBILE === */
         @media (max-width: 560px) {
-          .jp-layout { height: calc(100dvh - 150px) !important; padding: 6px !important; padding-bottom: 56px !important; }
-          .jp-center-panel { gap: 7px !important; }
-          .jp-canvas-container { min-height: 225px !important; border-radius: 16px !important; }
-          .jp-deck-grid { grid-template-columns: 1fr 1fr !important; gap: 5px !important; border-radius: 14px !important; max-height: 245px !important; }
-          .jp-wager-input { padding-top: 6px !important; padding-bottom: 6px !important; font-size: 12px !important; }
-          .jp-bet-button, .jp-cashout-button { font-size: 11px !important; }
-          .jp-mobile-footer { padding: 8px 0 !important; }
-          .jp-mobile-tab { font-size: 10px !important; }
-          .jp-multiplier-text { font-size: 3.1rem !important; }
+          .jp-canvas-container { min-height: 190px !important; border-radius: 12px !important; }
+          .jp-deck-grid { gap: 4px !important; border-radius: 12px !important; max-height: 220px !important; }
+          .jp-wager-input { font-size: 12px !important; padding: 5px !important; }
+          .jp-multiplier-text { font-size: 2.8rem !important; }
+          .jp-crashed-title { font-size: 1.8rem !important; }
+          .jp-idle-text { font-size: 11px !important; }
+          .jp-profile-label, .jp-rain-label, .jp-fair-label { display: none; }
+          .jp-fair-btn { padding: 4px 6px !important; }
         }
-        @media (max-width: 420px) {
-          .jp-canvas-container { min-height: 200px !important; }
-          .jp-deck-grid { max-height: 235px !important; padding: 5px !important; }
-          .jp-multiplier-text { font-size: 2.65rem !important; }
-          .jp-layout { height: calc(100dvh - 164px) !important; }
+
+        /* === RESPONSIVE: TINY PHONES (<380px) === */
+        @media (max-width: 380px) {
+          .jp-header { gap: 4px !important; padding: 6px 6px !important; }
+          .jp-header-right { gap: 4px !important; }
+          .jp-wallet-amount { display: none; }
+          .jp-wallet-balance { padding: 4px 6px !important; font-size: 11px !important; }
+          .jp-deposit-btn { padding: 6px 10px !important; font-size: 10px !important; }
+          .jp-brand-text { font-size: 16px !important; }
+          .jp-multiplier-text { font-size: 2.2rem !important; }
+          .jp-crashed-title { font-size: 1.5rem !important; }
+          .jp-deck-grid { max-height: 200px !important; }
+        }
+
+        /* === RESPONSIVE: LANDSCAPE MOBILE === */
+        @media (max-height: 500px) and (orientation: landscape) {
+          .jp-layout { padding-bottom: 48px !important; }
+          .jp-canvas-container { min-height: 120px !important; }
+          .jp-deck-grid { max-height: 110px !important; gap: 4px !important; padding: 4px !important; }
+          .jp-deck-panel { gap: 4px !important; padding: 4px !important; }
+          .jp-auto-cash-row, .jp-auto-cash-input { display: none !important; }
+          .jp-bet-button, .jp-cashout-button { min-height: 40px !important; padding: 6px !important; }
+          .jp-history-tape { padding: 4px 10px !important; }
+          .jp-idle-text { font-size: 10px !important; margin-top: 6px !important; }
         }
       `}</style>
     </div>
