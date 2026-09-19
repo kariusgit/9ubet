@@ -3,6 +3,162 @@
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 
+/* -------------------------------------------------------------------------- */
+/*  Icon system — replaces every emoji with a clean, scalable SVG             */
+/* -------------------------------------------------------------------------- */
+function Icon({ name, size = 18, className = '', stroke = 2 }) {
+  const common = {
+    width: size,
+    height: size,
+    viewBox: '0 0 24 24',
+    fill: 'none',
+    stroke: 'currentColor',
+    strokeWidth: stroke,
+    strokeLinecap: 'round',
+    strokeLinejoin: 'round',
+    className,
+    'aria-hidden': true,
+  };
+
+  switch (name) {
+    case 'plane':
+      return (
+        <svg {...common}>
+          <path d="M17.8 16.8 21 21l-4.2-3.2" />
+          <path d="M2.5 13.5 21 3l-8.5 18-2.7-7.3-7.3-2.7Z" />
+        </svg>
+      );
+    case 'plane-filled':
+      return (
+        <svg {...common} fill="currentColor" stroke="none">
+          <path d="M21 16v-2l-8-5V3.5A1.5 1.5 0 0 0 11.5 2 1.5 1.5 0 0 0 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5L21 16Z" />
+        </svg>
+      );
+    case 'shield':
+      return (
+        <svg {...common}>
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z" />
+          <path d="m9 12 2 2 4-4" />
+        </svg>
+      );
+    case 'mobile':
+      return (
+        <svg {...common}>
+          <rect x="6" y="2" width="12" height="20" rx="2.5" />
+          <path d="M11 18h2" />
+        </svg>
+      );
+    case 'bolt':
+      return (
+        <svg {...common}>
+          <path d="M13 2 3 14h9l-1 8 10-12h-9l1-8Z" />
+        </svg>
+      );
+    case 'trophy':
+      return (
+        <svg {...common}>
+          <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
+          <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
+          <path d="M4 22h16" />
+          <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" />
+          <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" />
+          <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
+        </svg>
+      );
+    case 'rocket':
+      return (
+        <svg {...common}>
+          <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09Z" />
+          <path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2Z" />
+          <path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0" />
+          <path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5" />
+        </svg>
+      );
+    case 'diamond':
+      return (
+        <svg {...common}>
+          <path d="M2.7 10.3a2.41 2.41 0 0 0 0 3.41l7.59 7.59a2.41 2.41 0 0 0 3.41 0l7.59-7.59a2.41 2.41 0 0 0 0-3.41L13.7 2.71a2.41 2.41 0 0 0-3.41 0Z" />
+        </svg>
+      );
+    case 'chart':
+      return (
+        <svg {...common}>
+          <path d="M3 3v18h18" />
+          <path d="m7 14 4-4 4 4 5-5" />
+        </svg>
+      );
+    case 'users':
+      return (
+        <svg {...common}>
+          <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+          <circle cx="9" cy="7" r="4" />
+          <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+          <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+        </svg>
+      );
+    case 'wallet':
+      return (
+        <svg {...common}>
+          <path d="M21 12V7H5a2 2 0 0 1 0-4h14v4" />
+          <path d="M3 5v14a2 2 0 0 0 2 2h16v-5" />
+          <path d="M18 12a2 2 0 0 0 0 4h4v-4Z" />
+        </svg>
+      );
+    case 'cash':
+      return (
+        <svg {...common}>
+          <rect x="2" y="6" width="20" height="12" rx="2" />
+          <circle cx="12" cy="12" r="2" />
+          <path d="M6 12h.01M18 12h.01" />
+        </svg>
+      );
+    case 'check':
+      return (
+        <svg {...common}>
+          <path d="M20 6 9 17l-5-5" />
+        </svg>
+      );
+    case 'x':
+      return (
+        <svg {...common}>
+          <path d="M18 6 6 18M6 6l12 12" />
+        </svg>
+      );
+    case 'sparkles':
+      return (
+        <svg {...common}>
+          <path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z" />
+          <path d="M5 3v4M3 5h4M19 17v4M17 19h4" />
+        </svg>
+      );
+    case 'arrow-right':
+      return (
+        <svg {...common}>
+          <path d="M5 12h14M13 5l7 7-7 7" />
+        </svg>
+      );
+    case 'play':
+      return (
+        <svg {...common} fill="currentColor" stroke="none">
+          <path d="M6 4.5v15l13-7.5Z" />
+        </svg>
+      );
+    case 'target':
+      return (
+        <svg {...common}>
+          <circle cx="12" cy="12" r="10" />
+          <circle cx="12" cy="12" r="6" />
+          <circle cx="12" cy="12" r="2" />
+        </svg>
+      );
+    default:
+      return null;
+  }
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Landing Page                                                              */
+/* -------------------------------------------------------------------------- */
 export default function JetPesaLandingPage() {
   const [demoMultiplier, setDemoMultiplier] = useState(1.0);
   const [demoStatus, setDemoStatus] = useState('loading');
@@ -70,6 +226,7 @@ export default function JetPesaLandingPage() {
 
       ctx.clearRect(0, 0, W, H);
 
+      // Deep space background
       const bg = ctx.createLinearGradient(0, 0, W, H);
       bg.addColorStop(0, '#020617');
       bg.addColorStop(0.5, '#08111f');
@@ -77,16 +234,22 @@ export default function JetPesaLandingPage() {
       ctx.fillStyle = bg;
       ctx.fillRect(0, 0, W, H);
 
+      // Subtle radial vignette
+      const vignette = ctx.createRadialGradient(W / 2, H / 2, 50, W / 2, H / 2, Math.max(W, H));
+      vignette.addColorStop(0, 'rgba(244,63,94,0.08)');
+      vignette.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = vignette;
+      ctx.fillRect(0, 0, W, H);
+
+      // Grid
       ctx.strokeStyle = 'rgba(255,255,255,0.045)';
       ctx.lineWidth = 1;
-
       for (let i = 0; i < W; i += 42) {
         ctx.beginPath();
         ctx.moveTo(i, 0);
         ctx.lineTo(i, H);
         ctx.stroke();
       }
-
       for (let j = 0; j < H; j += 34) {
         ctx.beginPath();
         ctx.moveTo(0, j);
@@ -94,6 +257,7 @@ export default function JetPesaLandingPage() {
         ctx.stroke();
       }
 
+      // Starfield
       for (let i = 0; i < 55; i++) {
         const x = (i * 97 + elapsed * 0.018) % W;
         const y = (i * 53) % H;
@@ -101,6 +265,7 @@ export default function JetPesaLandingPage() {
         ctx.fillRect(x, y, 1.6, 1.6);
       }
 
+      // Flight trail
       if (elapsed >= 3500 && status === 'running') {
         const airTime = (elapsed - 3500) / 1000;
         const progress = Math.min(Math.log(multiplier) / Math.log(120), 1);
@@ -128,6 +293,7 @@ export default function JetPesaLandingPage() {
         ctx.fillStyle = fill;
         ctx.fill();
 
+        // Jet
         ctx.save();
         ctx.translate(cx, cy);
         ctx.rotate(-0.16 + Math.sin(airTime * 5) * 0.025);
@@ -196,7 +362,6 @@ export default function JetPesaLandingPage() {
           setDemoMultiplier(1.0);
           generateDemoBets();
         }
-
         setDemoProgress(((3500 - elapsed) / 3500) * 100);
         drawDemoRadar(elapsed, 'loading', 1.0);
       } else if (elapsed < 25500) {
@@ -207,24 +372,14 @@ export default function JetPesaLandingPage() {
           lastPhase.current = 'crashed';
           setDemoStatus('crashed');
           setDemoMultiplier(crashAt);
-
           setDemoBets((prev) =>
-            prev.map((b) =>
-              b.cashedOut
-                ? b
-                : {
-                    ...b,
-                    lost: true,
-                  }
-            )
+            prev.map((b) => (b.cashedOut ? b : { ...b, lost: true }))
           );
-
           drawDemoRadar(elapsed, 'crashed', crashAt);
         } else {
           lastPhase.current = 'running';
           setDemoStatus('running');
           setDemoMultiplier(currentMult);
-
           setDemoBets((prev) =>
             prev.map((b) => {
               if (!b.cashedOut && !b.lost && currentMult >= b.autoTarget && b.autoTarget < crashAt) {
@@ -235,11 +390,9 @@ export default function JetPesaLandingPage() {
                   winAmount: Math.floor(b.stake * currentMult),
                 };
               }
-
               return b;
             })
           );
-
           drawDemoRadar(elapsed, 'running', currentMult);
         }
       } else {
@@ -248,7 +401,6 @@ export default function JetPesaLandingPage() {
           setDemoStatus('crashed');
           setDemoMultiplier(crashAt);
         }
-
         drawDemoRadar(elapsed, 'crashed', crashAt);
       }
 
@@ -266,168 +418,204 @@ export default function JetPesaLandingPage() {
   const activeWinners = demoBets.filter((b) => b.cashedOut).length;
   const activeLosers = demoBets.filter((b) => b.lost).length;
 
-  return (
-    <main style={styles.page}>
-      <div style={styles.glowOne} />
-      <div style={styles.glowTwo} />
-      <div style={styles.glowThree} />
+  const formatKES = (n) => `KES ${n.toLocaleString()}`;
 
-      <nav style={styles.nav}>
-        <Link href="/" style={styles.brand}>
-          <span style={styles.brandIcon}>✈</span>
-          <span>JETPESA</span>
+  return (
+    <main className="jp-page">
+      {/* Ambient glows */}
+      <div className="jp-glow jp-glow-1" />
+      <div className="jp-glow jp-glow-2" />
+      <div className="jp-glow jp-glow-3" />
+      <div className="jp-noise" />
+
+      {/* Nav */}
+      <nav className="jp-nav">
+        <Link href="/" className="jp-brand" aria-label="JetPesa home">
+          <span className="jp-brand-mark">
+            <Icon name="plane-filled" size={18} />
+          </span>
+          <span className="jp-brand-text">
+            JET<span className="jp-brand-accent">PESA</span>
+          </span>
         </Link>
 
-        <div style={styles.navCenter}>
-          <a href="#demo" style={styles.navLink}>Live Demo</a>
-          <a href="#jackpot" style={styles.navLink}>Jackpot</a>
-          <a href="#features" style={styles.navLink}>Features</a>
+        <div className="jp-nav-center">
+          <a href="#demo" className="jp-nav-link">Live Demo</a>
+          <a href="#jackpot" className="jp-nav-link">Jackpot</a>
+          <a href="#features" className="jp-nav-link">Features</a>
+          <a href="#how" className="jp-nav-link">How it works</a>
         </div>
 
-        <div style={styles.navActions}>
-          <Link href="/auth?tab=login" style={styles.loginLink}>
+        <div className="jp-nav-actions">
+          <Link href="/auth?tab=login" className="jp-login-link">
+            <Icon name="shield" size={15} />
             Login
           </Link>
-          <Link href="/auth?tab=signup" style={styles.joinButton}>
+          <Link href="/auth?tab=signup" className="jp-join-button">
             Join Now
+            <Icon name="arrow-right" size={14} />
           </Link>
         </div>
       </nav>
 
-      <section className="hero-grid" style={styles.hero}>
-        <div style={styles.copy}>
-          <div style={styles.badge}>
-            <span style={styles.pulseDot} />
+      {/* Hero */}
+      <section className="jp-hero">
+        <div className="jp-hero-copy">
+          <div className="jp-badge">
+            <span className="jp-pulse-dot" />
             LIVE AVIATOR MULTIPLIER GAME
           </div>
 
-          <h1 style={styles.title}>
-            Fly higher.
-            <br />
-            Cash out faster.
-            <br />
-            Own the runway.
+          <h1 className="jp-title">
+            <span>Fly higher.</span>
+            <span>Cash out faster.</span>
+            <span className="jp-title-accent">Own the runway.</span>
           </h1>
 
-          <p style={styles.text}>
+          <p className="jp-text">
             JetPesa is a premium Aviator-style betting experience built for fast
             rounds, clean wallet tracking, mobile-first play, and high-energy
             cashout moments before the plane flies away.
           </p>
 
-          <div style={styles.ctaRow}>
-            <Link href="/auth?tab=signup" style={styles.primaryCta}>
+          <div className="jp-cta-row">
+            <Link href="/auth?tab=signup" className="jp-primary-cta">
+              <Icon name="play" size={16} />
               Start Playing
             </Link>
-
-            <Link href="/auth?tab=login" style={styles.secondaryCta}>
+            <a href="#demo" className="jp-secondary-cta">
+              <Icon name="chart" size={16} />
               Watch Demo
-            </Link>
+            </a>
           </div>
 
-          <div className="stats-grid" style={styles.stats}>
-            <div style={styles.statCard}>
-              <strong style={styles.statValue}>KES 49</strong>
-              <span style={styles.statLabel}>Minimum entry</span>
+          <div className="jp-stats">
+            <div className="jp-stat-card">
+              <div className="jp-stat-icon">
+                <Icon name="cash" size={18} />
+              </div>
+              <div>
+                <strong className="jp-stat-value">KES 49</strong>
+                <span className="jp-stat-label">Minimum entry</span>
+              </div>
             </div>
-
-            <div style={styles.statCard}>
-              <strong style={styles.statValue}>KES 50M</strong>
-              <span style={styles.statLabel}>Weekly top wager jackpot</span>
+            <div className="jp-stat-card">
+              <div className="jp-stat-icon jp-stat-icon-gold">
+                <Icon name="trophy" size={18} />
+              </div>
+              <div>
+                <strong className="jp-stat-value">KES 50M</strong>
+                <span className="jp-stat-label">Weekly top wager jackpot</span>
+              </div>
             </div>
-
-            <div style={styles.statCard}>
-              <strong style={styles.statValue}>100x+</strong>
-              <span style={styles.statLabel}>Demo multiplier flight</span>
+            <div className="jp-stat-card">
+              <div className="jp-stat-icon jp-stat-icon-rose">
+                <Icon name="rocket" size={18} />
+              </div>
+              <div>
+                <strong className="jp-stat-value">100x+</strong>
+                <span className="jp-stat-label">Demo multiplier flight</span>
+              </div>
             </div>
           </div>
 
-          <div style={styles.trustRow}>
-            <span>🔐 Secure login</span>
-            <span>📱 M-Pesa ready</span>
-            <span>⚡ Fast rounds</span>
+          <div className="jp-trust-row">
+            <span><Icon name="shield" size={14} /> Secure login</span>
+            <span><Icon name="wallet" size={14} /> M-Pesa ready</span>
+            <span><Icon name="bolt" size={14} /> Fast rounds</span>
           </div>
         </div>
 
-        <div style={styles.visualStack}>
+        <div className="jp-visual-stack">
           <FloatingJetSvg />
 
-          <div id="demo" style={styles.demoCard}>
-            <div style={styles.demoTop}>
+          <div id="demo" className="jp-demo-card">
+            <div className="jp-demo-top">
               <div>
-                <div style={styles.liveDotRow}>
-                  <span style={styles.liveDot} />
-                  <span style={styles.liveText}>LIVE ROUND</span>
+                <div className="jp-live-dot-row">
+                  <span className="jp-live-dot" />
+                  <span className="jp-live-text">LIVE ROUND</span>
                 </div>
-                <div style={styles.onlineText}>{totalPoolUsers.toLocaleString()} pilots online</div>
+                <div className="jp-online-text">
+                  <Icon name="users" size={12} />
+                  {totalPoolUsers.toLocaleString()} pilots online
+                </div>
               </div>
-
-              <div style={styles.walletPill}>KES Wallet</div>
+              <div className="jp-wallet-pill">
+                <Icon name="wallet" size={13} />
+                KES Wallet
+              </div>
             </div>
 
-            <div style={styles.canvasWrap}>
+            <div className="jp-canvas-wrap">
               {demoStatus === 'loading' && (
-                <div style={styles.loadingOverlay}>
-                  <div style={styles.loaderPlane}>✈</div>
-                  <div style={styles.progressTrack}>
-                    <div
-                      style={{
-                        ...styles.progressFill,
-                        width: `${demoProgress}%`,
-                      }}
-                    />
+                <div className="jp-loading-overlay">
+                  <div className="jp-loader-plane">
+                    <Icon name="plane-filled" size={44} />
                   </div>
-                  <span style={styles.loadingText}>Preparing next flight...</span>
+                  <div className="jp-progress-track">
+                    <div className="jp-progress-fill" style={{ width: `${demoProgress}%` }} />
+                  </div>
+                  <span className="jp-loading-text">Preparing next flight…</span>
                 </div>
               )}
 
-              <canvas ref={canvasRef} style={styles.canvas} />
+              <canvas ref={canvasRef} className="jp-canvas" />
 
               {demoStatus !== 'loading' && (
-                <div style={styles.multiplierBox}>
+                <div className="jp-multiplier-box">
                   {demoStatus === 'crashed' ? (
                     <>
-                      <div style={styles.crashedText}>FLEW AWAY</div>
-                      <div style={styles.crashMultiplier}>
-                        @ {demoMultiplier.toFixed(2)}x
+                      <div className="jp-crashed-text">
+                        <Icon name="x" size={28} className="jp-crash-x" />
+                        FLEW AWAY
                       </div>
+                      <div className="jp-crash-multiplier">@ {demoMultiplier.toFixed(2)}x</div>
                     </>
                   ) : (
                     <>
-                      <div style={styles.multiplierText}>
+                      <div className="jp-multiplier-text">
                         {demoMultiplier.toFixed(2)}x
                       </div>
-                      <div style={styles.multiplierSub}>cash out before takeoff peak</div>
+                      <div className="jp-multiplier-sub">cash out before takeoff peak</div>
                     </>
                   )}
                 </div>
               )}
 
-              <div style={styles.roundStats}>
-                <span>✅ {activeWinners} cashed out</span>
-                <span>❌ {activeLosers} lost</span>
+              <div className="jp-round-stats">
+                <span className="jp-round-stat jp-round-stat-win">
+                  <Icon name="check" size={12} /> {activeWinners} cashed out
+                </span>
+                <span className="jp-round-stat jp-round-stat-lose">
+                  <Icon name="x" size={12} /> {activeLosers} lost
+                </span>
               </div>
             </div>
 
-            <div style={styles.ledgerHeader}>Live Round Allocations</div>
+            <div className="jp-ledger-header">
+              <Icon name="users" size={12} />
+              Live Round Allocations
+            </div>
 
-            <div style={styles.ledger}>
+            <div className="jp-ledger">
               {demoBets.map((b, idx) => (
-                <div key={idx} style={styles.betRow}>
-                  <span style={styles.betUser}>{b.user}</span>
-                  <span style={styles.betStake}>{b.stake.toLocaleString()} KES</span>
+                <div key={idx} className="jp-bet-row">
+                  <span className="jp-bet-user">{b.user}</span>
+                  <span className="jp-bet-stake">{b.stake.toLocaleString()} KES</span>
 
                   {b.cashedOut ? (
-                    <span style={styles.winPill}>
-                      {b.finalMult.toFixed(2)}x +{b.winAmount.toLocaleString()}
+                    <span className="jp-win-pill">
+                      <Icon name="check" size={11} />
+                      {b.finalMult.toFixed(2)}x · +{b.winAmount.toLocaleString()}
                     </span>
                   ) : (
                     <span
-                      style={{
-                        ...styles.pendingPill,
-                        color: demoStatus === 'crashed' ? '#ef4444' : '#94a3b8',
-                      }}
+                      className={`jp-pending-pill ${
+                        demoStatus === 'crashed' ? 'jp-pending-lost' : ''
+                      }`}
                     >
+                      <Icon name={demoStatus === 'crashed' ? 'x' : 'plane'} size={11} />
                       {demoStatus === 'crashed' ? 'Lost' : 'Flying'}
                     </span>
                   )}
@@ -438,56 +626,66 @@ export default function JetPesaLandingPage() {
         </div>
       </section>
 
-      <section id="jackpot" className="jackpot-grid" style={styles.jackpotSection}>
-        <div style={styles.jackpotCard}>
-          <div style={styles.jackpotIcon}>🏆</div>
+      {/* Jackpot */}
+      <section id="jackpot" className="jp-jackpot-section">
+        <div className="jp-jackpot-card">
+          <div className="jp-jackpot-icon">
+            <Icon name="trophy" size={34} />
+          </div>
           <div>
-            <span style={styles.sectionKicker}>WEEKLY HIGH ROLLER JACKPOT</span>
-            <h2 style={styles.sectionTitle}>
-              KES {weeklyPot.toLocaleString()} jackpot every week.
+            <span className="jp-section-kicker">WEEKLY HIGH ROLLER JACKPOT</span>
+            <h2 className="jp-section-title">
+              {formatKES(weeklyPot)} jackpot every week.
             </h2>
-            <p style={styles.sectionText}>
+            <p className="jp-section-text">
               The highest verified wager volume of the week gets a premium jackpot
               allocation. Keep flying, keep climbing, and finish at the top of the runway.
             </p>
           </div>
         </div>
 
-        <div style={styles.miniCard}>
-          <span style={styles.miniIcon}>🚀</span>
+        <div className="jp-mini-card">
+          <div className="jp-mini-icon jp-mini-icon-rose">
+            <Icon name="rocket" size={22} />
+          </div>
           <strong>Turbo Rounds</strong>
           <p>Rapid Aviator-style gameplay designed for mobile bettors.</p>
         </div>
 
-        <div style={styles.miniCard}>
-          <span style={styles.miniIcon}>💎</span>
+        <div className="jp-mini-card">
+          <div className="jp-mini-icon jp-mini-icon-indigo">
+            <Icon name="diamond" size={22} />
+          </div>
           <strong>VIP Missions</strong>
           <p>Daily missions, streak rewards, and wager milestones.</p>
         </div>
       </section>
 
-      <section id="features" style={styles.featureSection}>
-        <div style={styles.centerCopy}>
-          <span style={styles.sectionKicker}>BUILT FOR SPEED</span>
-          <h2 style={styles.sectionTitle}>A sharper betting flight deck.</h2>
-          <p style={styles.sectionText}>
+      {/* Features */}
+      <section id="features" className="jp-feature-section">
+        <div className="jp-center-copy">
+          <span className="jp-section-kicker">BUILT FOR SPEED</span>
+          <h2 className="jp-section-title">A sharper betting flight deck.</h2>
+          <p className="jp-section-text">
             Give players a landing page that feels polished, alive, and conversion-ready.
           </p>
         </div>
 
-        <div className="feature-grid" style={styles.featureGrid}>
+        <div className="jp-feature-grid">
           {[
-            ['⚡', 'Instant Cashout', 'Cash out while the plane is still climbing.'],
-            ['📊', 'Live Multiplier', 'Animated multiplier with real-time demo action.'],
-            ['👥', 'Player Feed', 'Many simulated users winning and a few missing the flight.'],
-            ['🏆', '50M Jackpot', 'Weekly top wager prize for serious players.'],
-            ['🔐', 'Secure Access', 'Professional auth-focused call-to-actions.'],
-            ['📱', 'Small Screen Ready', 'Responsive cards, ledger, nav, and hero layout.'],
-            ['💸', 'Wallet UX', 'KES wallet messaging with M-Pesa-ready positioning.'],
-            ['✈️', 'Aviator Visuals', '3D-inspired jet, runway lights, glow cards, and motion.'],
+            ['cash', 'Instant Cashout', 'Cash out while the plane is still climbing.'],
+            ['chart', 'Live Multiplier', 'Animated multiplier with real-time demo action.'],
+            ['users', 'Player Feed', 'Many simulated users winning and a few missing the flight.'],
+            ['trophy', '50M Jackpot', 'Weekly top wager prize for serious players.'],
+            ['shield', 'Secure Access', 'Professional auth-focused call-to-actions.'],
+            ['mobile', 'Small Screen Ready', 'Responsive cards, ledger, nav, and hero layout.'],
+            ['wallet', 'Wallet UX', 'KES wallet messaging with M-Pesa-ready positioning.'],
+            ['sparkles', 'Aviator Visuals', '3D-inspired jet, runway lights, glow cards, and motion.'],
           ].map(([icon, title, text]) => (
-            <div key={title} style={styles.featureCard}>
-              <span style={styles.featureIcon}>{icon}</span>
+            <div key={title} className="jp-feature-card">
+              <div className="jp-feature-icon">
+                <Icon name={icon} size={22} />
+              </div>
               <strong>{title}</strong>
               <p>{text}</p>
             </div>
@@ -495,21 +693,27 @@ export default function JetPesaLandingPage() {
         </div>
       </section>
 
-      <section style={styles.howItWorks}>
-        <div style={styles.centerCopy}>
-          <span style={styles.sectionKicker}>HOW IT WORKS</span>
-          <h2 style={styles.sectionTitle}>Bet. Fly. Cash out.</h2>
+      {/* How it works */}
+      <section id="how" className="jp-how">
+        <div className="jp-center-copy">
+          <span className="jp-section-kicker">HOW IT WORKS</span>
+          <h2 className="jp-section-title">Bet. Fly. Cash out.</h2>
         </div>
 
-        <div className="steps-grid" style={styles.stepsGrid}>
+        <div className="jp-steps-grid">
           {[
-            ['1', 'Place your stake', 'Choose your KES amount before the aircraft launches.'],
-            ['2', 'Watch the multiplier', 'The multiplier climbs higher as the jet flies.'],
-            ['3', 'Cash out early', 'Secure winnings before the plane disappears.'],
-            ['4', 'Compete weekly', 'Push your wager volume for the 50M jackpot race.'],
-          ].map(([num, title, text]) => (
-            <div key={num} style={styles.stepCard}>
-              <span style={styles.stepNum}>{num}</span>
+            ['1', 'target', 'Place your stake', 'Choose your KES amount before the aircraft launches.'],
+            ['2', 'chart', 'Watch the multiplier', 'The multiplier climbs higher as the jet flies.'],
+            ['3', 'cash', 'Cash out early', 'Secure winnings before the plane disappears.'],
+            ['4', 'trophy', 'Compete weekly', 'Push your wager volume for the 50M jackpot race.'],
+          ].map(([num, icon, title, text]) => (
+            <div key={num} className="jp-step-card">
+              <div className="jp-step-head">
+                <span className="jp-step-num">{num}</span>
+                <div className="jp-step-icon">
+                  <Icon name={icon} size={18} />
+                </div>
+              </div>
               <strong>{title}</strong>
               <p>{text}</p>
             </div>
@@ -517,73 +721,697 @@ export default function JetPesaLandingPage() {
         </div>
       </section>
 
-      <section style={styles.finalCta}>
+      {/* Final CTA */}
+      <section className="jp-final-cta">
         <div>
-          <span style={styles.sectionKicker}>READY FOR TAKEOFF?</span>
-          <h2 style={styles.finalTitle}>Join JetPesa and enter the next round.</h2>
-          <p style={styles.finalText}>
+          <span className="jp-section-kicker">READY FOR TAKEOFF?</span>
+          <h2 className="jp-final-title">Join JetPesa and enter the next round.</h2>
+          <p className="jp-final-text">
             Professional Aviator-style betting interface with live demo action,
             mobile responsiveness, jackpot positioning, and conversion-focused UI.
           </p>
         </div>
 
-        <Link href="/auth?tab=signup" style={styles.primaryCta}>
+        <Link href="/auth?tab=signup" className="jp-primary-cta jp-final-cta-btn">
           Create Account
+          <Icon name="arrow-right" size={16} />
         </Link>
       </section>
 
-      <footer style={styles.footer}>
-        <span>JETPESA</span>
+      <footer className="jp-footer">
+        <div className="jp-footer-brand">
+          <Icon name="plane-filled" size={16} />
+          <span>JETPESA</span>
+        </div>
         <span>Demo values are simulated for landing-page presentation.</span>
-        <span>Play responsibly. 18+</span>
+        <span>Play responsibly · 18+</span>
       </footer>
 
       <style>{`
+        /* ---------- Base ---------- */
+        .jp-page {
+          min-height: 100vh;
+          background: radial-gradient(circle at top left, #172554 0%, #07080e 38%, #020617 100%);
+          color: #f8fafc;
+          font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+          position: relative;
+          overflow: hidden;
+        }
+        .jp-noise {
+          position: absolute;
+          inset: 0;
+          pointer-events: none;
+          opacity: .035;
+          background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+          z-index: 1;
+        }
+        .jp-glow {
+          position: absolute;
+          border-radius: 999px;
+          filter: blur(110px);
+          z-index: 0;
+        }
+        .jp-glow-1 { width: 560px; height: 560px; background: rgba(225,29,72,.22); top: -200px; right: -170px; }
+        .jp-glow-2 { width: 460px; height: 460px; background: rgba(34,197,94,.15); bottom: 90px; left: -160px; }
+        .jp-glow-3 { width: 360px; height: 360px; background: rgba(251,191,36,.1); top: 420px; right: 18%; }
+
+        /* ---------- Nav ---------- */
+        .jp-nav {
+          position: relative;
+          z-index: 5;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          gap: 18px;
+          padding: 18px clamp(16px, 5vw, 64px);
+          border-bottom: 1px solid rgba(255,255,255,.08);
+          background: rgba(2,6,23,.72);
+          backdrop-filter: blur(18px);
+          -webkit-backdrop-filter: blur(18px);
+        }
+        .jp-brand {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          color: #fff;
+          text-decoration: none;
+          font-weight: 950;
+          letter-spacing: -1px;
+        }
+        .jp-brand-mark {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          width: 36px;
+          height: 36px;
+          border-radius: 12px;
+          background: linear-gradient(135deg, #ef4444, #991b1b);
+          box-shadow: 0 12px 28px rgba(239,68,68,.35), inset 0 1px 0 rgba(255,255,255,.25);
+        }
+        .jp-brand-text { font-size: 22px; }
+        .jp-brand-accent {
+          background: linear-gradient(135deg, #22c55e, #86efac);
+          -webkit-background-clip: text;
+          background-clip: text;
+          color: transparent;
+        }
+        .jp-nav-center { display: flex; gap: 26px; align-items: center; }
+        .jp-nav-link {
+          color: #94a3b8;
+          text-decoration: none;
+          font-size: 13px;
+          font-weight: 700;
+          transition: color .2s ease;
+          position: relative;
+        }
+        .jp-nav-link:hover { color: #fff; }
+        .jp-nav-link::after {
+          content: '';
+          position: absolute;
+          left: 0; right: 0; bottom: -6px;
+          height: 2px;
+          background: linear-gradient(90deg, #ef4444, #22c55e);
+          transform: scaleX(0);
+          transform-origin: left;
+          transition: transform .25s ease;
+          border-radius: 2px;
+        }
+        .jp-nav-link:hover::after { transform: scaleX(1); }
+        .jp-nav-actions { display: flex; gap: 12px; align-items: center; }
+        .jp-login-link {
+          color: #cbd5e1;
+          text-decoration: none;
+          font-size: 13px;
+          font-weight: 800;
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          padding: 9px 14px;
+          border-radius: 10px;
+          border: 1px solid rgba(255,255,255,.08);
+          transition: all .2s ease;
+        }
+        .jp-login-link:hover { color: #fff; border-color: rgba(255,255,255,.2); background: rgba(255,255,255,.04); }
+        .jp-join-button {
+          color: #fff;
+          text-decoration: none;
+          background: linear-gradient(135deg, #22c55e, #16a34a);
+          padding: 10px 18px;
+          border-radius: 999px;
+          font-size: 13px;
+          font-weight: 900;
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          box-shadow: 0 12px 30px rgba(34,197,94,.28), inset 0 1px 0 rgba(255,255,255,.2);
+          transition: transform .2s ease, box-shadow .2s ease;
+        }
+        .jp-join-button:hover { transform: translateY(-1px); box-shadow: 0 16px 36px rgba(34,197,94,.36); }
+
+        /* ---------- Hero ---------- */
+        .jp-hero {
+          position: relative;
+          z-index: 2;
+          max-width: 1280px;
+          margin: 0 auto;
+          padding: 68px 20px 34px;
+          display: grid;
+          grid-template-columns: .92fr 1.08fr;
+          gap: 46px;
+          align-items: center;
+        }
+        .jp-hero-copy { max-width: 610px; }
+        .jp-badge {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          color: #22c55e;
+          background: rgba(34,197,94,.1);
+          border: 1px solid rgba(34,197,94,.22);
+          padding: 8px 14px;
+          border-radius: 999px;
+          font-size: 11px;
+          font-weight: 900;
+          letter-spacing: 1px;
+          margin-bottom: 22px;
+        }
+        .jp-pulse-dot {
+          width: 8px; height: 8px;
+          border-radius: 999px;
+          background: #22c55e;
+          box-shadow: 0 0 18px #22c55e;
+          animation: jpPulse 1.5s infinite;
+        }
+        @keyframes jpPulse {
+          0%,100% { opacity: .65; transform: scale(1); }
+          50%     { opacity: 1;   transform: scale(1.15); }
+        }
+        .jp-title {
+          font-size: clamp(42px, 6.6vw, 82px);
+          line-height: .93;
+          letter-spacing: -3.4px;
+          margin: 0 0 22px;
+          font-weight: 1000;
+          display: flex;
+          flex-direction: column;
+          align-items: flex-start;
+        }
+        .jp-title span { display: block; }
+        .jp-title-accent {
+          background: linear-gradient(135deg, #f43f5e 0%, #f59e0b 50%, #22c55e 100%);
+          -webkit-background-clip: text;
+          background-clip: text;
+          color: transparent;
+        }
+        .jp-text {
+          color: #a8b4c7;
+          font-size: clamp(15px, 2vw, 17px);
+          line-height: 1.75;
+          margin: 0 0 32px;
+          max-width: 560px;
+        }
+        .jp-cta-row { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 30px; }
+        .jp-primary-cta {
+          text-decoration: none;
+          color: #fff;
+          background: linear-gradient(135deg, #e11d48, #be123c);
+          padding: 15px 28px;
+          border-radius: 14px;
+          font-size: 14px;
+          font-weight: 900;
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          box-shadow: 0 18px 40px rgba(225,29,72,.32), inset 0 1px 0 rgba(255,255,255,.18);
+          transition: transform .2s ease, box-shadow .2s ease;
+        }
+        .jp-primary-cta:hover { transform: translateY(-2px); box-shadow: 0 22px 46px rgba(225,29,72,.4); }
+        .jp-secondary-cta {
+          text-decoration: none;
+          color: #e2e8f0;
+          background: rgba(255,255,255,.06);
+          border: 1px solid rgba(255,255,255,.12);
+          padding: 15px 24px;
+          border-radius: 14px;
+          font-size: 14px;
+          font-weight: 850;
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          backdrop-filter: blur(10px);
+          transition: all .2s ease;
+        }
+        .jp-secondary-cta:hover { background: rgba(255,255,255,.1); border-color: rgba(255,255,255,.22); }
+
+        .jp-stats {
+          display: grid;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          gap: 12px;
+        }
+        .jp-stat-card {
+          background: rgba(15,23,42,.72);
+          border: 1px solid rgba(255,255,255,.09);
+          border-radius: 18px;
+          padding: 14px;
+          display: flex;
+          gap: 12px;
+          align-items: center;
+          box-shadow: inset 0 1px 0 rgba(255,255,255,.04);
+          transition: border-color .2s ease, transform .2s ease;
+        }
+        .jp-stat-card:hover { border-color: rgba(255,255,255,.18); transform: translateY(-2px); }
+        .jp-stat-icon {
+          width: 38px; height: 38px;
+          border-radius: 12px;
+          display: grid; place-items: center;
+          background: rgba(34,197,94,.12);
+          color: #22c55e;
+          flex: 0 0 auto;
+        }
+        .jp-stat-icon-gold { background: rgba(251,191,36,.14); color: #fbbf24; }
+        .jp-stat-icon-rose { background: rgba(244,63,94,.14); color: #f43f5e; }
+        .jp-stat-value { display: block; font-size: 17px; font-weight: 950; margin-bottom: 2px; }
+        .jp-stat-label { color: #7b8aa1; font-size: 11px; font-weight: 750; line-height: 1.35; }
+
+        .jp-trust-row {
+          display: flex; flex-wrap: wrap; gap: 10px;
+          margin-top: 18px;
+          color: #94a3b8;
+          font-size: 12px;
+          font-weight: 800;
+        }
+        .jp-trust-row span {
+          display: inline-flex; align-items: center; gap: 6px;
+          padding: 6px 10px;
+          background: rgba(255,255,255,.04);
+          border: 1px solid rgba(255,255,255,.08);
+          border-radius: 999px;
+        }
+
+        /* ---------- Visual stack ---------- */
+        .jp-visual-stack { position: relative; }
+        .jp-jet-svg-wrap {
+          position: absolute;
+          top: -76px; right: -26px;
+          width: min(360px, 56vw);
+          z-index: 3;
+          pointer-events: none;
+          animation: jpFloat 5s ease-in-out infinite;
+        }
+        .jp-jet-svg { width: 100%; height: auto; display: block; }
+        @keyframes jpFloat {
+          0%,100% { transform: translateY(0) rotate(-4deg); }
+          50%     { transform: translateY(-16px) rotate(2deg); }
+        }
+
+        .jp-demo-card {
+          position: relative;
+          z-index: 2;
+          background: rgba(15,23,42,.82);
+          border: 1px solid rgba(255,255,255,.12);
+          border-radius: 28px;
+          padding: 18px;
+          box-shadow: 0 34px 90px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.05);
+          backdrop-filter: blur(18px);
+        }
+        .jp-demo-top {
+          display: flex; justify-content: space-between; align-items: center;
+          gap: 12px; margin-bottom: 14px;
+        }
+        .jp-live-dot-row { display: flex; gap: 8px; align-items: center; }
+        .jp-live-dot {
+          width: 9px; height: 9px; border-radius: 50%;
+          background: #22c55e;
+          box-shadow: 0 0 16px #22c55e;
+          animation: jpPulse 1.5s infinite;
+        }
+        .jp-live-text { color: #e2e8f0; font-size: 12px; font-weight: 950; letter-spacing: .5px; }
+        .jp-online-text {
+          color: #7b8aa1; font-size: 12px; font-weight: 800; margin-top: 4px;
+          display: inline-flex; align-items: center; gap: 6px;
+        }
+        .jp-wallet-pill {
+          background: rgba(34,197,94,.1);
+          border: 1px solid rgba(34,197,94,.24);
+          color: #22c55e;
+          border-radius: 999px;
+          padding: 8px 13px;
+          font-size: 12px;
+          font-weight: 900;
+          display: inline-flex; align-items: center; gap: 6px;
+          white-space: nowrap;
+        }
+
+        .jp-canvas-wrap {
+          height: clamp(270px, 44vw, 390px);
+          background: #020617;
+          border-radius: 22px;
+          overflow: hidden;
+          border: 1px solid rgba(255,255,255,.08);
+          position: relative;
+        }
+        .jp-canvas { width: 100%; height: 100%; display: block; }
+
+        .jp-loading-overlay {
+          position: absolute; inset: 0; z-index: 5;
+          background: rgba(2,6,23,.88);
+          display: flex; flex-direction: column;
+          justify-content: center; align-items: center;
+          backdrop-filter: blur(4px);
+        }
+        .jp-loader-plane {
+          color: #ef4444;
+          margin-bottom: 16px;
+          transform: rotate(-12deg);
+          filter: drop-shadow(0 12px 18px rgba(239,68,68,.5));
+          animation: jpFloat 2.5s ease-in-out infinite;
+        }
+        .jp-progress-track {
+          width: min(320px, 68%);
+          height: 8px;
+          background: rgba(255,255,255,.08);
+          border-radius: 999px;
+          overflow: hidden;
+        }
+        .jp-progress-fill {
+          height: 100%;
+          background: linear-gradient(90deg, #22c55e, #86efac);
+          border-radius: 999px;
+          transition: width .1s linear;
+          box-shadow: 0 0 12px rgba(34,197,94,.5);
+        }
+        .jp-loading-text { color: #94a3b8; font-size: 12px; font-weight: 850; margin-top: 12px; }
+
+        .jp-multiplier-box {
+          position: absolute; inset: 0;
+          display: flex; flex-direction: column;
+          justify-content: center; align-items: center;
+          pointer-events: none;
+          text-align: center;
+        }
+        .jp-multiplier-text {
+          font-size: clamp(56px, 10vw, 112px);
+          font-weight: 1000;
+          letter-spacing: -4px;
+          background: linear-gradient(180deg, #fff 0%, #cbd5e1 100%);
+          -webkit-background-clip: text;
+          background-clip: text;
+          color: transparent;
+          text-shadow: 0 0 34px rgba(255,255,255,.24);
+        }
+        .jp-multiplier-sub { color: #94a3b8; font-size: 13px; font-weight: 850; margin-top: -8px; }
+        .jp-crashed-text {
+          color: #ef4444;
+          font-size: clamp(28px, 5vw, 46px);
+          font-weight: 1000;
+          letter-spacing: -1.4px;
+          display: inline-flex; align-items: center; gap: 10px;
+        }
+        .jp-crash-x {
+          width: 34px; height: 34px;
+          padding: 6px;
+          border-radius: 10px;
+          background: rgba(239,68,68,.14);
+          border: 1px solid rgba(239,68,68,.3);
+        }
+        .jp-crash-multiplier { color: #94a3b8; font-size: 16px; font-weight: 900; margin-top: 6px; }
+
+        .jp-round-stats {
+          position: absolute; left: 14px; right: 14px; bottom: 14px;
+          display: flex; justify-content: space-between; gap: 10px;
+          font-size: 12px; font-weight: 900;
+        }
+        .jp-round-stat {
+          display: inline-flex; align-items: center; gap: 6px;
+          padding: 6px 10px;
+          border-radius: 999px;
+          background: rgba(2,6,23,.7);
+          border: 1px solid rgba(255,255,255,.08);
+          backdrop-filter: blur(6px);
+        }
+        .jp-round-stat-win  { color: #22c55e; border-color: rgba(34,197,94,.2); }
+        .jp-round-stat-lose { color: #f87171; border-color: rgba(239,68,68,.2); }
+
+        .jp-ledger-header {
+          color: #7b8aa1;
+          font-size: 11px;
+          font-weight: 950;
+          letter-spacing: 1px;
+          text-transform: uppercase;
+          margin: 16px 0 8px;
+          display: inline-flex; align-items: center; gap: 6px;
+        }
+        .jp-ledger {
+          display: grid;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 7px;
+          max-height: 265px;
+          overflow: auto;
+          padding-right: 2px;
+        }
+        .jp-ledger::-webkit-scrollbar { width: 6px; }
+        .jp-ledger::-webkit-scrollbar-thumb { background: rgba(255,255,255,.1); border-radius: 999px; }
+
+        .jp-bet-row {
+          display: grid;
+          grid-template-columns: 1fr auto;
+          gap: 8px;
+          align-items: center;
+          background: rgba(2,6,23,.58);
+          border: 1px solid rgba(255,255,255,.07);
+          border-radius: 12px;
+          padding: 10px 11px;
+          font-size: 12px;
+          transition: border-color .2s ease, background .2s ease;
+        }
+        .jp-bet-row:hover { border-color: rgba(255,255,255,.16); background: rgba(2,6,23,.8); }
+        .jp-bet-user {
+          color: #cbd5e1; font-weight: 850;
+          overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+        }
+        .jp-bet-stake { color: #fff; font-weight: 950; font-size: 11px; }
+        .jp-win-pill {
+          grid-column: 1 / -1;
+          color: #22c55e;
+          background: rgba(34,197,94,.11);
+          border: 1px solid rgba(34,197,94,.2);
+          border-radius: 999px;
+          padding: 5px 10px;
+          font-size: 11px;
+          font-weight: 900;
+          width: fit-content;
+          display: inline-flex; align-items: center; gap: 5px;
+        }
+        .jp-pending-pill {
+          grid-column: 1 / -1;
+          font-size: 11px; font-weight: 900;
+          color: #94a3b8;
+          display: inline-flex; align-items: center; gap: 5px;
+        }
+        .jp-pending-lost { color: #ef4444; }
+
+        /* ---------- Jackpot ---------- */
+        .jp-jackpot-section {
+          position: relative; z-index: 2;
+          max-width: 1180px;
+          margin: 24px auto;
+          padding: 0 20px;
+          display: grid;
+          grid-template-columns: 1.5fr .75fr .75fr;
+          gap: 14px;
+        }
+        .jp-jackpot-card {
+          display: flex; gap: 20px; align-items: center;
+          background: linear-gradient(135deg, rgba(251,191,36,.16), rgba(225,29,72,.12));
+          border: 1px solid rgba(251,191,36,.25);
+          border-radius: 26px;
+          padding: 24px;
+          box-shadow: 0 24px 70px rgba(0,0,0,.28);
+        }
+        .jp-jackpot-icon {
+          width: 78px; height: 78px;
+          border-radius: 22px;
+          display: grid; place-items: center;
+          background: linear-gradient(135deg, #f59e0b, #e11d48);
+          color: #fff;
+          box-shadow: 0 20px 44px rgba(245,158,11,.22), inset 0 1px 0 rgba(255,255,255,.2);
+          flex: 0 0 auto;
+        }
+        .jp-section-kicker {
+          color: #22c55e;
+          font-size: 11px;
+          font-weight: 950;
+          letter-spacing: 1.2px;
+        }
+        .jp-section-title {
+          margin: 8px 0 10px;
+          font-size: clamp(26px, 4vw, 44px);
+          line-height: 1.02;
+          letter-spacing: -1.8px;
+          font-weight: 1000;
+        }
+        .jp-section-text { color: #94a3b8; line-height: 1.65; margin: 0; font-size: 15px; }
+
+        .jp-mini-card {
+          background: rgba(15,23,42,.74);
+          border: 1px solid rgba(255,255,255,.09);
+          border-radius: 22px;
+          padding: 22px;
+          transition: border-color .2s ease, transform .2s ease;
+        }
+        .jp-mini-card:hover { border-color: rgba(255,255,255,.18); transform: translateY(-2px); }
+        .jp-mini-card strong { display: block; font-size: 17px; font-weight: 900; margin-bottom: 6px; }
+        .jp-mini-card p { color: #94a3b8; margin: 0; font-size: 14px; line-height: 1.55; }
+        .jp-mini-icon {
+          width: 48px; height: 48px;
+          border-radius: 14px;
+          display: grid; place-items: center;
+          margin-bottom: 16px;
+          background: rgba(255,255,255,.08);
+        }
+        .jp-mini-icon-rose  { background: rgba(244,63,94,.14); color: #f43f5e; }
+        .jp-mini-icon-indigo { background: rgba(99,102,241,.16); color: #818cf8; }
+
+        /* ---------- Features ---------- */
+        .jp-feature-section {
+          position: relative; z-index: 2;
+          max-width: 1180px;
+          margin: 54px auto;
+          padding: 0 20px;
+        }
+        .jp-center-copy { text-align: center; max-width: 700px; margin: 0 auto 24px; }
+        .jp-feature-grid {
+          display: grid;
+          grid-template-columns: repeat(4, minmax(0, 1fr));
+          gap: 14px;
+        }
+        .jp-feature-card {
+          background: rgba(15,23,42,.74);
+          border: 1px solid rgba(255,255,255,.09);
+          border-radius: 20px;
+          padding: 20px;
+          min-height: 168px;
+          transition: border-color .2s ease, transform .2s ease, background .2s ease;
+        }
+        .jp-feature-card:hover {
+          border-color: rgba(255,255,255,.18);
+          transform: translateY(-3px);
+          background: rgba(15,23,42,.9);
+        }
+        .jp-feature-card strong { display: block; font-size: 16px; font-weight: 900; margin-bottom: 6px; }
+        .jp-feature-card p { color: #94a3b8; margin: 0; font-size: 13.5px; line-height: 1.55; }
+        .jp-feature-icon {
+          width: 46px; height: 46px;
+          border-radius: 14px;
+          display: grid; place-items: center;
+          background: linear-gradient(135deg, rgba(225,29,72,.22), rgba(34,197,94,.14));
+          color: #fff;
+          margin-bottom: 14px;
+          box-shadow: inset 0 1px 0 rgba(255,255,255,.08);
+        }
+
+        /* ---------- How it works ---------- */
+        .jp-how {
+          position: relative; z-index: 2;
+          max-width: 1180px;
+          margin: 54px auto;
+          padding: 0 20px;
+        }
+        .jp-steps-grid {
+          display: grid;
+          grid-template-columns: repeat(4, minmax(0, 1fr));
+          gap: 14px;
+        }
+        .jp-step-card {
+          background: rgba(2,6,23,.54);
+          border: 1px solid rgba(255,255,255,.08);
+          border-radius: 20px;
+          padding: 20px;
+          transition: border-color .2s ease, transform .2s ease;
+        }
+        .jp-step-card:hover { border-color: rgba(255,255,255,.18); transform: translateY(-2px); }
+        .jp-step-card strong { display: block; font-size: 16px; font-weight: 900; margin: 14px 0 6px; }
+        .jp-step-card p { color: #94a3b8; margin: 0; font-size: 13.5px; line-height: 1.55; }
+        .jp-step-head { display: flex; align-items: center; justify-content: space-between; }
+        .jp-step-num {
+          display: grid; place-items: center;
+          width: 38px; height: 38px;
+          border-radius: 12px;
+          background: linear-gradient(135deg, #e11d48, #be123c);
+          font-weight: 1000;
+          box-shadow: 0 10px 24px rgba(225,29,72,.3), inset 0 1px 0 rgba(255,255,255,.15);
+        }
+        .jp-step-icon {
+          width: 38px; height: 38px;
+          border-radius: 12px;
+          display: grid; place-items: center;
+          background: rgba(255,255,255,.06);
+          color: #94a3b8;
+          border: 1px solid rgba(255,255,255,.08);
+        }
+
+        /* ---------- Final CTA ---------- */
+        .jp-final-cta {
+          position: relative; z-index: 2;
+          max-width: 1180px;
+          margin: 54px auto 28px;
+          padding: 32px;
+          border-radius: 28px;
+          background: linear-gradient(135deg, rgba(225,29,72,.18), rgba(34,197,94,.12));
+          border: 1px solid rgba(255,255,255,.1);
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          gap: 24px;
+          flex-wrap: wrap;
+          box-shadow: 0 30px 80px rgba(0,0,0,.35);
+        }
+        .jp-final-title {
+          margin: 8px 0 8px;
+          font-size: clamp(28px, 5vw, 48px);
+          line-height: 1;
+          letter-spacing: -2px;
+          font-weight: 1000;
+        }
+        .jp-final-text { color: #94a3b8; margin: 0; max-width: 680px; line-height: 1.6; }
+        .jp-final-cta-btn { padding: 16px 28px; font-size: 15px; }
+
+        /* ---------- Footer ---------- */
+        .jp-footer {
+          position: relative; z-index: 2;
+          max-width: 1180px;
+          margin: 0 auto;
+          padding: 22px 20px 34px;
+          display: flex;
+          justify-content: space-between;
+          gap: 16px;
+          flex-wrap: wrap;
+          color: #64748b;
+          font-size: 12px;
+          font-weight: 800;
+          border-top: 1px solid rgba(255,255,255,.06);
+        }
+        .jp-footer-brand {
+          display: inline-flex; align-items: center; gap: 8px;
+          color: #cbd5e1;
+          font-weight: 950;
+          letter-spacing: .5px;
+        }
+
+        /* ---------- Responsive ---------- */
         @media (max-width: 1100px) {
-          .hero-grid {
-            grid-template-columns: 1fr !important;
-          }
-
-          .feature-grid {
-            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-          }
-
-          .jackpot-grid {
-            grid-template-columns: 1fr !important;
-          }
+          .jp-hero { grid-template-columns: 1fr !important; }
+          .jp-feature-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+          .jp-jackpot-section { grid-template-columns: 1fr !important; }
         }
-
         @media (max-width: 760px) {
-          .stats-grid,
-          .feature-grid,
-          .steps-grid {
-            grid-template-columns: 1fr !important;
-          }
-
-          nav .nav-center {
-            display: none !important;
-          }
+          .jp-stats, .jp-feature-grid, .jp-steps-grid { grid-template-columns: 1fr !important; }
+          .jp-nav-center { display: none !important; }
         }
-
         @media (max-width: 620px) {
-          body {
-            overflow-x: hidden;
-          }
-
-          .hero-grid {
-            padding-top: 34px !important;
-            gap: 28px !important;
-          }
-        }
-
-        @keyframes floatJet {
-          0%, 100% { transform: translateY(0) rotate(-4deg); }
-          50% { transform: translateY(-16px) rotate(2deg); }
-        }
-
-        @keyframes pulseGlow {
-          0%, 100% { opacity: .65; transform: scale(1); }
-          50% { opacity: 1; transform: scale(1.08); }
+          body { overflow-x: hidden; }
+          .jp-hero { padding-top: 34px !important; gap: 28px !important; }
+          .jp-final-cta { padding: 22px; }
         }
       `}</style>
     </main>
@@ -592,29 +1420,33 @@ export default function JetPesaLandingPage() {
 
 function FloatingJetSvg() {
   return (
-    <div style={styles.jetSvgWrap}>
-      <svg viewBox="0 0 420 240" style={styles.jetSvg} role="img" aria-label="3D jet illustration">
+    <div className="jp-jet-svg-wrap">
+      <svg viewBox="0 0 420 240" className="jp-jet-svg" role="img" aria-label="3D jet illustration">
         <defs>
-          <linearGradient id="jetBody" x1="0" x2="1">
+          <linearGradient id="jpJetBody" x1="0" x2="1">
             <stop offset="0%" stopColor="#ef4444" />
             <stop offset="52%" stopColor="#f97316" />
             <stop offset="100%" stopColor="#ffffff" />
           </linearGradient>
-          <linearGradient id="wing" x1="0" x2="1">
+          <linearGradient id="jpWing" x1="0" x2="1">
             <stop offset="0%" stopColor="#7f1d1d" />
             <stop offset="100%" stopColor="#f43f5e" />
           </linearGradient>
-          <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%">
+          <linearGradient id="jpTrail" x1="0" x2="1">
+            <stop offset="0%" stopColor="rgba(244,63,94,0)" />
+            <stop offset="100%" stopColor="rgba(244,63,94,.6)" />
+          </linearGradient>
+          <filter id="jpShadow" x="-30%" y="-30%" width="160%" height="160%">
             <feDropShadow dx="0" dy="18" stdDeviation="14" floodColor="#000000" floodOpacity="0.45" />
           </filter>
         </defs>
 
-        <path d="M30 178 C100 128 176 96 348 72" stroke="rgba(244,63,94,.42)" strokeWidth="10" fill="none" strokeLinecap="round" />
+        <path d="M30 178 C100 128 176 96 348 72" stroke="url(#jpTrail)" strokeWidth="10" fill="none" strokeLinecap="round" />
         <path d="M52 192 C134 142 204 111 370 90" stroke="rgba(34,197,94,.22)" strokeWidth="4" fill="none" strokeLinecap="round" />
 
-        <g filter="url(#shadow)" transform="translate(70 44) rotate(-8 160 80)">
-          <path d="M32 92 C105 38 230 31 318 76 C243 121 118 132 32 92Z" fill="url(#jetBody)" />
-          <path d="M132 80 L58 24 L88 92 Z" fill="url(#wing)" />
+        <g filter="url(#jpShadow)" transform="translate(70 44) rotate(-8 160 80)">
+          <path d="M32 92 C105 38 230 31 318 76 C243 121 118 132 32 92Z" fill="url(#jpJetBody)" />
+          <path d="M132 80 L58 24 L88 92 Z" fill="url(#jpWing)" />
           <path d="M144 100 L70 168 L98 94 Z" fill="#991b1b" />
           <path d="M258 62 C283 64 306 69 330 78 C305 87 282 92 256 94 C272 82 272 74 258 62Z" fill="#fff" />
           <ellipse cx="178" cy="69" rx="34" ry="13" fill="#0f172a" opacity=".92" />
@@ -629,685 +1461,3 @@ function FloatingJetSvg() {
     </div>
   );
 }
-
-const styles = {
-  page: {
-    minHeight: '100vh',
-    background:
-      'radial-gradient(circle at top left, #172554 0%, #07080e 38%, #020617 100%)',
-    color: '#f8fafc',
-    fontFamily: "'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, sans-serif",
-    position: 'relative',
-    overflow: 'hidden',
-  },
-
-  glowOne: {
-    position: 'absolute',
-    width: 560,
-    height: 560,
-    borderRadius: '999px',
-    background: 'rgba(225,29,72,0.22)',
-    filter: 'blur(110px)',
-    top: -200,
-    right: -170,
-  },
-
-  glowTwo: {
-    position: 'absolute',
-    width: 460,
-    height: 460,
-    borderRadius: '999px',
-    background: 'rgba(34,197,94,0.15)',
-    filter: 'blur(110px)',
-    bottom: 90,
-    left: -160,
-  },
-
-  glowThree: {
-    position: 'absolute',
-    width: 360,
-    height: 360,
-    borderRadius: '999px',
-    background: 'rgba(251,191,36,0.1)',
-    filter: 'blur(100px)',
-    top: 420,
-    right: '18%',
-  },
-
-  nav: {
-    position: 'relative',
-    zIndex: 5,
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    gap: 18,
-    padding: '18px clamp(16px, 5vw, 64px)',
-    borderBottom: '1px solid rgba(255,255,255,0.08)',
-    background: 'rgba(2,6,23,0.72)',
-    backdropFilter: 'blur(18px)',
-  },
-
-  brand: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 10,
-    color: '#fff',
-    textDecoration: 'none',
-    fontSize: 24,
-    fontWeight: 950,
-    letterSpacing: '-1px',
-  },
-
-  brandIcon: {
-    display: 'inline-flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: 36,
-    height: 36,
-    borderRadius: 14,
-    background: 'linear-gradient(135deg, #ef4444, #991b1b)',
-    boxShadow: '0 12px 28px rgba(239,68,68,0.35)',
-  },
-
-  navCenter: {
-    className: 'nav-center',
-    display: 'flex',
-    gap: 24,
-    alignItems: 'center',
-  },
-
-  navLink: {
-    color: '#94a3b8',
-    textDecoration: 'none',
-    fontSize: 13,
-    fontWeight: 850,
-  },
-
-  navActions: {
-    display: 'flex',
-    gap: 12,
-    alignItems: 'center',
-  },
-
-  loginLink: {
-    color: '#cbd5e1',
-    textDecoration: 'none',
-    fontSize: 14,
-    fontWeight: 850,
-  },
-
-  joinButton: {
-    color: '#fff',
-    textDecoration: 'none',
-    background: 'linear-gradient(135deg, #22c55e, #16a34a)',
-    padding: '11px 22px',
-    borderRadius: 999,
-    fontSize: 13,
-    fontWeight: 950,
-    boxShadow: '0 12px 30px rgba(34,197,94,0.25)',
-    whiteSpace: 'nowrap',
-  },
-
-  hero: {
-    position: 'relative',
-    zIndex: 2,
-    maxWidth: 1280,
-    margin: '0 auto',
-    padding: '68px 20px 34px',
-    display: 'grid',
-    gridTemplateColumns: '0.92fr 1.08fr',
-    gap: 46,
-    alignItems: 'center',
-  },
-
-  copy: {
-    maxWidth: 610,
-  },
-
-  badge: {
-    display: 'inline-flex',
-    alignItems: 'center',
-    gap: 8,
-    color: '#22c55e',
-    background: 'rgba(34,197,94,0.1)',
-    border: '1px solid rgba(34,197,94,0.22)',
-    padding: '8px 14px',
-    borderRadius: 999,
-    fontSize: 12,
-    fontWeight: 950,
-    letterSpacing: '0.8px',
-    marginBottom: 20,
-  },
-
-  pulseDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 999,
-    background: '#22c55e',
-    boxShadow: '0 0 18px #22c55e',
-    animation: 'pulseGlow 1.5s infinite',
-  },
-
-  title: {
-    fontSize: 'clamp(42px, 6.6vw, 82px)',
-    lineHeight: 0.93,
-    letterSpacing: '-3.4px',
-    margin: '0 0 22px',
-    fontWeight: 1000,
-  },
-
-  text: {
-    color: '#a8b4c7',
-    fontSize: 'clamp(15px, 2vw, 18px)',
-    lineHeight: 1.75,
-    margin: '0 0 32px',
-    maxWidth: 560,
-  },
-
-  ctaRow: {
-    display: 'flex',
-    gap: 14,
-    flexWrap: 'wrap',
-    marginBottom: 30,
-  },
-
-  primaryCta: {
-    textDecoration: 'none',
-    color: '#fff',
-    background: 'linear-gradient(135deg, #e11d48, #be123c)',
-    padding: '16px 32px',
-    borderRadius: 16,
-    fontSize: 15,
-    fontWeight: 950,
-    boxShadow: '0 18px 40px rgba(225,29,72,0.32)',
-    display: 'inline-flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-
-  secondaryCta: {
-    textDecoration: 'none',
-    color: '#e2e8f0',
-    background: 'rgba(255,255,255,0.07)',
-    border: '1px solid rgba(255,255,255,0.12)',
-    padding: '16px 28px',
-    borderRadius: 16,
-    fontSize: 15,
-    fontWeight: 900,
-    display: 'inline-flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-
-  stats: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
-    gap: 12,
-  },
-
-  statCard: {
-    background: 'rgba(15,23,42,0.72)',
-    border: '1px solid rgba(255,255,255,0.09)',
-    borderRadius: 18,
-    padding: 16,
-    boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.04)',
-  },
-
-  statValue: {
-    display: 'block',
-    fontSize: 19,
-    marginBottom: 5,
-  },
-
-  statLabel: {
-    color: '#7b8aa1',
-    fontSize: 12,
-    fontWeight: 800,
-    lineHeight: 1.35,
-  },
-
-  trustRow: {
-    display: 'flex',
-    flexWrap: 'wrap',
-    gap: 10,
-    marginTop: 18,
-    color: '#94a3b8',
-    fontSize: 13,
-    fontWeight: 850,
-  },
-
-  visualStack: {
-    position: 'relative',
-  },
-
-  jetSvgWrap: {
-    position: 'absolute',
-    top: -76,
-    right: -26,
-    width: 'min(360px, 56vw)',
-    zIndex: 3,
-    pointerEvents: 'none',
-    animation: 'floatJet 5s ease-in-out infinite',
-  },
-
-  jetSvg: {
-    width: '100%',
-    height: 'auto',
-    display: 'block',
-  },
-
-  demoCard: {
-    position: 'relative',
-    zIndex: 2,
-    background: 'rgba(15,23,42,0.82)',
-    border: '1px solid rgba(255,255,255,0.12)',
-    borderRadius: 30,
-    padding: 18,
-    boxShadow: '0 34px 90px rgba(0,0,0,0.55)',
-    backdropFilter: 'blur(18px)',
-  },
-
-  demoTop: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    gap: 12,
-    marginBottom: 14,
-  },
-
-  liveDotRow: {
-    display: 'flex',
-    gap: 8,
-    alignItems: 'center',
-  },
-
-  liveDot: {
-    width: 9,
-    height: 9,
-    borderRadius: '50%',
-    background: '#22c55e',
-    boxShadow: '0 0 16px #22c55e',
-  },
-
-  liveText: {
-    color: '#e2e8f0',
-    fontSize: 12,
-    fontWeight: 950,
-  },
-
-  onlineText: {
-    color: '#7b8aa1',
-    fontSize: 12,
-    fontWeight: 800,
-    marginTop: 4,
-  },
-
-  walletPill: {
-    background: 'rgba(34,197,94,0.1)',
-    border: '1px solid rgba(34,197,94,0.24)',
-    color: '#22c55e',
-    borderRadius: 999,
-    padding: '8px 13px',
-    fontSize: 12,
-    fontWeight: 950,
-    whiteSpace: 'nowrap',
-  },
-
-  canvasWrap: {
-    height: 'clamp(270px, 44vw, 390px)',
-    background: '#020617',
-    borderRadius: 24,
-    overflow: 'hidden',
-    border: '1px solid rgba(255,255,255,0.08)',
-    position: 'relative',
-  },
-
-  canvas: {
-    width: '100%',
-    height: '100%',
-    display: 'block',
-  },
-
-  loadingOverlay: {
-    position: 'absolute',
-    inset: 0,
-    zIndex: 5,
-    background: 'rgba(2,6,23,0.88)',
-    display: 'flex',
-    flexDirection: 'column',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-
-  loaderPlane: {
-    fontSize: 42,
-    marginBottom: 16,
-    transform: 'rotate(-12deg)',
-    filter: 'drop-shadow(0 12px 18px rgba(239,68,68,.5))',
-  },
-
-  progressTrack: {
-    width: 'min(320px, 68%)',
-    height: 8,
-    background: 'rgba(255,255,255,0.08)',
-    borderRadius: 999,
-    overflow: 'hidden',
-  },
-
-  progressFill: {
-    height: '100%',
-    background: 'linear-gradient(90deg, #22c55e, #86efac)',
-    borderRadius: 999,
-  },
-
-  loadingText: {
-    color: '#94a3b8',
-    fontSize: 12,
-    fontWeight: 900,
-    marginTop: 12,
-  },
-
-  multiplierBox: {
-    position: 'absolute',
-    inset: 0,
-    display: 'flex',
-    flexDirection: 'column',
-    justifyContent: 'center',
-    alignItems: 'center',
-    pointerEvents: 'none',
-    textAlign: 'center',
-  },
-
-  multiplierText: {
-    fontSize: 'clamp(56px, 10vw, 112px)',
-    fontWeight: 1000,
-    letterSpacing: '-4px',
-    textShadow: '0 0 34px rgba(255,255,255,0.24)',
-  },
-
-  multiplierSub: {
-    color: '#94a3b8',
-    fontSize: 13,
-    fontWeight: 900,
-    marginTop: -8,
-  },
-
-  crashedText: {
-    color: '#ef4444',
-    fontSize: 'clamp(32px, 6vw, 54px)',
-    fontWeight: 1000,
-    letterSpacing: '-1.4px',
-  },
-
-  crashMultiplier: {
-    color: '#94a3b8',
-    fontSize: 16,
-    fontWeight: 900,
-    marginTop: 4,
-  },
-
-  roundStats: {
-    position: 'absolute',
-    left: 14,
-    right: 14,
-    bottom: 14,
-    display: 'flex',
-    justifyContent: 'space-between',
-    gap: 10,
-    color: '#cbd5e1',
-    fontSize: 12,
-    fontWeight: 900,
-  },
-
-  ledgerHeader: {
-    color: '#7b8aa1',
-    fontSize: 11,
-    fontWeight: 950,
-    letterSpacing: '0.8px',
-    textTransform: 'uppercase',
-    margin: '16px 0 8px',
-  },
-
-  ledger: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
-    gap: 7,
-    maxHeight: 265,
-    overflow: 'auto',
-    paddingRight: 2,
-  },
-
-  betRow: {
-    display: 'grid',
-    gridTemplateColumns: '1fr auto',
-    gap: 8,
-    alignItems: 'center',
-    background: 'rgba(2,6,23,0.58)',
-    border: '1px solid rgba(255,255,255,0.07)',
-    borderRadius: 13,
-    padding: '10px 11px',
-    fontSize: 12,
-  },
-
-  betUser: {
-    color: '#cbd5e1',
-    fontWeight: 850,
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-    whiteSpace: 'nowrap',
-  },
-
-  betStake: {
-    color: '#fff',
-    fontWeight: 950,
-    fontSize: 11,
-  },
-
-  winPill: {
-    gridColumn: '1 / -1',
-    color: '#22c55e',
-    background: 'rgba(34,197,94,0.11)',
-    border: '1px solid rgba(34,197,94,0.18)',
-    borderRadius: 999,
-    padding: '5px 8px',
-    fontSize: 11,
-    fontWeight: 950,
-    width: 'fit-content',
-  },
-
-  pendingPill: {
-    gridColumn: '1 / -1',
-    fontSize: 11,
-    fontWeight: 950,
-  },
-
-  jackpotSection: {
-    position: 'relative',
-    zIndex: 2,
-    maxWidth: 1180,
-    margin: '24px auto',
-    padding: '0 20px',
-    display: 'grid',
-    gridTemplateColumns: '1.5fr 0.75fr 0.75fr',
-    gap: 14,
-  },
-
-  jackpotCard: {
-    display: 'flex',
-    gap: 20,
-    alignItems: 'center',
-    background: 'linear-gradient(135deg, rgba(251,191,36,0.16), rgba(225,29,72,0.12))',
-    border: '1px solid rgba(251,191,36,0.25)',
-    borderRadius: 28,
-    padding: 24,
-    boxShadow: '0 24px 70px rgba(0,0,0,0.28)',
-  },
-
-  jackpotIcon: {
-    width: 78,
-    height: 78,
-    borderRadius: 24,
-    display: 'grid',
-    placeItems: 'center',
-    background: 'linear-gradient(135deg, #f59e0b, #e11d48)',
-    fontSize: 36,
-    boxShadow: '0 20px 44px rgba(245,158,11,0.22)',
-    flex: '0 0 auto',
-  },
-
-  sectionKicker: {
-    color: '#22c55e',
-    fontSize: 12,
-    fontWeight: 950,
-    letterSpacing: '0.9px',
-  },
-
-  sectionTitle: {
-    margin: '8px 0 10px',
-    fontSize: 'clamp(28px, 4vw, 46px)',
-    lineHeight: 1.02,
-    letterSpacing: '-1.8px',
-    fontWeight: 1000,
-  },
-
-  sectionText: {
-    color: '#94a3b8',
-    lineHeight: 1.65,
-    margin: 0,
-    fontSize: 15,
-  },
-
-  miniCard: {
-    background: 'rgba(15,23,42,0.74)',
-    border: '1px solid rgba(255,255,255,0.09)',
-    borderRadius: 24,
-    padding: 22,
-  },
-
-  miniIcon: {
-    display: 'grid',
-    placeItems: 'center',
-    width: 48,
-    height: 48,
-    borderRadius: 16,
-    background: 'rgba(255,255,255,0.08)',
-    fontSize: 24,
-    marginBottom: 16,
-  },
-
-  featureSection: {
-    position: 'relative',
-    zIndex: 2,
-    maxWidth: 1180,
-    margin: '54px auto',
-    padding: '0 20px',
-  },
-
-  centerCopy: {
-    textAlign: 'center',
-    maxWidth: 700,
-    margin: '0 auto 24px',
-  },
-
-  featureGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(4, minmax(0, 1fr))',
-    gap: 14,
-  },
-
-  featureCard: {
-    background: 'rgba(15,23,42,0.74)',
-    border: '1px solid rgba(255,255,255,0.09)',
-    borderRadius: 22,
-    padding: 20,
-    minHeight: 168,
-  },
-
-  featureIcon: {
-    display: 'grid',
-    placeItems: 'center',
-    width: 48,
-    height: 48,
-    borderRadius: 16,
-    background: 'linear-gradient(135deg, rgba(225,29,72,.22), rgba(34,197,94,.14))',
-    fontSize: 24,
-    marginBottom: 14,
-  },
-
-  howItWorks: {
-    position: 'relative',
-    zIndex: 2,
-    maxWidth: 1180,
-    margin: '54px auto',
-    padding: '0 20px',
-  },
-
-  stepsGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(4, minmax(0, 1fr))',
-    gap: 14,
-  },
-
-  stepCard: {
-    background: 'rgba(2,6,23,0.54)',
-    border: '1px solid rgba(255,255,255,0.08)',
-    borderRadius: 22,
-    padding: 20,
-  },
-
-  stepNum: {
-    display: 'grid',
-    placeItems: 'center',
-    width: 38,
-    height: 38,
-    borderRadius: 14,
-    background: '#e11d48',
-    fontWeight: 1000,
-    marginBottom: 14,
-  },
-
-  finalCta: {
-    position: 'relative',
-    zIndex: 2,
-    maxWidth: 1180,
-    margin: '54px auto 28px',
-    padding: 28,
-    borderRadius: 30,
-    background: 'linear-gradient(135deg, rgba(225,29,72,0.18), rgba(34,197,94,0.12))',
-    border: '1px solid rgba(255,255,255,0.1)',
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    gap: 24,
-    flexWrap: 'wrap',
-  },
-
-  finalTitle: {
-    margin: '8px 0 8px',
-    fontSize: 'clamp(30px, 5vw, 54px)',
-    lineHeight: 1,
-    letterSpacing: '-2px',
-  },
-
-  finalText: {
-    color: '#94a3b8',
-    margin: 0,
-    maxWidth: 680,
-    lineHeight: 1.6,
-  },
-
-  footer: {
-    position: 'relative',
-    zIndex: 2,
-    maxWidth: 1180,
-    margin: '0 auto',
-    padding: '22px 20px 34px',
-    display: 'flex',
-    justifyContent: 'space-between',
-    gap: 16,
-    flexWrap: 'wrap',
-    color: '#64748b',
-    fontSize: 12,
-    fontWeight: 850,
-  },
-};
